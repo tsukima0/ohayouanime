@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Index from "./pages/Index";
 import ShortsPage from "./pages/Shorts";
 import WatchPage from "./pages/Watch";
+import SeriesDetailPage from "./pages/SeriesDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/shorts" element={<ShortsPage />} />
+            <Route path="/shorts/:shortId" element={<ShortsPage />} />
+            <Route path="/series/:seriesId" element={<SeriesDetailPage />} />
             <Route path="/watch/:episodeId" element={<WatchPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
