@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
-import { Star } from "lucide-react";
+import { Star, Bookmark } from "lucide-react";
 import type { AnimeSeries } from "@/lib/mock-data";
 import { motion } from "framer-motion";
+import { useAuth } from "@/hooks/useAuth";
+import { useWatchlist } from "@/hooks/useWatchlist";
+import { useNavigate } from "react-router-dom";
 
-// Image mapping
 import seriesShadow from "@/assets/series-shadow-requiem.jpg";
 import seriesNeon from "@/assets/series-neon-drift.jpg";
 import seriesCrimson from "@/assets/series-crimson-academy.jpg";
@@ -30,6 +32,20 @@ interface AnimeCardProps {
 
 export default function AnimeCard({ series, index }: AnimeCardProps) {
   const imageSrc = imageMap[series.id] || seriesShadow;
+  const { user } = useAuth();
+  const { isInWatchlist, toggleWatchlist } = useWatchlist();
+  const navigate = useNavigate();
+  const inList = isInWatchlist(series.id);
+
+  const handleBookmark = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    await toggleWatchlist(series.id);
+  };
 
   return (
     <motion.div
@@ -66,6 +82,19 @@ export default function AnimeCard({ series, index }: AnimeCardProps) {
               {series.status}
             </span>
           </div>
+
+          {/* Bookmark Button */}
+          <button
+            onClick={handleBookmark}
+            className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 z-10 ${
+              inList
+                ? "bg-primary text-primary-foreground"
+                : "bg-background/60 backdrop-blur-sm text-foreground hover:bg-primary/80 hover:text-primary-foreground"
+            }`}
+            title={inList ? "Remove from My List" : "Add to My List"}
+          >
+            <Bookmark className={`w-4 h-4 ${inList ? "fill-current" : ""}`} />
+          </button>
 
           {/* Bottom Info */}
           <div className="absolute bottom-0 left-0 right-0 p-3">
