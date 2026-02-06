@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
-import { Play, TrendingUp, Tv, ArrowRight } from "lucide-react";
-import { mockTrendingSeries, simulcastSeries, mockShorts } from "@/lib/mock-data";
+import { Play, TrendingUp, Tv, ArrowRight, History, Sparkles } from "lucide-react";
+import { mockTrendingSeries, simulcastSeries, mockShorts, mockContinueWatching, mockNewEpisodes } from "@/lib/mock-data";
 import AnimeCard from "@/components/AnimeCard";
+import ContinueWatchingCard from "@/components/ContinueWatchingCard";
+import NewEpisodeCard from "@/components/NewEpisodeCard";
 import { motion } from "framer-motion";
 import heroBanner from "@/assets/hero-banner.jpg";
 
@@ -60,6 +62,42 @@ const Index = () => {
               </Link>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Continue Watching Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <History className="w-5 h-5 text-primary" />
+            <h2 className="font-display text-xl sm:text-2xl font-bold">
+              Continue Watching
+            </h2>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {mockContinueWatching.map((item, index) => (
+            <ContinueWatchingCard key={item.episodeId} item={item} index={index} />
+          ))}
+        </div>
+      </section>
+
+      {/* New Episodes Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Sparkles className="w-5 h-5 text-primary" />
+            <h2 className="font-display text-xl sm:text-2xl font-bold">
+              New Episodes
+            </h2>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {mockNewEpisodes.map((item, index) => (
+            <NewEpisodeCard key={item.episodeId} item={item} index={index} />
+          ))}
         </div>
       </section>
 

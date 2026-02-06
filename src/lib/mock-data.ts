@@ -34,6 +34,27 @@ export interface AnimeSeries {
   description: string;
 }
 
+export interface ContinueWatchingItem {
+  episodeId: string;
+  seriesId: string;
+  animeName: string;
+  episodeNumber: number;
+  episodeTitle: string;
+  progress: number; // 0-100 percentage watched
+  duration: number;
+  currentTime: number;
+}
+
+export interface NewEpisodeItem {
+  episodeId: string;
+  seriesId: string;
+  animeName: string;
+  episodeNumber: number;
+  episodeTitle: string;
+  duration: number;
+  releasedAgo: string;
+}
+
 export const mockShorts: AnimeShort[] = [
   {
     id: "short-1",
@@ -291,6 +312,88 @@ export const simulcastSeries: AnimeSeries[] = [
     episodes: 10,
     status: "Airing",
     description: "New episode every Friday.",
+  },
+];
+
+export const mockContinueWatching: ContinueWatchingItem[] = [
+  {
+    episodeId: "ep-002",
+    seriesId: "series-1",
+    animeName: "Shadow Requiem",
+    episodeNumber: 2,
+    episodeTitle: "Crimson Dawn",
+    progress: 62,
+    duration: 1380,
+    currentTime: 856,
+  },
+  {
+    episodeId: "ep-004",
+    seriesId: "series-2",
+    animeName: "Neon Drift",
+    episodeNumber: 1,
+    episodeTitle: "Ignition Point",
+    progress: 35,
+    duration: 1440,
+    currentTime: 504,
+  },
+  {
+    episodeId: "ep-007",
+    seriesId: "series-4",
+    animeName: "Void Walker",
+    episodeNumber: 1,
+    episodeTitle: "The Thin Veil",
+    progress: 80,
+    duration: 1500,
+    currentTime: 1200,
+  },
+  {
+    episodeId: "ep-008",
+    seriesId: "series-5",
+    animeName: "Blade Symphony",
+    episodeNumber: 1,
+    episodeTitle: "First Movement",
+    progress: 15,
+    duration: 1440,
+    currentTime: 216,
+  },
+];
+
+export const mockNewEpisodes: NewEpisodeItem[] = [
+  {
+    episodeId: "ep-003",
+    seriesId: "series-1",
+    animeName: "Shadow Requiem",
+    episodeNumber: 3,
+    episodeTitle: "Echoes of the Void",
+    duration: 1500,
+    releasedAgo: "2 hours ago",
+  },
+  {
+    episodeId: "ep-005",
+    seriesId: "series-2",
+    animeName: "Neon Drift",
+    episodeNumber: 2,
+    episodeTitle: "Overdrive",
+    duration: 1380,
+    releasedAgo: "5 hours ago",
+  },
+  {
+    episodeId: "ep-006",
+    seriesId: "series-3",
+    animeName: "Crimson Academy",
+    episodeNumber: 1,
+    episodeTitle: "Enrollment",
+    duration: 1440,
+    releasedAgo: "1 day ago",
+  },
+  {
+    episodeId: "ep-009",
+    seriesId: "series-6",
+    animeName: "Starfall Chronicle",
+    episodeNumber: 1,
+    episodeTitle: "When Stars Fall",
+    duration: 1380,
+    releasedAgo: "2 days ago",
   },
 ];
 
