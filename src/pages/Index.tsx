@@ -89,7 +89,7 @@ const Index = () => {
               transition={{ delay: index * 0.15 }}
             >
               <Link
-                to={`/watch/${short.episodeId}?t=${short.timestamp}`}
+                to={`/shorts/${short.id}`}
                 className="group block relative rounded-xl overflow-hidden glass-card hover:scale-[1.02] transition-transform duration-300"
               >
                 <div className="aspect-[9/14] sm:aspect-[9/12] relative overflow-hidden">

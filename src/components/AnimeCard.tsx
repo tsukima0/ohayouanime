@@ -38,7 +38,7 @@ export default function AnimeCard({ series, index }: AnimeCardProps) {
       transition={{ delay: index * 0.1, duration: 0.5 }}
     >
       <Link
-        to={`/watch/ep-001`}
+        to={`/series/${series.id}`}
         className="group block relative rounded-xl overflow-hidden transition-transform duration-300 hover:scale-[1.03]"
       >
         {/* Image */}

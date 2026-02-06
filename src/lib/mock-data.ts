@@ -13,11 +13,12 @@ export interface AnimeShort {
 
 export interface AnimeEpisode {
   id: string;
+  seriesId: string;
   animeName: string;
   episodeNumber: number;
   title: string;
   thumbnail: string;
-  duration: number; // total duration in seconds
+  duration: number;
   description: string;
   season: number;
 }
@@ -75,6 +76,7 @@ export const mockShorts: AnimeShort[] = [
 export const mockEpisodes: AnimeEpisode[] = [
   {
     id: "ep-001",
+    seriesId: "series-1",
     animeName: "Shadow Requiem",
     episodeNumber: 1,
     title: "The World Beneath",
@@ -85,6 +87,7 @@ export const mockEpisodes: AnimeEpisode[] = [
   },
   {
     id: "ep-002",
+    seriesId: "series-1",
     animeName: "Shadow Requiem",
     episodeNumber: 2,
     title: "Crimson Dawn",
@@ -95,6 +98,7 @@ export const mockEpisodes: AnimeEpisode[] = [
   },
   {
     id: "ep-003",
+    seriesId: "series-1",
     animeName: "Shadow Requiem",
     episodeNumber: 3,
     title: "Echoes of the Void",
@@ -103,18 +107,95 @@ export const mockEpisodes: AnimeEpisode[] = [
     description: "The void between worlds grows thin. Kaito must master his abilities before the next eclipse, or risk losing everything he swore to protect.",
     season: 1,
   },
+  {
+    id: "ep-004",
+    seriesId: "series-2",
+    animeName: "Neon Drift",
+    episodeNumber: 1,
+    title: "Ignition Point",
+    thumbnail: "/placeholder.svg",
+    duration: 1440,
+    description: "In Neo-Tokyo 2187, underground mecha racers compete for survival. Riku, a former engineer, discovers a prototype that could change everything.",
+    season: 1,
+  },
+  {
+    id: "ep-005",
+    seriesId: "series-2",
+    animeName: "Neon Drift",
+    episodeNumber: 2,
+    title: "Overdrive",
+    thumbnail: "/placeholder.svg",
+    duration: 1380,
+    description: "The qualifying rounds begin. Riku must push beyond his limits as rival factions close in on his prototype's secret technology.",
+    season: 1,
+  },
+  {
+    id: "ep-006",
+    seriesId: "series-3",
+    animeName: "Crimson Academy",
+    episodeNumber: 1,
+    title: "Enrollment",
+    thumbnail: "/placeholder.svg",
+    duration: 1440,
+    description: "New students arrive at the prestigious Crimson Academy, unaware of the deadly trials that await beneath its pristine facade.",
+    season: 1,
+  },
+  {
+    id: "ep-007",
+    seriesId: "series-4",
+    animeName: "Void Walker",
+    episodeNumber: 1,
+    title: "The Thin Veil",
+    thumbnail: "/placeholder.svg",
+    duration: 1500,
+    description: "Detective Yuki investigates a series of disappearances linked to dimensional rifts appearing across the city.",
+    season: 1,
+  },
+  {
+    id: "ep-008",
+    seriesId: "series-5",
+    animeName: "Blade Symphony",
+    episodeNumber: 1,
+    title: "First Movement",
+    thumbnail: "/placeholder.svg",
+    duration: 1440,
+    description: "In feudal Japan, a wandering ronin encounters supernatural forces that challenge everything he knows about the art of the sword.",
+    season: 1,
+  },
+  {
+    id: "ep-009",
+    seriesId: "series-6",
+    animeName: "Starfall Chronicle",
+    episodeNumber: 1,
+    title: "When Stars Fall",
+    thumbnail: "/placeholder.svg",
+    duration: 1380,
+    description: "A celestial event brings mysterious powers to ordinary people. A group of strangers must unite to face what follows.",
+    season: 1,
+  },
 ];
 
 export const mockEpisode: AnimeEpisode = mockEpisodes[0];
 
 export function getNextEpisode(currentEpisodeId: string): AnimeEpisode | null {
-  const currentIndex = mockEpisodes.findIndex((ep) => ep.id === currentEpisodeId);
-  if (currentIndex === -1 || currentIndex >= mockEpisodes.length - 1) return null;
-  return mockEpisodes[currentIndex + 1];
+  const current = mockEpisodes.find((ep) => ep.id === currentEpisodeId);
+  if (!current) return null;
+  const seriesEpisodes = mockEpisodes.filter((ep) => ep.seriesId === current.seriesId);
+  const currentIndex = seriesEpisodes.findIndex((ep) => ep.id === currentEpisodeId);
+  if (currentIndex === -1 || currentIndex >= seriesEpisodes.length - 1) return null;
+  return seriesEpisodes[currentIndex + 1];
 }
 
 export function getEpisodeById(id: string): AnimeEpisode | null {
   return mockEpisodes.find((ep) => ep.id === id) || null;
+}
+
+export function getEpisodesBySeries(seriesId: string): AnimeEpisode[] {
+  return mockEpisodes.filter((ep) => ep.seriesId === seriesId);
+}
+
+export function getSeriesById(id: string): AnimeSeries | null {
+  return [...mockTrendingSeries, ...simulcastSeries].find((s) => s.id === id) || null;
 }
 
 export const mockTrendingSeries: AnimeSeries[] = [

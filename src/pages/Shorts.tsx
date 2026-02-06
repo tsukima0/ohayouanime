@@ -1,11 +1,33 @@
 import { useState, useRef, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { mockShorts } from "@/lib/mock-data";
 import ShortCard from "@/components/ShortCard";
 import { ChevronUp, ChevronDown } from "lucide-react";
 
 export default function ShortsPage() {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const { shortId } = useParams();
+  const initialIndex = shortId
+    ? mockShorts.findIndex((s) => s.id === shortId)
+    : 0;
+  const [activeIndex, setActiveIndex] = useState(
+    initialIndex >= 0 ? initialIndex : 0
+  );
   const containerRef = useRef<HTMLDivElement>(null);
+  const hasScrolled = useRef(false);
+
+  // Scroll to specific short on mount
+  useEffect(() => {
+    if (hasScrolled.current) return;
+    const container = containerRef.current;
+    if (!container) return;
+    const target = container.querySelector(
+      `[data-index="${initialIndex >= 0 ? initialIndex : 0}"]`
+    );
+    if (target) {
+      target.scrollIntoView({ behavior: "auto" });
+      hasScrolled.current = true;
+    }
+  }, [initialIndex]);
 
   useEffect(() => {
     const container = containerRef.current;
