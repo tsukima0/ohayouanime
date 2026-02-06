@@ -4,6 +4,9 @@ import { mockTrendingSeries, simulcastSeries, mockShorts, mockContinueWatching, 
 import AnimeCard from "@/components/AnimeCard";
 import ContinueWatchingCard from "@/components/ContinueWatchingCard";
 import NewEpisodeCard from "@/components/NewEpisodeCard";
+import MyListSection from "@/components/MyListSection";
+import { useAuth } from "@/hooks/useAuth";
+import { useWatchlist } from "@/hooks/useWatchlist";
 import { motion } from "framer-motion";
 import heroBanner from "@/assets/hero-banner.jpg";
 
@@ -19,6 +22,9 @@ const shortImages: Record<string, string> = {
 };
 
 const Index = () => {
+  const { user } = useAuth();
+  const { watchlistIds } = useWatchlist();
+
   return (
     <div className="min-h-screen bg-background pb-20 sm:pb-0">
       {/* Hero Banner */}
@@ -64,6 +70,9 @@ const Index = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* My List (only for logged-in users) */}
+      {user && <MyListSection watchlistIds={watchlistIds} />}
 
       {/* Continue Watching Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">

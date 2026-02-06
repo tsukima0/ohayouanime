@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Film, Play, Search, Sun, Moon } from "lucide-react";
+import { Home, Film, Play, Search, Sun, Moon, User, LogOut } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
+import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
 
 const navItems = [
@@ -11,6 +12,7 @@ const navItems = [
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
+  const { user, signOut } = useAuth();
   const location = useLocation();
 
   return (
@@ -57,7 +59,7 @@ export default function Navbar() {
           </div>
 
           {/* Right Side */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {/* Search */}
             <button className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
               <Search className="w-5 h-5" />
@@ -83,6 +85,25 @@ export default function Navbar() {
                 )}
               </motion.div>
             </button>
+
+            {/* Auth */}
+            {user ? (
+              <button
+                onClick={() => signOut()}
+                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                title="Sign Out"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            ) : (
+              <Link
+                to="/auth"
+                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                title="Sign In"
+              >
+                <User className="w-5 h-5" />
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -106,6 +127,23 @@ export default function Navbar() {
               </Link>
             );
           })}
+          {user ? (
+            <button
+              onClick={() => signOut()}
+              className="flex flex-col items-center gap-1 px-3 py-1 rounded-lg text-muted-foreground transition-colors"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="text-xs">Logout</span>
+            </button>
+          ) : (
+            <Link
+              to="/auth"
+              className="flex flex-col items-center gap-1 px-3 py-1 rounded-lg text-muted-foreground transition-colors"
+            >
+              <User className="w-5 h-5" />
+              <span className="text-xs">Login</span>
+            </Link>
+          )}
           <button
             onClick={toggleTheme}
             className="flex flex-col items-center gap-1 px-3 py-1 rounded-lg text-muted-foreground transition-colors"
