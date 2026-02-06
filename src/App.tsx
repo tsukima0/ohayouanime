@@ -11,6 +11,7 @@ import ShortsPage from "./pages/Shorts";
 import WatchPage from "./pages/Watch";
 import SeriesDetailPage from "./pages/SeriesDetail";
 import AuthPage from "./pages/Auth";
+import ProfilePage from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/series/:seriesId" element={<SeriesDetailPage />} />
               <Route path="/watch/:episodeId" element={<WatchPage />} />
               <Route path="/auth" element={<AuthPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

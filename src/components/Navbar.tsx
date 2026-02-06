@@ -88,13 +88,13 @@ export default function Navbar() {
 
             {/* Auth */}
             {user ? (
-              <button
-                onClick={() => signOut()}
+              <Link
+                to="/profile"
                 className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                title="Sign Out"
+                title="Profile"
               >
-                <LogOut className="w-5 h-5" />
-              </button>
+                <User className="w-5 h-5" />
+              </Link>
             ) : (
               <Link
                 to="/auth"
@@ -128,13 +128,13 @@ export default function Navbar() {
             );
           })}
           {user ? (
-            <button
-              onClick={() => signOut()}
+            <Link
+              to="/profile"
               className="flex flex-col items-center gap-1 px-3 py-1 rounded-lg text-muted-foreground transition-colors"
             >
-              <LogOut className="w-5 h-5" />
-              <span className="text-xs">Logout</span>
-            </button>
+              <User className="w-5 h-5" />
+              <span className="text-xs">Profile</span>
+            </Link>
           ) : (
             <Link
               to="/auth"
