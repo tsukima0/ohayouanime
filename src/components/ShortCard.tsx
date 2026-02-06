@@ -24,7 +24,7 @@ export default function ShortCard({ short, isActive }: ShortCardProps) {
   const imageSrc = shortImages[short.id] || short1Img;
 
   const handleWatchFull = () => {
-    navigate(`/watch/${short.episodeId}?t=${short.timestamp}`);
+    navigate(`/watch/${short.episodeId}`);
   };
 
   return (
@@ -103,9 +103,6 @@ export default function ShortCard({ short, isActive }: ShortCardProps) {
           >
             <Play className="w-4 h-4 fill-current" />
             <span>Watch Full Episode</span>
-            <span className="ml-1 px-2 py-0.5 rounded-md bg-primary-foreground/20 text-xs">
-              {formatTimestamp(short.timestamp)}
-            </span>
           </motion.button>
         </div>
       </div>

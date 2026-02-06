@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
-import { mockEpisode, mockShorts } from "@/lib/mock-data";
+import { getEpisodeById, getNextEpisode, mockShorts } from "@/lib/mock-data";
 import VideoPlayer from "@/components/VideoPlayer";
+import NextEpisodeCard from "@/components/NextEpisodeCard";
 import { Clock, Star, Calendar, Play } from "lucide-react";
 import { formatTimestamp } from "@/lib/mock-data";
 import { Link } from "react-router-dom";
@@ -8,13 +9,15 @@ import { motion } from "framer-motion";
 
 export default function WatchPage() {
   const { episodeId } = useParams();
-  const episode = mockEpisode; // In production, fetch by episodeId
+  const episode = getEpisodeById(episodeId || "") || getEpisodeById("ep-001")!;
+  const nextEpisode = getNextEpisode(episode.id);
 
   return (
     <div className="min-h-screen bg-background pt-16 pb-20 sm:pb-0">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Video Player — always cinema dark */}
+        {/* Video Player */}
         <motion.div
+          key={episode.id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -58,6 +61,13 @@ export default function WatchPage() {
           </p>
         </div>
 
+        {/* Next Episode Card */}
+        {nextEpisode && (
+          <div className="mt-8">
+            <NextEpisodeCard episode={nextEpisode} />
+          </div>
+        )}
+
         {/* Related Clips Section */}
         <div className="mt-10">
           <h2 className="font-display text-lg font-bold mb-4 text-foreground">
@@ -72,7 +82,7 @@ export default function WatchPage() {
                 transition={{ delay: index * 0.1 }}
               >
                 <Link
-                  to={`/watch/${short.episodeId}?t=${short.timestamp}`}
+                  to={`/watch/${short.episodeId}`}
                   className="group block glass-card rounded-xl overflow-hidden hover:scale-[1.02] transition-transform"
                 >
                   <div className="p-4">
@@ -85,7 +95,7 @@ export default function WatchPage() {
                           {short.title}
                         </h3>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Jump to {formatTimestamp(short.timestamp)}
+                          {formatTimestamp(short.duration)} clip
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                           {short.description}

@@ -72,16 +72,50 @@ export const mockShorts: AnimeShort[] = [
   },
 ];
 
-export const mockEpisode: AnimeEpisode = {
-  id: "ep-001",
-  animeName: "Shadow Requiem",
-  episodeNumber: 1,
-  title: "The World Beneath",
-  thumbnail: "/placeholder.svg",
-  duration: 1440, // 24 minutes
-  description: "In a world where shadows hold ancient power, Kaito discovers he is the last heir to a forgotten bloodline. When darkness threatens to consume the city, he must choose between hiding and becoming what he was destined to be.",
-  season: 1,
-};
+export const mockEpisodes: AnimeEpisode[] = [
+  {
+    id: "ep-001",
+    animeName: "Shadow Requiem",
+    episodeNumber: 1,
+    title: "The World Beneath",
+    thumbnail: "/placeholder.svg",
+    duration: 1440,
+    description: "In a world where shadows hold ancient power, Kaito discovers he is the last heir to a forgotten bloodline. When darkness threatens to consume the city, he must choose between hiding and becoming what he was destined to be.",
+    season: 1,
+  },
+  {
+    id: "ep-002",
+    animeName: "Shadow Requiem",
+    episodeNumber: 2,
+    title: "Crimson Dawn",
+    thumbnail: "/placeholder.svg",
+    duration: 1380,
+    description: "Kaito's awakening attracts the attention of the Shadow Council. As crimson light fills the sky, an ancient prophecy begins to unfold, and unlikely allies emerge from the darkness.",
+    season: 1,
+  },
+  {
+    id: "ep-003",
+    animeName: "Shadow Requiem",
+    episodeNumber: 3,
+    title: "Echoes of the Void",
+    thumbnail: "/placeholder.svg",
+    duration: 1500,
+    description: "The void between worlds grows thin. Kaito must master his abilities before the next eclipse, or risk losing everything he swore to protect.",
+    season: 1,
+  },
+];
+
+export const mockEpisode: AnimeEpisode = mockEpisodes[0];
+
+export function getNextEpisode(currentEpisodeId: string): AnimeEpisode | null {
+  const currentIndex = mockEpisodes.findIndex((ep) => ep.id === currentEpisodeId);
+  if (currentIndex === -1 || currentIndex >= mockEpisodes.length - 1) return null;
+  return mockEpisodes[currentIndex + 1];
+}
+
+export function getEpisodeById(id: string): AnimeEpisode | null {
+  return mockEpisodes.find((ep) => ep.id === id) || null;
+}
 
 export const mockTrendingSeries: AnimeSeries[] = [
   {

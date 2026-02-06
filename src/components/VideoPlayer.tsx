@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import {
   Play,
   Pause,
@@ -16,7 +15,7 @@ import { motion } from "framer-motion";
 interface VideoPlayerProps {
   episodeTitle: string;
   animeName: string;
-  duration: number; // total duration in seconds
+  duration: number;
 }
 
 export default function VideoPlayer({
@@ -24,14 +23,10 @@ export default function VideoPlayer({
   animeName,
   duration,
 }: VideoPlayerProps) {
-  const [searchParams] = useSearchParams();
-  const startTime = parseInt(searchParams.get("t") || "0", 10);
-
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(startTime);
+  const [currentTime, setCurrentTime] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [showControls, setShowControls] = useState(true);
-  const [showTimestamp, setShowTimestamp] = useState(!!searchParams.get("t"));
   const controlsTimer = useRef<ReturnType<typeof setTimeout>>();
   const progressInterval = useRef<ReturnType<typeof setInterval>>();
 
@@ -65,18 +60,20 @@ export default function VideoPlayer({
     };
   }, [showControls, isPlaying]);
 
-  // Show timestamp indicator
-  useEffect(() => {
-    if (showTimestamp) {
-      const timer = setTimeout(() => setShowTimestamp(false), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [showTimestamp]);
-
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const fraction = (e.clientX - rect.left) / rect.width;
     setCurrentTime(Math.floor(fraction * duration));
+  };
+
+  const skipBackward = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentTime(Math.max(0, currentTime - 10));
+  };
+
+  const skipForward = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentTime(Math.min(duration, currentTime + 10));
   };
 
   const progress = (currentTime / duration) * 100;
@@ -97,29 +94,25 @@ export default function VideoPlayer({
         </div>
       </div>
 
-      {/* Jumped-to-timestamp indicator */}
-      {showTimestamp && startTime > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0 }}
-          className="absolute top-4 left-1/2 -translate-x-1/2 z-20"
-        >
-          <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium glow-primary">
-            <SkipForward className="w-4 h-4" />
-            <span>Jumped to {formatTimestamp(startTime)} from clip</span>
-          </div>
-        </motion.div>
-      )}
-
       {/* Controls Overlay */}
       <motion.div
         initial={false}
         animate={{ opacity: showControls ? 1 : 0 }}
         className="absolute inset-0 bg-gradient-to-t from-[hsl(0,0%,0%,0.8)] via-transparent to-[hsl(0,0%,0%,0.3)] z-10 transition-opacity"
       >
-        {/* Center Play/Pause */}
-        <div className="absolute inset-0 flex items-center justify-center">
+        {/* Center Play/Pause with Skip buttons */}
+        <div className="absolute inset-0 flex items-center justify-center gap-6">
+          {/* Skip Back 10s */}
+          <motion.button
+            whileTap={{ scale: 0.85 }}
+            onClick={skipBackward}
+            className="w-11 h-11 rounded-full bg-[hsl(0,0%,0%,0.6)] border border-[hsl(0,100%,50%,0.4)] flex items-center justify-center text-[hsl(0,100%,50%)] hover:bg-[hsl(0,100%,50%,0.15)] transition-colors"
+            title="Skip back 10s"
+          >
+            <SkipBack className="w-5 h-5" />
+          </motion.button>
+
+          {/* Play/Pause */}
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={(e) => {
@@ -133,6 +126,16 @@ export default function VideoPlayer({
             ) : (
               <Play className="w-7 h-7 fill-current ml-1" />
             )}
+          </motion.button>
+
+          {/* Skip Forward 10s */}
+          <motion.button
+            whileTap={{ scale: 0.85 }}
+            onClick={skipForward}
+            className="w-11 h-11 rounded-full bg-[hsl(0,0%,0%,0.6)] border border-[hsl(0,100%,50%,0.4)] flex items-center justify-center text-[hsl(0,100%,50%)] hover:bg-[hsl(0,100%,50%,0.15)] transition-colors"
+            title="Skip forward 10s"
+          >
+            <SkipForward className="w-5 h-5" />
           </motion.button>
         </div>
 
@@ -162,25 +165,21 @@ export default function VideoPlayer({
                   e.stopPropagation();
                   setIsPlaying(!isPlaying);
                 }}
-                className="text-[hsl(0,0%,100%)] hover:text-primary transition-colors"
+                className="text-[hsl(0,0%,100%)] hover:text-[hsl(0,100%,50%)] transition-colors"
               >
                 {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
               </button>
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentTime(Math.max(0, currentTime - 10));
-                }}
-                className="text-[hsl(0,0%,100%)] hover:text-primary transition-colors"
+                onClick={skipBackward}
+                className="text-[hsl(0,100%,50%)] hover:text-[hsl(0,100%,65%)] transition-colors"
+                title="-10s"
               >
                 <SkipBack className="w-5 h-5" />
               </button>
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentTime(Math.min(duration, currentTime + 10));
-                }}
-                className="text-[hsl(0,0%,100%)] hover:text-primary transition-colors"
+                onClick={skipForward}
+                className="text-[hsl(0,100%,50%)] hover:text-[hsl(0,100%,65%)] transition-colors"
+                title="+10s"
               >
                 <SkipForward className="w-5 h-5" />
               </button>
@@ -189,7 +188,7 @@ export default function VideoPlayer({
                   e.stopPropagation();
                   setIsMuted(!isMuted);
                 }}
-                className="text-[hsl(0,0%,100%)] hover:text-primary transition-colors"
+                className="text-[hsl(0,0%,100%)] hover:text-[hsl(0,100%,50%)] transition-colors"
               >
                 {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </button>
@@ -198,10 +197,10 @@ export default function VideoPlayer({
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <button className="text-[hsl(0,0%,100%)] hover:text-primary transition-colors">
+              <button className="text-[hsl(0,0%,100%)] hover:text-[hsl(0,100%,50%)] transition-colors">
                 <Settings className="w-5 h-5" />
               </button>
-              <button className="text-[hsl(0,0%,100%)] hover:text-primary transition-colors">
+              <button className="text-[hsl(0,0%,100%)] hover:text-[hsl(0,100%,50%)] transition-colors">
                 <Maximize className="w-5 h-5" />
               </button>
             </div>
