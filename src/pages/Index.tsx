@@ -4,6 +4,7 @@ import { useSeries, useShorts, useLatestEpisodes } from "@/hooks/useSeriesData";
 import AnimeCard from "@/components/AnimeCard";
 import NewEpisodeCard from "@/components/NewEpisodeCard";
 import MyListSection from "@/components/MyListSection";
+import VideoThumbnail from "@/components/VideoThumbnail";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useWatchlist } from "@/hooks/useWatchlist";
@@ -140,6 +141,12 @@ const Index = () => {
                         alt={short.title}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         loading="lazy"
+                      />
+                    ) : short.video_url ? (
+                      <VideoThumbnail
+                        videoUrl={short.video_url}
+                        alt={short.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-primary/20 via-muted to-accent flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
