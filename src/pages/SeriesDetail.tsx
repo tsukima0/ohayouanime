@@ -1,7 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { getSeriesById, getEpisodesBySeries } from "@/lib/mock-data";
 import { formatTimestamp } from "@/lib/mock-data";
-import { Star, Play, Clock, ArrowLeft } from "lucide-react";
+import { Star, Play, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 
 import seriesShadow from "@/assets/series-shadow-requiem.jpg";
@@ -126,13 +126,27 @@ export default function SeriesDetailPage() {
             >
               <Link
                 to={`/watch/${episode.id}`}
-                className="group flex items-center gap-4 p-4 rounded-xl glass-card border border-border hover:border-primary/30 hover:scale-[1.01] transition-all duration-200"
+                className="group flex items-center gap-4 p-3 rounded-xl glass-card border border-border hover:border-primary/30 hover:scale-[1.01] transition-all duration-200"
               >
-                {/* Episode Number */}
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
-                  <span className="font-display font-bold text-primary text-lg">
-                    {episode.episodeNumber}
-                  </span>
+                {/* Episode Thumbnail */}
+                <div className="relative w-28 sm:w-36 aspect-video rounded-lg overflow-hidden flex-shrink-0">
+                  <img
+                    src={imageSrc}
+                    alt={`Episode ${episode.episodeNumber}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-background/30 group-hover:bg-background/10 transition-colors" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-primary/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Play className="w-3.5 h-3.5 fill-current text-primary-foreground ml-0.5" />
+                    </div>
+                  </div>
+                  <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-background/80 text-[10px] font-mono text-foreground">
+                    {formatTimestamp(episode.duration)}
+                  </div>
+                  <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
+                    EP {episode.episodeNumber}
+                  </div>
                 </div>
 
                 {/* Episode Info */}
@@ -140,19 +154,13 @@ export default function SeriesDetailPage() {
                   <h3 className="font-display font-semibold text-foreground text-sm sm:text-base truncate">
                     {episode.title}
                   </h3>
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                     {episode.description}
                   </p>
-                </div>
-
-                {/* Duration & Play */}
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                    <span>Season {episode.season}</span>
+                    <span>•</span>
                     <span>{formatTimestamp(episode.duration)}</span>
-                  </div>
-                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground text-primary transition-colors">
-                    <Play className="w-4 h-4 fill-current ml-0.5" />
                   </div>
                 </div>
               </Link>
