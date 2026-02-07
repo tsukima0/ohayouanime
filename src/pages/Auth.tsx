@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { Play, Mail, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
+import logoImg from "@/assets/logo.png";
 
 type AuthMode = "login" | "signup" | "forgot" | "reset";
 
@@ -165,11 +166,10 @@ export default function AuthPage() {
 
         {/* Logo */}
         <div className="flex items-center gap-2 mb-8">
-          <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center glow-primary-sm">
-            <Play className="w-4 h-4 text-primary-foreground fill-current" />
-          </div>
+          <img src={logoImg} alt="Ohayou Anime" className="w-8 h-8 rounded-md object-cover" />
           <span className="font-display text-xl font-bold">
-            Ani<span className="text-primary">Stream</span>
+            <span className="text-primary">Ohayou</span>{" "}
+            <span className="text-foreground">Anime</span>
           </span>
         </div>
 
