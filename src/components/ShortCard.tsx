@@ -151,10 +151,25 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
         )}
       </AnimatePresence>
 
-      {/* Content overlay */}
-      <div className="relative h-full flex flex-col justify-end pb-4 sm:pb-6">
+      {/* Center play/pause button — always tappable */}
+      {renderVideo && isActive && (
+        <button
+          onClick={(e) => { e.stopPropagation(); togglePlayPause(); }}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-16 h-16 rounded-full bg-background/40 backdrop-blur-sm flex items-center justify-center transition-opacity duration-300"
+          style={{ opacity: isPlaying ? 0 : 1 }}
+        >
+          {isPlaying ? (
+            <Pause className="w-7 h-7 text-foreground fill-current" />
+          ) : (
+            <Play className="w-7 h-7 text-foreground fill-current ml-0.5" />
+          )}
+        </button>
+      )}
+
+      {/* Content overlay — pointer-events-none so taps pass through to video */}
+      <div className="relative h-full flex flex-col justify-end pb-4 sm:pb-6 pointer-events-none">
         {/* Right-side actions */}
-        <div className="absolute right-3 bottom-28 sm:bottom-20 z-20">
+        <div className="absolute right-3 bottom-28 sm:bottom-20 z-20 pointer-events-auto">
           <ShortActions
             liked={liked}
             likesCount={likesCount}
@@ -188,20 +203,6 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
           </motion.div>
         </div>
       </div>
-
-      {/* Progress bar */}
-      {renderVideo && <ShortProgressBar videoRef={videoRef} isActive={isActive} />}
-
-      {/* Persistent play/pause button — center */}
-      {renderVideo && isActive && !showPlayIcon && (
-        <button
-          onClick={(e) => { e.stopPropagation(); togglePlayPause(); }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-16 h-16 rounded-full bg-background/40 backdrop-blur-sm flex items-center justify-center transition-opacity duration-300"
-          style={{ opacity: isPlaying ? 0 : 1, pointerEvents: isPlaying ? "none" : "auto" }}
-        >
-          <Play className="w-7 h-7 text-foreground fill-current ml-0.5" />
-        </button>
-      )}
 
       {/* Sheets */}
       <ShortCommentsSheet open={commentsOpen} onOpenChange={setCommentsOpen} shortId={short.id} />
