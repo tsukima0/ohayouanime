@@ -1,9 +1,12 @@
+import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useWatchlist } from "@/hooks/useWatchlist";
+import { supabase } from "@/integrations/supabase/client";
 import { mockTrendingSeries, simulcastSeries, type AnimeSeries } from "@/lib/mock-data";
-import { User, Mail, Calendar, Bookmark, LogOut, ArrowLeft, Play } from "lucide-react";
+import { User, Mail, Calendar, Bookmark, LogOut, ArrowLeft, Play, Pencil, Camera, Check, X, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 import seriesShadow from "@/assets/series-shadow-requiem.jpg";
 import seriesNeon from "@/assets/series-neon-drift.jpg";
@@ -29,6 +32,12 @@ export default function ProfilePage() {
   const { user, signOut } = useAuth();
   const { watchlistIds, toggleWatchlist } = useWatchlist();
 
+  const [editingName, setEditingName] = useState(false);
+  const [displayName, setDisplayName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   if (!user) {
     return (
       <div className="min-h-screen bg-background pt-16 flex items-center justify-center">
@@ -46,6 +55,86 @@ export default function ProfilePage() {
       </div>
     );
   }
+
+  const currentName = user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
+  const avatarUrl = user.user_metadata?.avatar_url;
+
+  const startEditName = () => {
+    setDisplayName(user.user_metadata?.full_name || "");
+    setEditingName(true);
+  };
+
+  const cancelEditName = () => {
+    setEditingName(false);
+    setDisplayName("");
+  };
+
+  const saveName = async () => {
+    const trimmed = displayName.trim();
+    if (!trimmed || trimmed.length > 100) {
+      toast.error("Name must be between 1 and 100 characters.");
+      return;
+    }
+    setSavingName(true);
+    const { error } = await supabase.auth.updateUser({
+      data: { full_name: trimmed },
+    });
+    setSavingName(false);
+    if (error) {
+      toast.error("Failed to update name.");
+    } else {
+      toast.success("Display name updated!");
+      setEditingName(false);
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file.");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image must be under 2 MB.");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    const ext = file.name.split(".").pop();
+    const filePath = `${user.id}/avatar.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      toast.error("Upload failed. Try again.");
+      setUploadingAvatar(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("avatars")
+      .getPublicUrl(filePath);
+
+    const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+
+    const { error: updateError } = await supabase.auth.updateUser({
+      data: { avatar_url: publicUrl },
+    });
+
+    setUploadingAvatar(false);
+    if (updateError) {
+      toast.error("Failed to save avatar.");
+    } else {
+      toast.success("Avatar updated!");
+    }
+
+    // Reset file input
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const savedSeries = Array.from(watchlistIds)
     .map((id) => getSeriesData(id))
@@ -78,22 +167,87 @@ export default function ProfilePage() {
           className="glass-card rounded-2xl p-6 sm:p-8 border border-border"
         >
           <div className="flex items-center gap-5">
-            {user.user_metadata?.avatar_url ? (
-              <img
-                src={user.user_metadata.avatar_url}
-                alt={user.user_metadata.full_name || "Avatar"}
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-primary object-cover flex-shrink-0"
-                referrerPolicy="no-referrer"
+            {/* Avatar with upload */}
+            <div className="relative flex-shrink-0 group">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={currentName}
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-primary object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center">
+                  <User className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
+                </div>
+              )}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="absolute inset-0 rounded-full bg-background/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer"
+                title="Change avatar"
+              >
+                {uploadingAvatar ? (
+                  <Loader2 className="w-5 h-5 text-foreground animate-spin" />
+                ) : (
+                  <Camera className="w-5 h-5 text-foreground" />
+                )}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarUpload}
               />
-            ) : (
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center flex-shrink-0">
-                <User className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
-              </div>
-            )}
+            </div>
+
+            {/* Name & info */}
             <div className="flex-1 min-w-0">
-              <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground truncate">
-                {user.user_metadata?.full_name || user.email?.split("@")[0] || "User"}
-              </h1>
+              {editingName ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    maxLength={100}
+                    autoFocus
+                    className="font-display text-xl sm:text-2xl font-bold bg-secondary border border-border rounded-lg px-3 py-1 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 w-full max-w-[220px]"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") saveName();
+                      if (e.key === "Escape") cancelEditName();
+                    }}
+                  />
+                  <button
+                    onClick={saveName}
+                    disabled={savingName}
+                    className="p-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                    title="Save"
+                  >
+                    {savingName ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  </button>
+                  <button
+                    onClick={cancelEditName}
+                    className="p-1.5 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                    title="Cancel"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground truncate">
+                    {currentName}
+                  </h1>
+                  <button
+                    onClick={startEditName}
+                    className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors flex-shrink-0"
+                    title="Edit display name"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
                 <Mail className="w-3.5 h-3.5" />
                 <span className="truncate">{user.email}</span>
@@ -179,7 +333,6 @@ export default function ProfilePage() {
                       </div>
                     </div>
                   </Link>
-                  {/* Remove button */}
                   <button
                     onClick={() => toggleWatchlist(series.id)}
                     className="absolute top-2 right-2 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center z-10 hover:bg-primary/80 transition-colors"
