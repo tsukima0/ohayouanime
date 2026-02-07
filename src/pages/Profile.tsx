@@ -78,12 +78,21 @@ export default function ProfilePage() {
           className="glass-card rounded-2xl p-6 sm:p-8 border border-border"
         >
           <div className="flex items-center gap-5">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center flex-shrink-0">
-              <User className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
-            </div>
+            {user.user_metadata?.avatar_url ? (
+              <img
+                src={user.user_metadata.avatar_url}
+                alt={user.user_metadata.full_name || "Avatar"}
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-primary object-cover flex-shrink-0"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center flex-shrink-0">
+                <User className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground truncate">
-                {user.email?.split("@")[0] || "User"}
+                {user.user_metadata?.full_name || user.email?.split("@")[0] || "User"}
               </h1>
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
                 <Mail className="w-3.5 h-3.5" />
