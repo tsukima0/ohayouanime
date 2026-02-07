@@ -11,6 +11,7 @@ import { toast } from "sonner";
 export default function ProfilePage() {
   const { user, signOut } = useAuth();
   const { watchlistIds, toggleWatchlist } = useWatchlist();
+  const { data: allSeries } = useSeries();
 
   const [editingName, setEditingName] = useState(false);
   const [displayName, setDisplayName] = useState("");
@@ -116,7 +117,6 @@ export default function ProfilePage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const { data: allSeries } = useSeries();
   const savedSeries = allSeries?.filter((s) => watchlistIds.has(s.id)) || [];
 
   const joinedDate = user.created_at
