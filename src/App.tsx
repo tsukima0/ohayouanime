@@ -12,6 +12,7 @@ import WatchPage from "./pages/Watch";
 import SeriesDetailPage from "./pages/SeriesDetail";
 import AuthPage from "./pages/Auth";
 import ProfilePage from "./pages/Profile";
+import SearchPage from "./pages/Search";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
               <Route path="/watch/:episodeId" element={<WatchPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/search" element={<SearchPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
