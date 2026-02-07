@@ -4,6 +4,7 @@ import { formatTimestamp, statusLabel } from "@/lib/utils";
 import { Star, Play, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
+import VideoThumbnail from "@/components/VideoThumbnail";
 
 export default function SeriesDetailPage() {
   const { seriesId } = useParams();
@@ -133,11 +134,25 @@ export default function SeriesDetailPage() {
               >
                 {/* Episode Thumbnail */}
                 <div className="relative w-28 sm:w-36 aspect-video rounded-lg overflow-hidden flex-shrink-0">
-                  <img
-                    src={episode.thumbnail_url || imageSrc}
-                    alt={`Episode ${episode.episode_number}`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
+                  {episode.thumbnail_url ? (
+                    <img
+                      src={episode.thumbnail_url}
+                      alt={`Episode ${episode.episode_number}`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : episode.video_url ? (
+                    <VideoThumbnail
+                      videoUrl={episode.video_url}
+                      alt={`Episode ${episode.episode_number}`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <img
+                      src={imageSrc}
+                      alt={`Episode ${episode.episode_number}`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  )}
                   <div className="absolute inset-0 bg-background/30 group-hover:bg-background/10 transition-colors" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-8 h-8 rounded-full bg-primary/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">

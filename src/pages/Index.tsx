@@ -4,6 +4,7 @@ import { useSeries, useShorts, useLatestEpisodes } from "@/hooks/useSeriesData";
 import AnimeCard from "@/components/AnimeCard";
 import NewEpisodeCard from "@/components/NewEpisodeCard";
 import MyListSection from "@/components/MyListSection";
+import VideoThumbnail from "@/components/VideoThumbnail";
 import { useAuth } from "@/hooks/useAuth";
 import { useWatchlist } from "@/hooks/useWatchlist";
 import { motion } from "framer-motion";
@@ -133,12 +134,27 @@ const Index = () => {
                   className="group block relative rounded-xl overflow-hidden glass-card hover:scale-[1.02] transition-transform duration-300"
                 >
                   <div className="aspect-[9/14] sm:aspect-[9/12] relative overflow-hidden">
-                    <img
-                      src={short.thumbnail_url || "/placeholder.svg"}
-                      alt={short.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      loading="lazy"
-                    />
+                    {short.thumbnail_url ? (
+                      <img
+                        src={short.thumbnail_url}
+                        alt={short.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        loading="lazy"
+                      />
+                    ) : short.video_url ? (
+                      <VideoThumbnail
+                        videoUrl={short.video_url}
+                        alt={short.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    ) : (
+                      <img
+                        src="/placeholder.svg"
+                        alt={short.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        loading="lazy"
+                      />
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
 
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
