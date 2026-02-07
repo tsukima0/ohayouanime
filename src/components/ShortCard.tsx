@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Play, Pause, Volume2, VolumeX } from "lucide-react";
+import { Play, Pause } from "lucide-react";
 import type { DbShort } from "@/hooks/useSeriesData";
 import { formatTimestamp } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { useShortLike } from "@/hooks/useShortInteractions";
 import ShortActions from "@/components/shorts/ShortActions";
 import ShortCommentsSheet from "@/components/shorts/ShortCommentsSheet";
 import ShortShareSheet from "@/components/shorts/ShortShareSheet";
@@ -24,6 +25,8 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
   const [shareOpen, setShareOpen] = useState(false);
   const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
   const lastTapRef = useRef(0);
+
+  const { liked, likesCount, toggleLike } = useShortLike(short.id);
 
   const hasVideo = !!short.video_url && !videoError;
   const renderVideo = hasVideo && shouldLoad;
@@ -67,7 +70,8 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
   const handleTap = useCallback(() => {
     const now = Date.now();
     if (now - lastTapRef.current < 300) {
-      // Double tap — show heart animation
+      // Double tap — like + heart animation
+      if (!liked) toggleLike();
       setShowDoubleTapHeart(true);
       setTimeout(() => setShowDoubleTapHeart(false), 800);
       lastTapRef.current = 0;
@@ -78,7 +82,7 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
         if (lastTapRef.current !== 0) togglePlayPause();
       }, 300);
     }
-  }, [togglePlayPause]);
+  }, [togglePlayPause, liked, toggleLike]);
 
   const posterUrl = short.thumbnail_url || undefined;
 
@@ -147,23 +151,19 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
         )}
       </AnimatePresence>
 
-      {/* Mute toggle — top right */}
-      {renderVideo && (
-        <button
-          onClick={(e) => { e.stopPropagation(); setIsMuted((p) => !p); }}
-          className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-background/30 backdrop-blur-sm flex items-center justify-center"
-        >
-          {isMuted ? <VolumeX className="w-4 h-4 text-foreground" /> : <Volume2 className="w-4 h-4 text-foreground" />}
-        </button>
-      )}
-
       {/* Content overlay */}
       <div className="relative h-full flex flex-col justify-end pb-4 sm:pb-6">
         {/* Right-side actions */}
         <div className="absolute right-3 bottom-28 sm:bottom-20 z-20">
           <ShortActions
+            liked={liked}
+            likesCount={likesCount}
+            commentsCount={(short as any).comments_count ?? 0}
+            isMuted={isMuted}
+            onToggleLike={toggleLike}
             onCommentOpen={() => setCommentsOpen(true)}
             onShareOpen={() => setShareOpen(true)}
+            onToggleMute={() => setIsMuted((p) => !p)}
           />
         </div>
 
@@ -202,7 +202,7 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
       )}
 
       {/* Sheets */}
-      <ShortCommentsSheet open={commentsOpen} onOpenChange={setCommentsOpen} />
+      <ShortCommentsSheet open={commentsOpen} onOpenChange={setCommentsOpen} shortId={short.id} />
       <ShortShareSheet open={shareOpen} onOpenChange={setShareOpen} title={short.title} />
     </div>
   );

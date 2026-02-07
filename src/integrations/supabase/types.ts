@@ -109,35 +109,102 @@ export type Database = {
         }
         Relationships: []
       }
+      short_comments: {
+        Row: {
+          created_at: string
+          id: string
+          short_id: string
+          text: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          short_id: string
+          text: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          short_id?: string
+          text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "short_comments_short_id_fkey"
+            columns: ["short_id"]
+            isOneToOne: false
+            referencedRelation: "shorts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      short_likes: {
+        Row: {
+          created_at: string
+          id: string
+          short_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          short_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          short_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "short_likes_short_id_fkey"
+            columns: ["short_id"]
+            isOneToOne: false
+            referencedRelation: "shorts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shorts: {
         Row: {
+          comments_count: number
           created_at: string
           created_by: string | null
           description: string | null
           duration: number
           id: string
+          likes_count: number
           thumbnail_url: string | null
           title: string
           updated_at: string
           video_url: string | null
         }
         Insert: {
+          comments_count?: number
           created_at?: string
           created_by?: string | null
           description?: string | null
           duration?: number
           id?: string
+          likes_count?: number
           thumbnail_url?: string | null
           title: string
           updated_at?: string
           video_url?: string | null
         }
         Update: {
+          comments_count?: number
           created_at?: string
           created_by?: string | null
           description?: string | null
           duration?: number
           id?: string
+          likes_count?: number
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
