@@ -107,16 +107,20 @@ export function useNextEpisode(episode: DbEpisode | null | undefined) {
   });
 }
 
+export type ShortWithEpisode = DbShort & {
+  episode: { id: string; title: string; series_id: string; series: { title: string } | null } | null;
+};
+
 export function useShorts() {
   return useQuery({
     queryKey: ["shorts"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("shorts")
-        .select("*")
+        .select("*, episode:episode_id(id, title, series_id, series:series_id(title))")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data as DbShort[];
+      return data as ShortWithEpisode[];
     },
   });
 }

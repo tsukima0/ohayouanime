@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadFile } from "@/lib/storage";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, Trash2, Edit2, Loader2, ImageIcon, Film } from "lucide-react";
+import { Plus, Trash2, Edit2, Loader2, ImageIcon, Film, Link2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Short {
@@ -12,13 +12,23 @@ interface Short {
   video_url: string | null;
   thumbnail_url: string | null;
   duration: number;
+  episode_id: string | null;
   created_at: string;
+}
+
+interface EpisodeOption {
+  id: string;
+  title: string;
+  season: number;
+  episode_number: number;
+  series_title: string;
 }
 
 export default function ShortsManager() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [shorts, setShorts] = useState<Short[]>([]);
+  const [episodes, setEpisodes] = useState<EpisodeOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -28,6 +38,7 @@ export default function ShortsManager() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState("0");
+  const [episodeId, setEpisodeId] = useState<string>("");
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
@@ -35,17 +46,39 @@ export default function ShortsManager() {
 
   const fetchShorts = async () => {
     const { data } = await supabase
-      .from("shorts" as any)
+      .from("shorts")
       .select("*")
       .order("created_at", { ascending: false });
-    if (data) setShorts(data as any as Short[]);
+    if (data) setShorts(data as Short[]);
     setLoading(false);
   };
 
-  useEffect(() => { fetchShorts(); }, []);
+  const fetchEpisodes = async () => {
+    const { data } = await supabase
+      .from("episodes")
+      .select("id, title, season, episode_number, series:series_id(title)")
+      .order("season", { ascending: true })
+      .order("episode_number", { ascending: true });
+    if (data) {
+      setEpisodes(
+        data.map((ep: any) => ({
+          id: ep.id,
+          title: ep.title,
+          season: ep.season,
+          episode_number: ep.episode_number,
+          series_title: ep.series?.title ?? "Unknown Series",
+        }))
+      );
+    }
+  };
+
+  useEffect(() => {
+    fetchShorts();
+    fetchEpisodes();
+  }, []);
 
   const resetForm = () => {
-    setTitle(""); setDescription(""); setDuration("0");
+    setTitle(""); setDescription(""); setDuration("0"); setEpisodeId("");
     setVideoFile(null); setThumbnailFile(null); setThumbnailPreview(null);
     setEditingId(null); setShowForm(false); setUploadProgress("");
   };
@@ -54,6 +87,7 @@ export default function ShortsManager() {
     setTitle(s.title);
     setDescription(s.description || "");
     setDuration(String(s.duration));
+    setEpisodeId(s.episode_id || "");
     setThumbnailPreview(s.thumbnail_url);
     setEditingId(s.id);
     setShowForm(true);
@@ -82,17 +116,18 @@ export default function ShortsManager() {
         description,
         duration: parseInt(duration),
         thumbnail_url: thumbUrl,
+        episode_id: episodeId || null,
         created_by: user.id,
       };
       if (videoUrl) payload.video_url = videoUrl;
 
       if (editingId) {
-        const { error } = await supabase.from("shorts" as any).update(payload).eq("id", editingId);
+        const { error } = await supabase.from("shorts").update(payload).eq("id", editingId);
         if (error) throw error;
         toast({ title: "Short updated" });
       } else {
         payload.video_url = videoUrl;
-        const { error } = await supabase.from("shorts" as any).insert(payload);
+        const { error } = await supabase.from("shorts").insert(payload);
         if (error) throw error;
         toast({ title: "Short created" });
       }
@@ -109,13 +144,26 @@ export default function ShortsManager() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this short?")) return;
-    const { error } = await supabase.from("shorts" as any).delete().eq("id", id);
+    const { error } = await supabase.from("shorts").delete().eq("id", id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Short deleted" });
       fetchShorts();
     }
+  };
+
+  // Group episodes by series for the dropdown
+  const groupedEpisodes = episodes.reduce<Record<string, EpisodeOption[]>>((acc, ep) => {
+    if (!acc[ep.series_title]) acc[ep.series_title] = [];
+    acc[ep.series_title].push(ep);
+    return acc;
+  }, {});
+
+  const getEpisodeLabel = (epId: string) => {
+    const ep = episodes.find((e) => e.id === epId);
+    if (!ep) return null;
+    return `${ep.series_title} — S${ep.season}E${ep.episode_number}: ${ep.title}`;
   };
 
   if (loading) return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
@@ -156,6 +204,29 @@ export default function ShortsManager() {
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Description</label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2}
               className="w-full px-3 py-2 rounded-xl bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none" />
+          </div>
+
+          {/* Episode Link Dropdown */}
+          <div>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">
+              Link to Full Episode (optional)
+            </label>
+            <select
+              value={episodeId}
+              onChange={(e) => setEpisodeId(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+            >
+              <option value="">— No linked episode —</option>
+              {Object.entries(groupedEpisodes).map(([seriesTitle, eps]) => (
+                <optgroup key={seriesTitle} label={seriesTitle}>
+                  {eps.map((ep) => (
+                    <option key={ep.id} value={ep.id}>
+                      S{ep.season}E{ep.episode_number}: {ep.title}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -221,6 +292,12 @@ export default function ShortsManager() {
               <h4 className="font-display font-semibold text-foreground text-sm truncate">{s.title}</h4>
               <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{s.description}</p>
               <p className="text-xs text-muted-foreground mt-1">{Math.floor(s.duration / 60)}:{String(s.duration % 60).padStart(2, "0")}</p>
+              {s.episode_id && (
+                <p className="text-xs text-primary mt-1 flex items-center gap-1 truncate">
+                  <Link2 className="w-3 h-3 flex-shrink-0" />
+                  {getEpisodeLabel(s.episode_id) || "Linked episode"}
+                </p>
+              )}
             </div>
             <div className="flex gap-1 flex-shrink-0">
               <button onClick={() => startEdit(s)} className="p-2 rounded-lg hover:bg-accent transition-colors text-muted-foreground hover:text-foreground">
