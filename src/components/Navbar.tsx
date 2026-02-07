@@ -110,10 +110,19 @@ export default function Navbar() {
             {user ? (
               <Link
                 to="/profile"
-                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                className="p-1.5 rounded-lg hover:bg-accent transition-colors"
                 title="Profile"
               >
-                <User className="w-5 h-5" />
+                {user.user_metadata?.avatar_url ? (
+                  <img
+                    src={user.user_metadata.avatar_url}
+                    alt="Profile"
+                    className="w-7 h-7 rounded-full object-cover border border-border"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <User className="w-5 h-5 text-muted-foreground" />
+                )}
               </Link>
             ) : (
               <Link
@@ -152,7 +161,16 @@ export default function Navbar() {
               to="/profile"
               className="flex flex-col items-center gap-1 px-3 py-1 rounded-lg text-muted-foreground transition-colors"
             >
-              <User className="w-5 h-5" />
+              {user.user_metadata?.avatar_url ? (
+                <img
+                  src={user.user_metadata.avatar_url}
+                  alt="Profile"
+                  className="w-5 h-5 rounded-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <User className="w-5 h-5" />
+              )}
               <span className="text-xs">Profile</span>
             </Link>
           ) : (
