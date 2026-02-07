@@ -192,13 +192,15 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
       {/* Progress bar */}
       {renderVideo && <ShortProgressBar videoRef={videoRef} isActive={isActive} />}
 
-      {/* Paused overlay */}
-      {renderVideo && isActive && !isPlaying && !showPlayIcon && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10">
-          <div className="w-16 h-16 rounded-full bg-background/40 backdrop-blur-sm flex items-center justify-center">
-            <Play className="w-7 h-7 text-foreground fill-current ml-0.5" />
-          </div>
-        </div>
+      {/* Persistent play/pause button — center */}
+      {renderVideo && isActive && !showPlayIcon && (
+        <button
+          onClick={(e) => { e.stopPropagation(); togglePlayPause(); }}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-16 h-16 rounded-full bg-background/40 backdrop-blur-sm flex items-center justify-center transition-opacity duration-300"
+          style={{ opacity: isPlaying ? 0 : 1, pointerEvents: isPlaying ? "none" : "auto" }}
+        >
+          <Play className="w-7 h-7 text-foreground fill-current ml-0.5" />
+        </button>
       )}
 
       {/* Sheets */}
