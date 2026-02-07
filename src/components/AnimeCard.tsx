@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Star, Bookmark } from "lucide-react";
-import type { DbSeries } from "@/hooks/useSeriesData";
+import type { PublicSeries } from "@/hooks/useSeriesData";
 import { statusLabel } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,7 +8,7 @@ import { useWatchlist } from "@/hooks/useWatchlist";
 import { useNavigate } from "react-router-dom";
 
 interface AnimeCardProps {
-  series: DbSeries;
+  series: PublicSeries;
   index: number;
 }
 

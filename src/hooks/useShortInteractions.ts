@@ -25,11 +25,11 @@ export function useShortLike(shortId: string) {
     queryKey: ["short-likes-count", shortId],
     queryFn: async () => {
       const { data } = await supabase
-        .from("shorts")
+        .from("shorts_public" as any)
         .select("likes_count")
         .eq("id", shortId)
         .maybeSingle();
-      return data?.likes_count ?? 0;
+      return (data as any)?.likes_count ?? 0;
     },
     enabled: !!shortId,
   });
