@@ -1,21 +1,23 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Play, Pause } from "lucide-react";
-import type { DbShort } from "@/hooks/useSeriesData";
+import type { ShortWithEpisode } from "@/hooks/useSeriesData";
 import { formatTimestamp } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useShortLike } from "@/hooks/useShortInteractions";
+import { useNavigate } from "react-router-dom";
 import ShortActions from "@/components/shorts/ShortActions";
 import ShortCommentsSheet from "@/components/shorts/ShortCommentsSheet";
 import ShortShareSheet from "@/components/shorts/ShortShareSheet";
 import ShortProgressBar from "@/components/shorts/ShortProgressBar";
 
 interface ShortCardProps {
-  short: DbShort;
+  short: ShortWithEpisode;
   isActive: boolean;
   shouldLoad: boolean;
 }
 
 export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProps) {
+  const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
@@ -62,20 +64,17 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
       video.pause();
       setIsPlaying(false);
     }
-
   }, []);
 
   const handleTap = useCallback(() => {
     const now = Date.now();
     if (now - lastTapRef.current < 300) {
-      // Double tap — like + heart animation
       if (!liked) toggleLike();
       setShowDoubleTapHeart(true);
       setTimeout(() => setShowDoubleTapHeart(false), 800);
       lastTapRef.current = 0;
     } else {
       lastTapRef.current = now;
-      // Single tap — toggle play/pause after delay
       setTimeout(() => {
         if (lastTapRef.current !== 0) togglePlayPause();
       }, 300);
@@ -107,7 +106,6 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
             <Play className="w-12 h-12 text-muted-foreground/50" />
           </div>
         )}
-        {/* Gradient overlays */}
         <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-background/20 pointer-events-none" />
       </div>
 
@@ -128,7 +126,7 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
         )}
       </AnimatePresence>
 
-      {/* Center play/pause button — always tappable */}
+      {/* Center play/pause button */}
       {renderVideo && isActive && (
         <button
           onClick={(e) => { e.stopPropagation(); togglePlayPause(); }}
@@ -143,7 +141,7 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
         </button>
       )}
 
-      {/* Content overlay — pointer-events-none so taps pass through to video */}
+      {/* Content overlay */}
       <div className="relative h-full flex flex-col justify-end pb-4 sm:pb-6 pointer-events-none">
         {/* Right-side actions */}
         <div className="absolute right-3 bottom-28 sm:bottom-20 z-20 pointer-events-auto">
@@ -174,9 +172,30 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
                 {short.description}
               </p>
             )}
-            <div className="flex items-center gap-3 text-xs text-foreground/60">
+            <div className="flex items-center gap-3 text-xs text-foreground/60 mb-3">
               <span>{formatTimestamp(short.duration)}</span>
             </div>
+
+            {/* Watch Full Episode button */}
+            {short.episode_id && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/watch/${short.episode_id}`);
+                }}
+                className="pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-xl border border-primary bg-primary/10 backdrop-blur-sm text-primary text-sm font-semibold hover:bg-primary/20 transition-all"
+              >
+                <Play className="w-4 h-4 fill-current" />
+                <span>
+                  Watch Full Episode
+                  {short.episode && (
+                    <span className="text-xs font-normal text-primary/70 ml-1">
+                      — {short.episode.series?.title}
+                    </span>
+                  )}
+                </span>
+              </button>
+            )}
           </motion.div>
         </div>
       </div>

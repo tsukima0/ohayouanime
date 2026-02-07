@@ -177,6 +177,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           duration: number
+          episode_id: string | null
           id: string
           likes_count: number
           thumbnail_url: string | null
@@ -190,6 +191,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           duration?: number
+          episode_id?: string | null
           id?: string
           likes_count?: number
           thumbnail_url?: string | null
@@ -203,6 +205,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           duration?: number
+          episode_id?: string | null
           id?: string
           likes_count?: number
           thumbnail_url?: string | null
@@ -210,7 +213,15 @@ export type Database = {
           updated_at?: string
           video_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "shorts_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
