@@ -65,6 +65,13 @@ export type Database = {
             referencedRelation: "series"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "episodes_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "series_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       series: {
@@ -139,6 +146,13 @@ export type Database = {
             referencedRelation: "shorts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "short_comments_short_id_fkey"
+            columns: ["short_id"]
+            isOneToOne: false
+            referencedRelation: "shorts_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       short_likes: {
@@ -166,6 +180,13 @@ export type Database = {
             columns: ["short_id"]
             isOneToOne: false
             referencedRelation: "shorts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "short_likes_short_id_fkey"
+            columns: ["short_id"]
+            isOneToOne: false
+            referencedRelation: "shorts_public"
             referencedColumns: ["id"]
           },
         ]
@@ -221,6 +242,13 @@ export type Database = {
             referencedRelation: "episodes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "shorts_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_roles: {
@@ -264,7 +292,159 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      episodes_public: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          duration: number | null
+          episode_number: number | null
+          id: string | null
+          season: number | null
+          series_id: string | null
+          thumbnail_url: string | null
+          title: string | null
+          updated_at: string | null
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          duration?: number | null
+          episode_number?: number | null
+          id?: string | null
+          season?: number | null
+          series_id?: string | null
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          duration?: number | null
+          episode_number?: number | null
+          id?: string | null
+          season?: number | null
+          series_id?: string | null
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "episodes_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "series"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "episodes_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "series_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      series_public: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          episode_count: number | null
+          genres: string[] | null
+          id: string | null
+          image_url: string | null
+          rating: number | null
+          status: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          episode_count?: number | null
+          genres?: string[] | null
+          id?: string | null
+          image_url?: string | null
+          rating?: number | null
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          episode_count?: number | null
+          genres?: string[] | null
+          id?: string | null
+          image_url?: string | null
+          rating?: number | null
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      shorts_public: {
+        Row: {
+          comments_count: number | null
+          created_at: string | null
+          description: string | null
+          duration: number | null
+          episode_id: string | null
+          id: string | null
+          likes_count: number | null
+          thumbnail_url: string | null
+          title: string | null
+          updated_at: string | null
+          video_url: string | null
+        }
+        Insert: {
+          comments_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          duration?: number | null
+          episode_id?: string | null
+          id?: string | null
+          likes_count?: number | null
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          comments_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          duration?: number | null
+          episode_id?: string | null
+          id?: string | null
+          likes_count?: number | null
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shorts_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shorts_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       has_role: {
