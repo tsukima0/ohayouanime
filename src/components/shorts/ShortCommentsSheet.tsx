@@ -97,13 +97,21 @@ export default function ShortCommentsSheet({ open, onOpenChange, shortId }: Shor
           onSubmit={handleSubmit}
           className="absolute bottom-0 left-0 right-0 px-4 py-3 border-t border-border bg-background flex gap-2"
         >
-          <Input
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder={user ? "Add a comment..." : "Log in to comment"}
-            disabled={!user}
-            className="flex-1 bg-muted border-0 rounded-full h-10 px-4"
-          />
+          <div className="flex-1 relative">
+            <Input
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value.slice(0, 1000))}
+              placeholder={user ? "Add a comment..." : "Log in to comment"}
+              disabled={!user}
+              maxLength={1000}
+              className="bg-muted border-0 rounded-full h-10 px-4 pr-14 w-full"
+            />
+            {newComment.length > 0 && (
+              <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs ${newComment.length > 900 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                {newComment.length}/1000
+              </span>
+            )}
+          </div>
           <Button
             type="submit"
             size="icon"
