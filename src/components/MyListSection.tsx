@@ -1,42 +1,19 @@
 import { Link } from "react-router-dom";
-import { Bookmark, Play } from "lucide-react";
-import { mockTrendingSeries, simulcastSeries, type AnimeSeries } from "@/lib/mock-data";
+import { Bookmark } from "lucide-react";
+import type { DbSeries } from "@/hooks/useSeriesData";
+import { useSeries } from "@/hooks/useSeriesData";
 import { motion } from "framer-motion";
-
-import seriesShadow from "@/assets/series-shadow-requiem.jpg";
-import seriesNeon from "@/assets/series-neon-drift.jpg";
-import seriesCrimson from "@/assets/series-crimson-academy.jpg";
-import seriesVoid from "@/assets/series-void-walker.jpg";
-import seriesBlade from "@/assets/series-blade-symphony.jpg";
-import seriesStarfall from "@/assets/series-starfall-chronicle.jpg";
-
-const imageMap: Record<string, string> = {
-  "series-1": seriesShadow,
-  "series-2": seriesNeon,
-  "series-3": seriesCrimson,
-  "series-4": seriesVoid,
-  "series-5": seriesBlade,
-  "series-6": seriesStarfall,
-  "sim-1": seriesShadow,
-  "sim-2": seriesNeon,
-  "sim-3": seriesVoid,
-};
-
-function getSeriesData(seriesId: string): AnimeSeries | undefined {
-  return [...mockTrendingSeries, ...simulcastSeries].find((s) => s.id === seriesId);
-}
 
 interface MyListSectionProps {
   watchlistIds: Set<string>;
 }
 
 export default function MyListSection({ watchlistIds }: MyListSectionProps) {
-  if (watchlistIds.size === 0) return null;
+  const { data: allSeries } = useSeries();
 
-  const seriesList = Array.from(watchlistIds)
-    .map((id) => getSeriesData(id))
-    .filter(Boolean) as AnimeSeries[];
+  if (watchlistIds.size === 0 || !allSeries) return null;
 
+  const seriesList = allSeries.filter((s) => watchlistIds.has(s.id));
   if (seriesList.length === 0) return null;
 
   return (
@@ -60,14 +37,13 @@ export default function MyListSection({ watchlistIds }: MyListSectionProps) {
             >
               <div className="aspect-[2/3] relative overflow-hidden">
                 <img
-                  src={imageMap[series.id] || seriesShadow}
-                  alt={series.name}
+                  src={series.image_url || "/placeholder.svg"}
+                  alt={series.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
 
-                {/* Bookmark badge */}
                 <div className="absolute top-2 right-2">
                   <div className="w-7 h-7 rounded-full bg-primary/90 flex items-center justify-center">
                     <Bookmark className="w-3.5 h-3.5 text-primary-foreground fill-current" />
@@ -76,10 +52,10 @@ export default function MyListSection({ watchlistIds }: MyListSectionProps) {
 
                 <div className="absolute bottom-0 left-0 right-0 p-3">
                   <h3 className="font-display font-bold text-sm leading-tight text-foreground">
-                    {series.name}
+                    {series.title}
                   </h3>
                   <span className="text-xs text-muted-foreground">
-                    {series.episodes} eps
+                    {series.episode_count} eps
                   </span>
                 </div>
               </div>

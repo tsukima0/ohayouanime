@@ -1,14 +1,16 @@
 import { Link } from "react-router-dom";
 import { Play, ChevronRight } from "lucide-react";
-import type { AnimeEpisode } from "@/lib/mock-data";
-import { formatTimestamp } from "@/lib/mock-data";
+import type { DbEpisode } from "@/hooks/useSeriesData";
+import { formatTimestamp } from "@/lib/utils";
 import { motion } from "framer-motion";
 
 interface NextEpisodeCardProps {
-  episode: AnimeEpisode;
+  episode: DbEpisode & { series: { id: string; title: string; image_url: string | null } | null };
 }
 
 export default function NextEpisodeCard({ episode }: NextEpisodeCardProps) {
+  const thumbSrc = episode.thumbnail_url || episode.series?.image_url || "/placeholder.svg";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
@@ -21,19 +23,20 @@ export default function NextEpisodeCard({ episode }: NextEpisodeCardProps) {
             Up Next
           </p>
           <div className="flex items-center gap-4">
-            {/* Episode thumbnail placeholder */}
-            <div className="w-28 h-16 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
-              <div className="w-full h-full bg-gradient-to-br from-muted to-accent flex items-center justify-center">
-                <Play className="w-6 h-6 text-muted-foreground" />
-              </div>
+            <div className="w-28 h-16 rounded-lg overflow-hidden flex-shrink-0">
+              <img
+                src={thumbSrc}
+                alt={`Episode ${episode.episode_number}`}
+                className="w-full h-full object-cover"
+              />
             </div>
 
             <div className="flex-1 min-w-0">
               <p className="text-xs text-primary font-semibold mb-0.5">
-                {episode.animeName}
+                {episode.series?.title}
               </p>
               <h3 className="font-display font-bold text-foreground text-sm truncate">
-                Episode {episode.episodeNumber}: {episode.title}
+                Episode {episode.episode_number}: {episode.title}
               </h3>
               <p className="text-xs text-muted-foreground mt-1">
                 {formatTimestamp(episode.duration)} • Season {episode.season}
@@ -49,9 +52,11 @@ export default function NextEpisodeCard({ episode }: NextEpisodeCardProps) {
             </Link>
           </div>
 
-          <p className="text-xs text-muted-foreground mt-3 line-clamp-2 leading-relaxed">
-            {episode.description}
-          </p>
+          {episode.description && (
+            <p className="text-xs text-muted-foreground mt-3 line-clamp-2 leading-relaxed">
+              {episode.description}
+            </p>
+          )}
         </div>
       </div>
     </motion.div>

@@ -3,30 +3,10 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useWatchlist } from "@/hooks/useWatchlist";
 import { supabase } from "@/integrations/supabase/client";
-import { mockTrendingSeries, simulcastSeries, type AnimeSeries } from "@/lib/mock-data";
+import { useSeries } from "@/hooks/useSeriesData";
 import { User, Mail, Calendar, Bookmark, LogOut, ArrowLeft, Play, Pencil, Camera, Check, X, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-
-import seriesShadow from "@/assets/series-shadow-requiem.jpg";
-import seriesNeon from "@/assets/series-neon-drift.jpg";
-import seriesCrimson from "@/assets/series-crimson-academy.jpg";
-import seriesVoid from "@/assets/series-void-walker.jpg";
-import seriesBlade from "@/assets/series-blade-symphony.jpg";
-import seriesStarfall from "@/assets/series-starfall-chronicle.jpg";
-
-const imageMap: Record<string, string> = {
-  "series-1": seriesShadow,
-  "series-2": seriesNeon,
-  "series-3": seriesCrimson,
-  "series-4": seriesVoid,
-  "series-5": seriesBlade,
-  "series-6": seriesStarfall,
-};
-
-function getSeriesData(seriesId: string): AnimeSeries | undefined {
-  return [...mockTrendingSeries, ...simulcastSeries].find((s) => s.id === seriesId);
-}
 
 export default function ProfilePage() {
   const { user, signOut } = useAuth();
@@ -136,9 +116,8 @@ export default function ProfilePage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const savedSeries = Array.from(watchlistIds)
-    .map((id) => getSeriesData(id))
-    .filter(Boolean) as AnimeSeries[];
+  const { data: allSeries } = useSeries();
+  const savedSeries = allSeries?.filter((s) => watchlistIds.has(s.id)) || [];
 
   const joinedDate = user.created_at
     ? new Date(user.created_at).toLocaleDateString("en-US", {
@@ -321,15 +300,15 @@ export default function ProfilePage() {
                   >
                     <div className="aspect-[2/3] relative overflow-hidden">
                       <img
-                        src={imageMap[series.id] || seriesShadow}
-                        alt={series.name}
+                        src={series.image_url || "/placeholder.svg"}
+                        alt={series.title}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         loading="lazy"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
                       <div className="absolute bottom-0 left-0 right-0 p-3">
-                        <h3 className="font-display font-bold text-sm text-foreground">{series.name}</h3>
-                        <span className="text-xs text-muted-foreground">{series.episodes} eps</span>
+                        <h3 className="font-display font-bold text-sm text-foreground">{series.title}</h3>
+                        <span className="text-xs text-muted-foreground">{series.episode_count} eps</span>
                       </div>
                     </div>
                   </Link>
