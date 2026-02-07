@@ -21,7 +21,7 @@ const shareOptions = [
 export default function ShortShareSheet({ open, onOpenChange, title }: ShortShareSheetProps) {
   const handleShare = async (action: string) => {
     const url = window.location.href;
-    const text = title ? `Check out "${title}" on AniStream!` : "Check this out on AniStream!";
+    const text = title ? `Check out "${title}" on Ohayou Anime!` : "Check this out on Ohayou Anime!";
 
     switch (action) {
       case "copy":
