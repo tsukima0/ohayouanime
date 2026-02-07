@@ -19,7 +19,7 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
-  const [showPlayIcon, setShowPlayIcon] = useState(false);
+  
   const [videoError, setVideoError] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
@@ -63,8 +63,6 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
       setIsPlaying(false);
     }
 
-    setShowPlayIcon(true);
-    setTimeout(() => setShowPlayIcon(false), 600);
   }, []);
 
   const handleTap = useCallback(() => {
@@ -126,27 +124,6 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
             <svg width="80" height="80" viewBox="0 0 24 24" fill="hsl(var(--primary))" className="drop-shadow-lg">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
             </svg>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Play/Pause flash */}
-      <AnimatePresence>
-        {showPlayIcon && (
-          <motion.div
-            initial={{ scale: 0.5, opacity: 1 }}
-            animate={{ scale: 1.2, opacity: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none"
-          >
-            <div className="w-16 h-16 rounded-full bg-background/50 backdrop-blur-sm flex items-center justify-center">
-              {isPlaying ? (
-                <Play className="w-7 h-7 text-foreground fill-current ml-0.5" />
-              ) : (
-                <Pause className="w-7 h-7 text-foreground fill-current" />
-              )}
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
