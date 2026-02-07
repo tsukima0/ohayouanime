@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Play, Clock } from "lucide-react";
-import type { ContinueWatchingItem } from "@/lib/mock-data";
-import { formatTimestamp } from "@/lib/mock-data";
+import { formatTimestamp } from "@/lib/utils";
 import { motion } from "framer-motion";
 
 import seriesShadow from "@/assets/series-shadow-requiem.jpg";
@@ -15,6 +14,17 @@ const seriesImageMap: Record<string, string> = {
   "series-4": seriesVoid,
   "series-5": seriesBlade,
 };
+
+interface ContinueWatchingItem {
+  episodeId: string;
+  seriesId: string;
+  animeName: string;
+  episodeNumber: number;
+  episodeTitle: string;
+  progress: number;
+  duration: number;
+  currentTime: number;
+}
 
 interface ContinueWatchingCardProps {
   item: ContinueWatchingItem;
