@@ -4,6 +4,7 @@ import { useTheme } from "./ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import { motion } from "framer-motion";
+import logoImg from "@/assets/logo.png";
 
 const navItems = [
   { label: "Home", path: "/", icon: Home },
@@ -23,11 +24,10 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center glow-primary-sm">
-              <Play className="w-4 h-4 text-primary-foreground fill-current" />
-            </div>
+            <img src={logoImg} alt="Ohayou Anime" className="w-8 h-8 rounded-md object-cover" />
             <span className="font-display text-xl font-bold tracking-tight">
-              Ani<span className="text-primary">Stream</span>
+              <span className="text-primary">Ohayou</span>{" "}
+              <span className="text-foreground">Anime</span>
             </span>
           </Link>
 
