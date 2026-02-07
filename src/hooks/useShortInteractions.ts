@@ -24,11 +24,12 @@ export function useShortLike(shortId: string) {
   const { data: likesCount = 0 } = useQuery({
     queryKey: ["short-likes-count", shortId],
     queryFn: async () => {
-      const { count } = await supabase
-        .from("short_likes")
-        .select("*", { count: "exact", head: true })
-        .eq("short_id", shortId);
-      return count ?? 0;
+      const { data } = await supabase
+        .from("shorts")
+        .select("likes_count")
+        .eq("id", shortId)
+        .maybeSingle();
+      return data?.likes_count ?? 0;
     },
     enabled: !!shortId,
   });
@@ -100,9 +101,12 @@ export function useShortComments(shortId: string) {
   const addComment = useMutation({
     mutationFn: async (text: string) => {
       if (!user) throw new Error("Must be logged in");
+      const trimmed = text.trim();
+      if (trimmed.length === 0) throw new Error("Comment cannot be empty");
+      if (trimmed.length > 1000) throw new Error("Comment cannot exceed 1000 characters");
       const { data, error } = await supabase
         .from("short_comments")
-        .insert({ short_id: shortId, user_id: user.id, text })
+        .insert({ short_id: shortId, user_id: user.id, text: trimmed })
         .select()
         .single();
       if (error) throw error;
