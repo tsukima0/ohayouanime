@@ -17,8 +17,9 @@ export default function ShortCard({ short, isActive }: ShortCardProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [showPlayIcon, setShowPlayIcon] = useState(false);
+  const [videoError, setVideoError] = useState(false);
 
-  const hasVideo = !!short.video_url;
+  const hasVideo = !!short.video_url && !videoError;
 
   // Auto-play/pause based on active state
   useEffect(() => {
@@ -64,6 +65,11 @@ export default function ShortCard({ short, isActive }: ShortCardProps) {
     setIsMuted((prev) => !prev);
   };
 
+  const handleVideoError = () => {
+    setVideoError(true);
+    setIsPlaying(false);
+  };
+
   return (
     <div className="relative w-full h-full snap-start snap-always flex-shrink-0">
       {/* Background - Video or Thumbnail */}
@@ -79,7 +85,8 @@ export default function ShortCard({ short, isActive }: ShortCardProps) {
             loop
             muted={isMuted}
             playsInline
-            preload="metadata"
+            preload="auto"
+            onError={handleVideoError}
           />
         ) : short.thumbnail_url ? (
           <img
@@ -87,12 +94,16 @@ export default function ShortCard({ short, isActive }: ShortCardProps) {
             alt={short.title}
             className="w-full h-full object-cover"
           />
-        ) : (
+        ) : short.video_url ? (
           <VideoThumbnail
-            videoUrl={short.video_url || ""}
+            videoUrl={short.video_url}
             alt={short.title}
             className="w-full h-full object-cover"
           />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-muted to-accent flex items-center justify-center">
+            <Play className="w-12 h-12 text-muted-foreground/50" />
+          </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/30" />
       </div>

@@ -29,10 +29,20 @@ export default function VideoThumbnail({
     }
 
     const video = document.createElement("video");
-    video.crossOrigin = "anonymous";
     video.preload = "metadata";
     video.muted = true;
     video.playsInline = true;
+
+    // Only set crossOrigin if the video is from a different origin
+    try {
+      const videoOrigin = new URL(videoUrl).origin;
+      if (videoOrigin !== window.location.origin) {
+        video.crossOrigin = "anonymous";
+      }
+    } catch {
+      // Invalid URL, will be caught by error handler
+    }
+
     videoRef.current = video;
 
     let cancelled = false;
@@ -52,6 +62,12 @@ export default function VideoThumbnail({
           setFailed(true);
         }
       } catch {
+        // Canvas tainted by cross-origin data — try without crossOrigin
+        if (video.crossOrigin) {
+          video.crossOrigin = "";
+          video.removeEventListener("seeked", handleSeeked);
+          // Retry without crossOrigin — just show as failed for now
+        }
         setFailed(true);
       }
       video.removeEventListener("seeked", handleSeeked);
