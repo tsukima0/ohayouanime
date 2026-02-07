@@ -301,36 +301,12 @@ export type Database = {
           id: string | null
           season: number | null
           series_id: string | null
+          series_image_url: string | null
+          series_title: string | null
           thumbnail_url: string | null
           title: string | null
           updated_at: string | null
           video_url: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          duration?: number | null
-          episode_number?: number | null
-          id?: string | null
-          season?: number | null
-          series_id?: string | null
-          thumbnail_url?: string | null
-          title?: string | null
-          updated_at?: string | null
-          video_url?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          duration?: number | null
-          episode_number?: number | null
-          id?: string | null
-          season?: number | null
-          series_id?: string | null
-          thumbnail_url?: string | null
-          title?: string | null
-          updated_at?: string | null
-          video_url?: string | null
         }
         Relationships: [
           {
@@ -395,6 +371,9 @@ export type Database = {
           description: string | null
           duration: number | null
           episode_id: string | null
+          episode_series_id: string | null
+          episode_series_title: string | null
+          episode_title: string | null
           id: string | null
           likes_count: number | null
           thumbnail_url: string | null
@@ -402,33 +381,21 @@ export type Database = {
           updated_at: string | null
           video_url: string | null
         }
-        Insert: {
-          comments_count?: number | null
-          created_at?: string | null
-          description?: string | null
-          duration?: number | null
-          episode_id?: string | null
-          id?: string | null
-          likes_count?: number | null
-          thumbnail_url?: string | null
-          title?: string | null
-          updated_at?: string | null
-          video_url?: string | null
-        }
-        Update: {
-          comments_count?: number | null
-          created_at?: string | null
-          description?: string | null
-          duration?: number | null
-          episode_id?: string | null
-          id?: string | null
-          likes_count?: number | null
-          thumbnail_url?: string | null
-          title?: string | null
-          updated_at?: string | null
-          video_url?: string | null
-        }
         Relationships: [
+          {
+            foreignKeyName: "episodes_series_id_fkey"
+            columns: ["episode_series_id"]
+            isOneToOne: false
+            referencedRelation: "series"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "episodes_series_id_fkey"
+            columns: ["episode_series_id"]
+            isOneToOne: false
+            referencedRelation: "series_public"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "shorts_episode_id_fkey"
             columns: ["episode_id"]

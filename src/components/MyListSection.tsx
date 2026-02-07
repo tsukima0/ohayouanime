@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Bookmark } from "lucide-react";
-import type { DbSeries } from "@/hooks/useSeriesData";
+import type { PublicSeries } from "@/hooks/useSeriesData";
 import { useSeries } from "@/hooks/useSeriesData";
 import { motion } from "framer-motion";
 

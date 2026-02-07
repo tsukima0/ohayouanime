@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Search, SlidersHorizontal, X, ArrowUpDown, Film, Tv } from "lucide-react";
-import { useSeries, useEpisodes, type DbSeries } from "@/hooks/useSeriesData";
+import { useSeries, useEpisodes, type PublicSeries } from "@/hooks/useSeriesData";
 import AnimeCard from "@/components/AnimeCard";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
