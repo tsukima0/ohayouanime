@@ -119,7 +119,11 @@ export default function ShortsPage() {
             data-index={index}
             className="h-full w-full max-w-lg mx-auto"
           >
-            <ShortCard short={short} isActive={activeIndex === index} />
+            <ShortCard
+              short={short}
+              isActive={activeIndex === index}
+              shouldLoad={Math.abs(activeIndex - index) <= 1}
+            />
           </div>
         ))}
       </div>

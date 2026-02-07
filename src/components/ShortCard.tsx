@@ -1,18 +1,17 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Play, Pause, Heart, Share2, MessageCircle, Volume2, VolumeX } from "lucide-react";
 import type { DbShort } from "@/hooks/useSeriesData";
 import { formatTimestamp } from "@/lib/utils";
 import { motion } from "framer-motion";
-import VideoThumbnail from "@/components/VideoThumbnail";
 
 interface ShortCardProps {
   short: DbShort;
   isActive: boolean;
+  /** Whether this short is close enough to the active one to warrant loading its video */
+  shouldLoad: boolean;
 }
 
-export default function ShortCard({ short, isActive }: ShortCardProps) {
-  const navigate = useNavigate();
+export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
@@ -20,11 +19,12 @@ export default function ShortCard({ short, isActive }: ShortCardProps) {
   const [videoError, setVideoError] = useState(false);
 
   const hasVideo = !!short.video_url && !videoError;
+  const renderVideo = hasVideo && shouldLoad;
 
   // Auto-play/pause based on active state
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !hasVideo) return;
+    if (!video || !renderVideo) return;
 
     if (isActive) {
       video.play().catch(() => {});
@@ -34,7 +34,7 @@ export default function ShortCard({ short, isActive }: ShortCardProps) {
       video.currentTime = 0;
       setIsPlaying(false);
     }
-  }, [isActive, hasVideo]);
+  }, [isActive, renderVideo]);
 
   // Sync muted state
   useEffect(() => {
@@ -55,7 +55,6 @@ export default function ShortCard({ short, isActive }: ShortCardProps) {
       setIsPlaying(false);
     }
 
-    // Flash the play/pause icon briefly
     setShowPlayIcon(true);
     setTimeout(() => setShowPlayIcon(false), 600);
   };
@@ -70,33 +69,31 @@ export default function ShortCard({ short, isActive }: ShortCardProps) {
     setIsPlaying(false);
   };
 
+  // Build the thumbnail/poster URL — use thumbnail_url if available
+  const posterUrl = short.thumbnail_url || undefined;
+
   return (
     <div className="relative w-full h-full snap-start snap-always flex-shrink-0">
       {/* Background - Video or Thumbnail */}
       <div
         className="absolute inset-0 cursor-pointer"
-        onClick={hasVideo ? togglePlayPause : undefined}
+        onClick={renderVideo ? togglePlayPause : undefined}
       >
-        {hasVideo ? (
+        {renderVideo ? (
           <video
             ref={videoRef}
             src={short.video_url!}
+            poster={posterUrl}
             className="w-full h-full object-cover"
             loop
             muted={isMuted}
             playsInline
-            preload="auto"
+            preload={isActive ? "auto" : "metadata"}
             onError={handleVideoError}
           />
         ) : short.thumbnail_url ? (
           <img
             src={short.thumbnail_url}
-            alt={short.title}
-            className="w-full h-full object-cover"
-          />
-        ) : short.video_url ? (
-          <VideoThumbnail
-            videoUrl={short.video_url}
             alt={short.title}
             className="w-full h-full object-cover"
           />
@@ -131,7 +128,7 @@ export default function ShortCard({ short, isActive }: ShortCardProps) {
         {/* Side Actions */}
         <div className="absolute right-4 bottom-32 sm:bottom-24 flex flex-col items-center gap-5">
           {/* Mute / Unmute */}
-          {hasVideo && (
+          {renderVideo && (
             <button
               onClick={toggleMute}
               className="flex flex-col items-center gap-1"
@@ -196,10 +193,8 @@ export default function ShortCard({ short, isActive }: ShortCardProps) {
       </div>
 
       {/* Paused overlay when video is paused and active */}
-      {hasVideo && isActive && !isPlaying && !showPlayIcon && (
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
-        >
+      {renderVideo && isActive && !isPlaying && !showPlayIcon && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10">
           <div className="w-16 h-16 rounded-full bg-background/50 flex items-center justify-center">
             <Play className="w-7 h-7 text-foreground fill-current ml-0.5" />
           </div>

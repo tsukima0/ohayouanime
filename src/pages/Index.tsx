@@ -4,7 +4,7 @@ import { useSeries, useShorts, useLatestEpisodes } from "@/hooks/useSeriesData";
 import AnimeCard from "@/components/AnimeCard";
 import NewEpisodeCard from "@/components/NewEpisodeCard";
 import MyListSection from "@/components/MyListSection";
-import VideoThumbnail from "@/components/VideoThumbnail";
+
 import { useAuth } from "@/hooks/useAuth";
 import { useWatchlist } from "@/hooks/useWatchlist";
 import { motion } from "framer-motion";
@@ -141,19 +141,10 @@ const Index = () => {
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         loading="lazy"
                       />
-                    ) : short.video_url ? (
-                      <VideoThumbnail
-                        videoUrl={short.video_url}
-                        alt={short.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
                     ) : (
-                      <img
-                        src="/placeholder.svg"
-                        alt={short.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        loading="lazy"
-                      />
+                      <div className="w-full h-full bg-gradient-to-br from-primary/20 via-muted to-accent flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
+                        <Play className="w-10 h-10 text-muted-foreground/40" />
+                      </div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
 
