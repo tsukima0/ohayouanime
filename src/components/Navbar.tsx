@@ -1,7 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Film, Play, Search, Sun, Moon, User, LogOut } from "lucide-react";
+import { Home, Film, Play, Search, Sun, Moon, User, Shield } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdmin } from "@/hooks/useAdmin";
 import { motion } from "framer-motion";
 
 const navItems = [
@@ -13,6 +14,7 @@ const navItems = [
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
+  const { isAdmin } = useAdmin();
   const location = useLocation();
 
   return (
@@ -60,6 +62,21 @@ export default function Navbar() {
 
           {/* Right Side */}
           <div className="flex items-center gap-2">
+            {/* Admin */}
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className={`p-2 rounded-lg transition-colors ${
+                  location.pathname === "/admin"
+                    ? "text-primary bg-primary/10"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                }`}
+                title="Admin Panel"
+              >
+                <Shield className="w-5 h-5" />
+              </Link>
+            )}
+
             {/* Search */}
             <Link
               to="/search"
