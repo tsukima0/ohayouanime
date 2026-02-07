@@ -1,34 +1,55 @@
-import { useState } from "react";
-import { Heart, MessageCircle, Share2, Bookmark } from "lucide-react";
+import { Heart, MessageCircle, Share2, Volume2, VolumeX } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
 
 interface ShortActionsProps {
+  liked: boolean;
+  likesCount: number;
+  commentsCount: number;
+  isMuted: boolean;
+  onToggleLike: () => void;
   onCommentOpen: () => void;
   onShareOpen: () => void;
+  onToggleMute: () => void;
 }
 
-export default function ShortActions({ onCommentOpen, onShareOpen }: ShortActionsProps) {
-  const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(Math.floor(Math.random() * 500) + 10);
-  const [saved, setSaved] = useState(false);
+export default function ShortActions({
+  liked,
+  likesCount,
+  commentsCount,
+  isMuted,
+  onToggleLike,
+  onCommentOpen,
+  onShareOpen,
+  onToggleMute,
+}: ShortActionsProps) {
   const [showHeartBurst, setShowHeartBurst] = useState(false);
 
   const handleLike = () => {
     if (!liked) {
-      setLikeCount((c) => c + 1);
       setShowHeartBurst(true);
       setTimeout(() => setShowHeartBurst(false), 600);
-    } else {
-      setLikeCount((c) => c - 1);
     }
-    setLiked(!liked);
+    onToggleLike();
   };
-
-  const commentCount = Math.floor(Math.random() * 50) + 1;
-  const shareCount = Math.floor(Math.random() * 30) + 1;
 
   return (
     <div className="flex flex-col items-center gap-5">
+      {/* Mute */}
+      <motion.button
+        whileTap={{ scale: 1.2 }}
+        onClick={onToggleMute}
+        className="flex flex-col items-center gap-1"
+      >
+        <div className="w-12 h-12 rounded-full bg-background/30 backdrop-blur-sm flex items-center justify-center">
+          {isMuted ? (
+            <VolumeX className="w-6 h-6 text-foreground" />
+          ) : (
+            <Volume2 className="w-6 h-6 text-foreground" />
+          )}
+        </div>
+      </motion.button>
+
       {/* Like */}
       <div className="relative">
         <motion.button
@@ -44,7 +65,7 @@ export default function ShortActions({ onCommentOpen, onShareOpen }: ShortAction
             />
           </div>
           <span className="text-xs font-semibold text-foreground drop-shadow-md">
-            {formatCount(likeCount)}
+            {formatCount(likesCount)}
           </span>
         </motion.button>
 
@@ -84,24 +105,8 @@ export default function ShortActions({ onCommentOpen, onShareOpen }: ShortAction
           <MessageCircle className="w-7 h-7 text-foreground" />
         </div>
         <span className="text-xs font-semibold text-foreground drop-shadow-md">
-          {formatCount(commentCount)}
+          {formatCount(commentsCount)}
         </span>
-      </motion.button>
-
-      {/* Bookmark */}
-      <motion.button
-        whileTap={{ scale: 1.2 }}
-        onClick={() => setSaved(!saved)}
-        className="flex flex-col items-center gap-1"
-      >
-        <div className="w-12 h-12 rounded-full bg-background/30 backdrop-blur-sm flex items-center justify-center">
-          <Bookmark
-            className={`w-7 h-7 transition-colors duration-200 ${
-              saved ? "text-primary fill-primary" : "text-foreground"
-            }`}
-          />
-        </div>
-        <span className="text-xs font-semibold text-foreground drop-shadow-md">Save</span>
       </motion.button>
 
       {/* Share */}
@@ -114,7 +119,7 @@ export default function ShortActions({ onCommentOpen, onShareOpen }: ShortAction
           <Share2 className="w-7 h-7 text-foreground" />
         </div>
         <span className="text-xs font-semibold text-foreground drop-shadow-md">
-          {formatCount(shareCount)}
+          Share
         </span>
       </motion.button>
     </div>
