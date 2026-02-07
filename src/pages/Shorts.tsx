@@ -74,7 +74,7 @@ export default function ShortsPage() {
 
   if (isLoading) {
     return (
-      <div className="h-screen pt-16 bg-background flex items-center justify-center">
+      <div className="h-screen bg-background flex items-center justify-center">
         <Skeleton className="w-full max-w-lg h-[80vh] rounded-xl" />
       </div>
     );
@@ -82,33 +82,33 @@ export default function ShortsPage() {
 
   if (shorts.length === 0) {
     return (
-      <div className="h-screen pt-16 bg-background flex items-center justify-center">
+      <div className="h-screen bg-background flex items-center justify-center">
         <p className="text-muted-foreground">No shorts available yet.</p>
       </div>
     );
   }
 
   return (
-    <div className="h-screen pt-16 sm:pt-16 relative bg-background">
-      {/* Navigation arrows (desktop) */}
+    <div className="h-screen relative bg-background">
+      {/* Navigation arrows (desktop only) */}
       <div className="hidden sm:flex fixed right-6 top-1/2 -translate-y-1/2 flex-col gap-2 z-30">
         <button
           onClick={() => scrollTo("up")}
           disabled={activeIndex === 0}
-          className="p-2 rounded-full glass-card text-foreground hover:text-primary disabled:opacity-30 transition-all"
+          className="p-2 rounded-full bg-background/30 backdrop-blur-sm text-foreground hover:text-primary disabled:opacity-30 transition-all"
         >
           <ChevronUp className="w-5 h-5" />
         </button>
         <button
           onClick={() => scrollTo("down")}
           disabled={activeIndex === shorts.length - 1}
-          className="p-2 rounded-full glass-card text-foreground hover:text-primary disabled:opacity-30 transition-all"
+          className="p-2 rounded-full bg-background/30 backdrop-blur-sm text-foreground hover:text-primary disabled:opacity-30 transition-all"
         >
           <ChevronDown className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Shorts Container */}
+      {/* Shorts Container — full viewport */}
       <div
         ref={containerRef}
         className="h-full overflow-y-scroll snap-y snap-mandatory hide-scrollbar"
@@ -128,15 +128,15 @@ export default function ShortsPage() {
         ))}
       </div>
 
-      {/* Dots indicator */}
-      <div className="fixed left-4 sm:left-auto sm:right-6 bottom-24 sm:bottom-6 flex sm:flex-col gap-2 z-30">
+      {/* Minimal progress dots — desktop side */}
+      <div className="hidden sm:flex fixed left-4 bottom-6 flex-col gap-1.5 z-30">
         {shorts.map((_, index) => (
           <div
             key={index}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+            className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
               index === activeIndex
-                ? "bg-primary scale-125 glow-primary-sm"
-                : "bg-muted-foreground/30"
+                ? "bg-primary scale-125"
+                : "bg-foreground/20"
             }`}
           />
         ))}

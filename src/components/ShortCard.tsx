@@ -1,13 +1,16 @@
-import { useState, useRef, useEffect } from "react";
-import { Play, Pause, Heart, Share2, MessageCircle, Volume2, VolumeX } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Play, Pause, Volume2, VolumeX } from "lucide-react";
 import type { DbShort } from "@/hooks/useSeriesData";
 import { formatTimestamp } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import ShortActions from "@/components/shorts/ShortActions";
+import ShortCommentsSheet from "@/components/shorts/ShortCommentsSheet";
+import ShortShareSheet from "@/components/shorts/ShortShareSheet";
+import ShortProgressBar from "@/components/shorts/ShortProgressBar";
 
 interface ShortCardProps {
   short: DbShort;
   isActive: boolean;
-  /** Whether this short is close enough to the active one to warrant loading its video */
   shouldLoad: boolean;
 }
 
@@ -17,6 +20,10 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
   const [isMuted, setIsMuted] = useState(true);
   const [showPlayIcon, setShowPlayIcon] = useState(false);
   const [videoError, setVideoError] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
+  const lastTapRef = useRef(0);
 
   const hasVideo = !!short.video_url && !videoError;
   const renderVideo = hasVideo && shouldLoad;
@@ -38,12 +45,10 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
 
   // Sync muted state
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = isMuted;
-    }
+    if (videoRef.current) videoRef.current.muted = isMuted;
   }, [isMuted]);
 
-  const togglePlayPause = () => {
+  const togglePlayPause = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
 
@@ -57,28 +62,30 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
 
     setShowPlayIcon(true);
     setTimeout(() => setShowPlayIcon(false), 600);
-  };
+  }, []);
 
-  const toggleMute = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsMuted((prev) => !prev);
-  };
+  const handleTap = useCallback(() => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      // Double tap — show heart animation
+      setShowDoubleTapHeart(true);
+      setTimeout(() => setShowDoubleTapHeart(false), 800);
+      lastTapRef.current = 0;
+    } else {
+      lastTapRef.current = now;
+      // Single tap — toggle play/pause after delay
+      setTimeout(() => {
+        if (lastTapRef.current !== 0) togglePlayPause();
+      }, 300);
+    }
+  }, [togglePlayPause]);
 
-  const handleVideoError = () => {
-    setVideoError(true);
-    setIsPlaying(false);
-  };
-
-  // Build the thumbnail/poster URL — use thumbnail_url if available
   const posterUrl = short.thumbnail_url || undefined;
 
   return (
-    <div className="relative w-full h-full snap-start snap-always flex-shrink-0">
-      {/* Background - Video or Thumbnail */}
-      <div
-        className="absolute inset-0 cursor-pointer"
-        onClick={renderVideo ? togglePlayPause : undefined}
-      >
+    <div className="relative w-full h-full snap-start snap-always flex-shrink-0 overflow-hidden bg-background">
+      {/* Video / Thumbnail background */}
+      <div className="absolute inset-0 cursor-pointer" onClick={renderVideo ? handleTap : undefined}>
         {renderVideo ? (
           <video
             ref={videoRef}
@@ -89,117 +96,114 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
             muted={isMuted}
             playsInline
             preload={isActive ? "auto" : "metadata"}
-            onError={handleVideoError}
+            onError={() => { setVideoError(true); setIsPlaying(false); }}
           />
         ) : short.thumbnail_url ? (
-          <img
-            src={short.thumbnail_url}
-            alt={short.title}
-            className="w-full h-full object-cover"
-          />
+          <img src={short.thumbnail_url} alt={short.title} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-muted to-accent flex items-center justify-center">
             <Play className="w-12 h-12 text-muted-foreground/50" />
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/30" />
+        {/* Gradient overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-background/20 pointer-events-none" />
       </div>
 
-      {/* Play/Pause Flash Icon */}
-      {showPlayIcon && (
-        <motion.div
-          initial={{ scale: 0.5, opacity: 1 }}
-          animate={{ scale: 1.2, opacity: 0 }}
-          transition={{ duration: 0.5 }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none"
+      {/* Double-tap heart animation */}
+      <AnimatePresence>
+        {showDoubleTapHeart && (
+          <motion.div
+            initial={{ scale: 0, opacity: 1 }}
+            animate={{ scale: 1.5, opacity: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none"
+          >
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="hsl(var(--primary))" className="drop-shadow-lg">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Play/Pause flash */}
+      <AnimatePresence>
+        {showPlayIcon && (
+          <motion.div
+            initial={{ scale: 0.5, opacity: 1 }}
+            animate={{ scale: 1.2, opacity: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none"
+          >
+            <div className="w-16 h-16 rounded-full bg-background/50 backdrop-blur-sm flex items-center justify-center">
+              {isPlaying ? (
+                <Play className="w-7 h-7 text-foreground fill-current ml-0.5" />
+              ) : (
+                <Pause className="w-7 h-7 text-foreground fill-current" />
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mute toggle — top right */}
+      {renderVideo && (
+        <button
+          onClick={(e) => { e.stopPropagation(); setIsMuted((p) => !p); }}
+          className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-background/30 backdrop-blur-sm flex items-center justify-center"
         >
-          <div className="w-16 h-16 rounded-full bg-background/60 flex items-center justify-center">
-            {isPlaying ? (
-              <Play className="w-7 h-7 text-foreground fill-current ml-0.5" />
-            ) : (
-              <Pause className="w-7 h-7 text-foreground fill-current" />
-            )}
-          </div>
-        </motion.div>
+          {isMuted ? <VolumeX className="w-4 h-4 text-foreground" /> : <Volume2 className="w-4 h-4 text-foreground" />}
+        </button>
       )}
 
-      {/* Content Overlay */}
-      <div className="relative h-full flex flex-col justify-end p-4 pb-20 sm:pb-6">
-        {/* Side Actions */}
-        <div className="absolute right-4 bottom-32 sm:bottom-24 flex flex-col items-center gap-5">
-          {/* Mute / Unmute */}
-          {renderVideo && (
-            <button
-              onClick={toggleMute}
-              className="flex flex-col items-center gap-1"
-            >
-              <div className="w-10 h-10 rounded-full glass-card flex items-center justify-center">
-                {isMuted ? (
-                  <VolumeX className="w-5 h-5 text-foreground" />
-                ) : (
-                  <Volume2 className="w-5 h-5 text-foreground" />
-                )}
-              </div>
-              <span className="text-xs font-medium text-foreground">
-                {isMuted ? "Unmute" : "Mute"}
-              </span>
-            </button>
-          )}
-
-          <motion.button
-            whileTap={{ scale: 1.3 }}
-            className="flex flex-col items-center gap-1"
-          >
-            <div className="w-10 h-10 rounded-full glass-card flex items-center justify-center">
-              <Heart className="w-5 h-5 text-foreground" />
-            </div>
-          </motion.button>
-
-          <button className="flex flex-col items-center gap-1">
-            <div className="w-10 h-10 rounded-full glass-card flex items-center justify-center">
-              <MessageCircle className="w-5 h-5 text-foreground" />
-            </div>
-            <span className="text-xs font-medium text-foreground">Chat</span>
-          </button>
-
-          <button className="flex flex-col items-center gap-1">
-            <div className="w-10 h-10 rounded-full glass-card flex items-center justify-center">
-              <Share2 className="w-5 h-5 text-foreground" />
-            </div>
-            <span className="text-xs font-medium text-foreground">Share</span>
-          </button>
+      {/* Content overlay */}
+      <div className="relative h-full flex flex-col justify-end pb-4 sm:pb-6">
+        {/* Right-side actions */}
+        <div className="absolute right-3 bottom-28 sm:bottom-20 z-20">
+          <ShortActions
+            onCommentOpen={() => setCommentsOpen(true)}
+            onShareOpen={() => setShareOpen(true)}
+          />
         </div>
 
-        {/* Bottom Info */}
-        <div className="max-w-[75%]">
+        {/* Bottom info */}
+        <div className="max-w-[75%] px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={isActive ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.15 }}
           >
-            <h2 className="font-display text-lg font-bold text-foreground leading-tight mb-2">
+            <h2 className="font-display text-lg font-bold text-foreground leading-tight mb-1 drop-shadow-md">
               {short.title}
             </h2>
             {short.description && (
-              <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+              <p className="text-xs text-foreground/70 mb-2 line-clamp-2 drop-shadow-sm">
                 {short.description}
               </p>
             )}
-            <div className="flex items-center gap-3 text-xs text-muted-foreground mb-4">
+            <div className="flex items-center gap-3 text-xs text-foreground/60">
               <span>{formatTimestamp(short.duration)}</span>
             </div>
           </motion.div>
         </div>
       </div>
 
-      {/* Paused overlay when video is paused and active */}
+      {/* Progress bar */}
+      {renderVideo && <ShortProgressBar videoRef={videoRef} isActive={isActive} />}
+
+      {/* Paused overlay */}
       {renderVideo && isActive && !isPlaying && !showPlayIcon && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10">
-          <div className="w-16 h-16 rounded-full bg-background/50 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-background/40 backdrop-blur-sm flex items-center justify-center">
             <Play className="w-7 h-7 text-foreground fill-current ml-0.5" />
           </div>
         </div>
       )}
+
+      {/* Sheets */}
+      <ShortCommentsSheet open={commentsOpen} onOpenChange={setCommentsOpen} />
+      <ShortShareSheet open={shareOpen} onOpenChange={setShareOpen} title={short.title} />
     </div>
   );
 }
