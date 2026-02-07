@@ -1,30 +1,29 @@
 import { useParams, Link } from "react-router-dom";
-import { getSeriesById, getEpisodesBySeries } from "@/lib/mock-data";
-import { formatTimestamp } from "@/lib/mock-data";
+import { useSeriesById, useEpisodesBySeries } from "@/hooks/useSeriesData";
+import { formatTimestamp, statusLabel } from "@/lib/utils";
 import { Star, Play, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
-
-import seriesShadow from "@/assets/series-shadow-requiem.jpg";
-import seriesNeon from "@/assets/series-neon-drift.jpg";
-import seriesCrimson from "@/assets/series-crimson-academy.jpg";
-import seriesVoid from "@/assets/series-void-walker.jpg";
-import seriesBlade from "@/assets/series-blade-symphony.jpg";
-import seriesStarfall from "@/assets/series-starfall-chronicle.jpg";
-
-const imageMap: Record<string, string> = {
-  "series-1": seriesShadow,
-  "series-2": seriesNeon,
-  "series-3": seriesCrimson,
-  "series-4": seriesVoid,
-  "series-5": seriesBlade,
-  "series-6": seriesStarfall,
-};
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SeriesDetailPage() {
   const { seriesId } = useParams();
-  const series = getSeriesById(seriesId || "");
-  const episodes = getEpisodesBySeries(seriesId || "");
-  const imageSrc = imageMap[seriesId || ""] || seriesShadow;
+  const { data: series, isLoading: seriesLoading } = useSeriesById(seriesId);
+  const { data: episodes = [], isLoading: episodesLoading } = useEpisodesBySeries(seriesId);
+  const imageSrc = series?.image_url || "/placeholder.svg";
+
+  if (seriesLoading) {
+    return (
+      <div className="min-h-screen bg-background pt-16">
+        <Skeleton className="w-full h-[50vh]" />
+        <div className="max-w-4xl mx-auto px-4 mt-10 space-y-3">
+          <Skeleton className="h-8 w-48" />
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!series) {
     return (
@@ -37,13 +36,15 @@ export default function SeriesDetailPage() {
     );
   }
 
+  const label = statusLabel(series.status);
+
   return (
     <div className="min-h-screen bg-background pt-16 pb-20 sm:pb-0">
       {/* Hero Banner */}
       <div className="relative w-full h-[50vh] overflow-hidden">
         <img
           src={imageSrc}
-          alt={series.name}
+          alt={series.title}
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
@@ -65,31 +66,33 @@ export default function SeriesDetailPage() {
 
             <div className="flex items-center gap-2 mb-3">
               <span className={`px-2 py-1 rounded-md text-xs font-semibold ${
-                series.status === "Airing"
+                label === "Airing"
                   ? "bg-primary text-primary-foreground"
-                  : series.status === "Completed"
+                  : label === "Completed"
                   ? "bg-secondary text-secondary-foreground"
                   : "bg-muted text-muted-foreground"
               }`}>
-                {series.status}
+                {label}
               </span>
-              <div className="flex items-center gap-1">
-                <Star className="w-3.5 h-3.5 text-primary fill-primary" />
-                <span className="text-sm font-medium text-foreground">{series.rating}</span>
-              </div>
+              {series.rating != null && (
+                <div className="flex items-center gap-1">
+                  <Star className="w-3.5 h-3.5 text-primary fill-primary" />
+                  <span className="text-sm font-medium text-foreground">{series.rating}</span>
+                </div>
+              )}
             </div>
 
             <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-2 text-foreground">
-              {series.name}
+              {series.title}
             </h1>
             <p className="text-muted-foreground text-sm sm:text-base mb-3 leading-relaxed">
               {series.description}
             </p>
             <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <span>{series.episodes} Episodes</span>
+              <span>{series.episode_count} Episodes</span>
               <span>•</span>
               <div className="flex gap-1.5">
-                {series.genre.map((g) => (
+                {series.genres.map((g) => (
                   <span key={g} className="px-2 py-0.5 rounded bg-accent text-accent-foreground text-xs">
                     {g}
                   </span>
@@ -131,8 +134,8 @@ export default function SeriesDetailPage() {
                 {/* Episode Thumbnail */}
                 <div className="relative w-28 sm:w-36 aspect-video rounded-lg overflow-hidden flex-shrink-0">
                   <img
-                    src={imageSrc}
-                    alt={`Episode ${episode.episodeNumber}`}
+                    src={episode.thumbnail_url || imageSrc}
+                    alt={`Episode ${episode.episode_number}`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-background/30 group-hover:bg-background/10 transition-colors" />
@@ -145,7 +148,7 @@ export default function SeriesDetailPage() {
                     {formatTimestamp(episode.duration)}
                   </div>
                   <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
-                    EP {episode.episodeNumber}
+                    EP {episode.episode_number}
                   </div>
                 </div>
 

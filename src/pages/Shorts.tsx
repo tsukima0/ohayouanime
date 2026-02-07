@@ -1,13 +1,16 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { mockShorts } from "@/lib/mock-data";
+import { useShorts } from "@/hooks/useSeriesData";
 import ShortCard from "@/components/ShortCard";
 import { ChevronUp, ChevronDown } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ShortsPage() {
   const { shortId } = useParams();
+  const { data: shorts = [], isLoading } = useShorts();
+
   const initialIndex = shortId
-    ? mockShorts.findIndex((s) => s.id === shortId)
+    ? shorts.findIndex((s) => s.id === shortId)
     : 0;
   const [activeIndex, setActiveIndex] = useState(
     initialIndex >= 0 ? initialIndex : 0
@@ -15,19 +18,26 @@ export default function ShortsPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const hasScrolled = useRef(false);
 
+  // Update active index when shorts load and shortId matches
+  useEffect(() => {
+    if (shorts.length > 0 && shortId) {
+      const idx = shorts.findIndex((s) => s.id === shortId);
+      if (idx >= 0) setActiveIndex(idx);
+    }
+  }, [shorts, shortId]);
+
   // Scroll to specific short on mount
   useEffect(() => {
-    if (hasScrolled.current) return;
+    if (hasScrolled.current || shorts.length === 0) return;
     const container = containerRef.current;
     if (!container) return;
-    const target = container.querySelector(
-      `[data-index="${initialIndex >= 0 ? initialIndex : 0}"]`
-    );
+    const targetIdx = initialIndex >= 0 ? initialIndex : 0;
+    const target = container.querySelector(`[data-index="${targetIdx}"]`);
     if (target) {
       target.scrollIntoView({ behavior: "auto" });
       hasScrolled.current = true;
     }
-  }, [initialIndex]);
+  }, [initialIndex, shorts]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -49,18 +59,34 @@ export default function ShortsPage() {
     cards.forEach((card) => observer.observe(card));
 
     return () => observer.disconnect();
-  }, []);
+  }, [shorts]);
 
   const scrollTo = (direction: "up" | "down") => {
     const newIndex =
       direction === "up"
         ? Math.max(0, activeIndex - 1)
-        : Math.min(mockShorts.length - 1, activeIndex + 1);
+        : Math.min(shorts.length - 1, activeIndex + 1);
     const container = containerRef.current;
     if (!container) return;
     const target = container.querySelector(`[data-index="${newIndex}"]`);
     target?.scrollIntoView({ behavior: "smooth" });
   };
+
+  if (isLoading) {
+    return (
+      <div className="h-screen pt-16 bg-background flex items-center justify-center">
+        <Skeleton className="w-full max-w-lg h-[80vh] rounded-xl" />
+      </div>
+    );
+  }
+
+  if (shorts.length === 0) {
+    return (
+      <div className="h-screen pt-16 bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">No shorts available yet.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen pt-16 sm:pt-16 relative bg-background">
@@ -75,7 +101,7 @@ export default function ShortsPage() {
         </button>
         <button
           onClick={() => scrollTo("down")}
-          disabled={activeIndex === mockShorts.length - 1}
+          disabled={activeIndex === shorts.length - 1}
           className="p-2 rounded-full glass-card text-foreground hover:text-primary disabled:opacity-30 transition-all"
         >
           <ChevronDown className="w-5 h-5" />
@@ -87,7 +113,7 @@ export default function ShortsPage() {
         ref={containerRef}
         className="h-full overflow-y-scroll snap-y snap-mandatory hide-scrollbar"
       >
-        {mockShorts.map((short, index) => (
+        {shorts.map((short, index) => (
           <div
             key={short.id}
             data-index={index}
@@ -100,7 +126,7 @@ export default function ShortsPage() {
 
       {/* Dots indicator */}
       <div className="fixed left-4 sm:left-auto sm:right-6 bottom-24 sm:bottom-6 flex sm:flex-col gap-2 z-30">
-        {mockShorts.map((_, index) => (
+        {shorts.map((_, index) => (
           <div
             key={index}
             className={`w-2 h-2 rounded-full transition-all duration-300 ${

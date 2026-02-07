@@ -11,13 +11,14 @@ import {
   Settings,
   Check,
 } from "lucide-react";
-import { formatTimestamp } from "@/lib/mock-data";
+import { formatTimestamp } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface VideoPlayerProps {
   episodeTitle: string;
   animeName: string;
   duration: number;
+  videoUrl?: string | null;
 }
 
 const QUALITY_OPTIONS = ["1080p", "720p", "480p", "360p"] as const;
@@ -27,7 +28,9 @@ export default function VideoPlayer({
   episodeTitle,
   animeName,
   duration,
+  videoUrl,
 }: VideoPlayerProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
@@ -36,20 +39,68 @@ export default function VideoPlayer({
   const [showSettings, setShowSettings] = useState(false);
   const [quality, setQuality] = useState<typeof QUALITY_OPTIONS[number]>("1080p");
   const [speed, setSpeed] = useState<number>(1);
+  const [videoDuration, setVideoDuration] = useState(duration);
 
   const controlsTimer = useRef<ReturnType<typeof setTimeout>>();
   const progressInterval = useRef<ReturnType<typeof setInterval>>();
   const playerRef = useRef<HTMLDivElement>(null);
   const settingsRef = useRef<HTMLDivElement>(null);
 
-  // Simulate playback
+  const hasVideo = !!videoUrl;
+
+  // Real video event handlers
   useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !hasVideo) return;
+
+    const onTimeUpdate = () => setCurrentTime(Math.floor(video.currentTime));
+    const onDurationChange = () => {
+      if (video.duration && isFinite(video.duration)) {
+        setVideoDuration(Math.floor(video.duration));
+      }
+    };
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+    const onEnded = () => setIsPlaying(false);
+
+    video.addEventListener("timeupdate", onTimeUpdate);
+    video.addEventListener("durationchange", onDurationChange);
+    video.addEventListener("play", onPlay);
+    video.addEventListener("pause", onPause);
+    video.addEventListener("ended", onEnded);
+
+    return () => {
+      video.removeEventListener("timeupdate", onTimeUpdate);
+      video.removeEventListener("durationchange", onDurationChange);
+      video.removeEventListener("play", onPlay);
+      video.removeEventListener("pause", onPause);
+      video.removeEventListener("ended", onEnded);
+    };
+  }, [hasVideo]);
+
+  // Apply playback speed to real video
+  useEffect(() => {
+    if (videoRef.current && hasVideo) {
+      videoRef.current.playbackRate = speed;
+    }
+  }, [speed, hasVideo]);
+
+  // Apply muted state to real video
+  useEffect(() => {
+    if (videoRef.current && hasVideo) {
+      videoRef.current.muted = isMuted;
+    }
+  }, [isMuted, hasVideo]);
+
+  // Simulated playback (fallback when no video URL)
+  useEffect(() => {
+    if (hasVideo) return;
     if (isPlaying) {
       progressInterval.current = setInterval(() => {
         setCurrentTime((prev) => {
-          if (prev >= duration) {
+          if (prev >= videoDuration) {
             setIsPlaying(false);
-            return duration;
+            return videoDuration;
           }
           return prev + 1;
         });
@@ -58,7 +109,7 @@ export default function VideoPlayer({
     return () => {
       if (progressInterval.current) clearInterval(progressInterval.current);
     };
-  }, [isPlaying, duration, speed]);
+  }, [isPlaying, videoDuration, speed, hasVideo]);
 
   // Auto-hide controls
   useEffect(() => {
@@ -75,7 +126,6 @@ export default function VideoPlayer({
     };
   }, [showControls, isPlaying]);
 
-  // Listen for fullscreen changes
   useEffect(() => {
     const handleFsChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -84,7 +134,6 @@ export default function VideoPlayer({
     return () => document.removeEventListener("fullscreenchange", handleFsChange);
   }, []);
 
-  // Close settings when clicking outside
   useEffect(() => {
     if (!showSettings) return;
     const handleClick = (e: MouseEvent) => {
@@ -96,20 +145,46 @@ export default function VideoPlayer({
     return () => document.removeEventListener("mousedown", handleClick);
   }, [showSettings]);
 
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (hasVideo && videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current.play();
+      } else {
+        videoRef.current.pause();
+      }
+    } else {
+      setIsPlaying(!isPlaying);
+    }
+  };
+
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
     const rect = e.currentTarget.getBoundingClientRect();
     const fraction = (e.clientX - rect.left) / rect.width;
-    setCurrentTime(Math.floor(fraction * duration));
+    const newTime = Math.floor(fraction * videoDuration);
+    setCurrentTime(newTime);
+    if (hasVideo && videoRef.current) {
+      videoRef.current.currentTime = newTime;
+    }
   };
 
   const skipBackward = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentTime(Math.max(0, currentTime - 10));
+    const newTime = Math.max(0, currentTime - 10);
+    setCurrentTime(newTime);
+    if (hasVideo && videoRef.current) {
+      videoRef.current.currentTime = newTime;
+    }
   };
 
   const skipForward = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentTime(Math.min(duration, currentTime + 10));
+    const newTime = Math.min(videoDuration, currentTime + 10);
+    setCurrentTime(newTime);
+    if (hasVideo && videoRef.current) {
+      videoRef.current.currentTime = newTime;
+    }
   };
 
   const toggleFullscreen = useCallback(async (e: React.MouseEvent) => {
@@ -131,7 +206,7 @@ export default function VideoPlayer({
     setShowSettings((prev) => !prev);
   };
 
-  const progress = (currentTime / duration) * 100;
+  const progress = videoDuration > 0 ? (currentTime / videoDuration) * 100 : 0;
 
   return (
     <div
@@ -142,19 +217,29 @@ export default function VideoPlayer({
         setShowSettings(false);
       }}
     >
-      {/* Simulated Video Area */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(0,0%,4%)] via-[hsl(0,0%,2%)] to-[hsl(0,0%,0%)] flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-[hsl(0,0%,50%)] text-sm mb-2">{animeName}</p>
-          <p className="text-[hsl(0,0%,80%)] text-xl font-display font-bold">{episodeTitle}</p>
-          <p className="text-[hsl(0,0%,40%)] text-sm mt-2">
-            {isPlaying ? "▶ Playing" : "⏸ Paused"} — {formatTimestamp(currentTime)}
-          </p>
-          <p className="text-[hsl(0,0%,30%)] text-xs mt-1">
-            {quality} • {speed}x
-          </p>
+      {/* Video or Simulated Area */}
+      {hasVideo ? (
+        <video
+          ref={videoRef}
+          src={videoUrl!}
+          className="absolute inset-0 w-full h-full object-contain bg-black"
+          playsInline
+          preload="metadata"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(0,0%,4%)] via-[hsl(0,0%,2%)] to-[hsl(0,0%,0%)] flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-[hsl(0,0%,50%)] text-sm mb-2">{animeName}</p>
+            <p className="text-[hsl(0,0%,80%)] text-xl font-display font-bold">{episodeTitle}</p>
+            <p className="text-[hsl(0,0%,40%)] text-sm mt-2">
+              {isPlaying ? "▶ Playing" : "⏸ Paused"} — {formatTimestamp(currentTime)}
+            </p>
+            <p className="text-[hsl(0,0%,30%)] text-xs mt-1">
+              {quality} • {speed}x
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Controls Overlay */}
       <motion.div
@@ -175,10 +260,7 @@ export default function VideoPlayer({
 
           <motion.button
             whileTap={{ scale: 0.9 }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsPlaying(!isPlaying);
-            }}
+            onClick={togglePlay}
             className="w-16 h-16 rounded-full bg-primary/90 flex items-center justify-center text-primary-foreground hover:bg-primary transition-colors glow-primary"
           >
             {isPlaying ? (
@@ -200,13 +282,9 @@ export default function VideoPlayer({
 
         {/* Bottom Bar */}
         <div className="absolute bottom-0 left-0 right-0 p-4">
-          {/* Progress Bar */}
           <div
             className="w-full h-1.5 rounded-full bg-[hsl(0,0%,30%)] cursor-pointer mb-3 group/progress hover:h-2.5 transition-all"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleProgressClick(e);
-            }}
+            onClick={handleProgressClick}
           >
             <div
               className="h-full rounded-full bg-primary relative transition-all"
@@ -216,67 +294,38 @@ export default function VideoPlayer({
             </div>
           </div>
 
-          {/* Controls Row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsPlaying(!isPlaying);
-                }}
-                className="text-[hsl(0,0%,100%)] hover:text-[hsl(0,100%,50%)] transition-colors"
-              >
+              <button onClick={togglePlay} className="text-[hsl(0,0%,100%)] hover:text-[hsl(0,100%,50%)] transition-colors">
                 {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
               </button>
-              <button
-                onClick={skipBackward}
-                className="text-[hsl(0,100%,50%)] hover:text-[hsl(0,100%,65%)] transition-colors"
-                title="-10s"
-              >
+              <button onClick={skipBackward} className="text-[hsl(0,100%,50%)] hover:text-[hsl(0,100%,65%)] transition-colors" title="-10s">
                 <SkipBack className="w-5 h-5" />
               </button>
-              <button
-                onClick={skipForward}
-                className="text-[hsl(0,100%,50%)] hover:text-[hsl(0,100%,65%)] transition-colors"
-                title="+10s"
-              >
+              <button onClick={skipForward} className="text-[hsl(0,100%,50%)] hover:text-[hsl(0,100%,65%)] transition-colors" title="+10s">
                 <SkipForward className="w-5 h-5" />
               </button>
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsMuted(!isMuted);
-                }}
+                onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
                 className="text-[hsl(0,0%,100%)] hover:text-[hsl(0,100%,50%)] transition-colors"
               >
                 {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </button>
               <span className="text-xs text-[hsl(0,0%,70%)] font-mono">
-                {formatTimestamp(currentTime)} / {formatTimestamp(duration)}
+                {formatTimestamp(currentTime)} / {formatTimestamp(videoDuration)}
               </span>
             </div>
             <div className="flex items-center gap-3 relative">
-              {/* Settings Button */}
               <button
                 onClick={toggleSettings}
-                className={`transition-colors ${
-                  showSettings
-                    ? "text-[hsl(0,100%,50%)]"
-                    : "text-[hsl(0,0%,100%)] hover:text-[hsl(0,100%,50%)]"
-                }`}
+                className={`transition-colors ${showSettings ? "text-[hsl(0,100%,50%)]" : "text-[hsl(0,0%,100%)] hover:text-[hsl(0,100%,50%)]"}`}
               >
                 <Settings className="w-5 h-5" />
               </button>
-
-              {/* Fullscreen Button */}
-              <button
-                onClick={toggleFullscreen}
-                className="text-[hsl(0,0%,100%)] hover:text-[hsl(0,100%,50%)] transition-colors"
-              >
+              <button onClick={toggleFullscreen} className="text-[hsl(0,0%,100%)] hover:text-[hsl(0,100%,50%)] transition-colors">
                 {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
               </button>
 
-              {/* Settings Panel */}
               <AnimatePresence>
                 {showSettings && (
                   <motion.div
@@ -288,20 +337,15 @@ export default function VideoPlayer({
                     className="absolute bottom-full right-0 mb-2 w-52 rounded-xl bg-[hsl(0,0%,8%)] border border-[hsl(0,0%,20%)] shadow-2xl overflow-hidden"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {/* Quality */}
                     <div className="p-3 border-b border-[hsl(0,0%,15%)]">
-                      <p className="text-[10px] uppercase tracking-wider text-[hsl(0,0%,50%)] font-semibold mb-2">
-                        Quality
-                      </p>
+                      <p className="text-[10px] uppercase tracking-wider text-[hsl(0,0%,50%)] font-semibold mb-2">Quality</p>
                       <div className="flex flex-col gap-0.5">
                         {QUALITY_OPTIONS.map((q) => (
                           <button
                             key={q}
                             onClick={() => setQuality(q)}
                             className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors ${
-                              quality === q
-                                ? "bg-[hsl(0,100%,50%,0.15)] text-[hsl(0,100%,50%)]"
-                                : "text-[hsl(0,0%,80%)] hover:bg-[hsl(0,0%,15%)]"
+                              quality === q ? "bg-[hsl(0,100%,50%,0.15)] text-[hsl(0,100%,50%)]" : "text-[hsl(0,0%,80%)] hover:bg-[hsl(0,0%,15%)]"
                             }`}
                           >
                             <span>{q}</span>
@@ -310,21 +354,15 @@ export default function VideoPlayer({
                         ))}
                       </div>
                     </div>
-
-                    {/* Speed */}
                     <div className="p-3">
-                      <p className="text-[10px] uppercase tracking-wider text-[hsl(0,0%,50%)] font-semibold mb-2">
-                        Speed
-                      </p>
+                      <p className="text-[10px] uppercase tracking-wider text-[hsl(0,0%,50%)] font-semibold mb-2">Speed</p>
                       <div className="flex flex-col gap-0.5">
                         {SPEED_OPTIONS.map((s) => (
                           <button
                             key={s}
                             onClick={() => setSpeed(s)}
                             className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors ${
-                              speed === s
-                                ? "bg-[hsl(0,100%,50%,0.15)] text-[hsl(0,100%,50%)]"
-                                : "text-[hsl(0,0%,80%)] hover:bg-[hsl(0,0%,15%)]"
+                              speed === s ? "bg-[hsl(0,100%,50%,0.15)] text-[hsl(0,100%,50%)]" : "text-[hsl(0,0%,80%)] hover:bg-[hsl(0,0%,15%)]"
                             }`}
                           >
                             <span>{s === 1 ? "Normal" : `${s}x`}</span>

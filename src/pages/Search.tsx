@@ -1,23 +1,13 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Search, SlidersHorizontal, X, ArrowUpDown, Film, Tv } from "lucide-react";
-import { mockTrendingSeries, simulcastSeries, mockEpisodes } from "@/lib/mock-data";
-import type { AnimeSeries, AnimeEpisode } from "@/lib/mock-data";
+import { useSeries, useEpisodes, type DbSeries } from "@/hooks/useSeriesData";
 import AnimeCard from "@/components/AnimeCard";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { formatTimestamp } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-
-const allSeries: AnimeSeries[] = [
-  ...mockTrendingSeries,
-  ...simulcastSeries.filter(
-    (s) => !mockTrendingSeries.some((t) => t.name === s.name)
-  ),
-];
-
-const allGenres = Array.from(
-  new Set(allSeries.flatMap((s) => s.genre))
-).sort();
+import { Skeleton } from "@/components/ui/skeleton";
 
 type SortOption = "rating-desc" | "rating-asc" | "name-asc" | "name-desc" | "episodes-desc";
 
@@ -32,11 +22,19 @@ const sortLabels: Record<SortOption, string> = {
 type Tab = "series" | "episodes";
 
 export default function SearchPage() {
+  const { data: allSeries = [], isLoading: seriesLoading } = useSeries();
+  const { data: allEpisodes = [], isLoading: episodesLoading } = useEpisodes();
+
   const [query, setQuery] = useState("");
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [sort, setSort] = useState<SortOption>("rating-desc");
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("series");
+
+  const allGenres = useMemo(
+    () => Array.from(new Set(allSeries.flatMap((s) => s.genres))).sort(),
+    [allSeries]
+  );
 
   const toggleGenre = (genre: string) => {
     setSelectedGenres((prev) =>
@@ -59,49 +57,49 @@ export default function SearchPage() {
       const q = query.toLowerCase();
       results = results.filter(
         (s) =>
-          s.name.toLowerCase().includes(q) ||
-          s.description.toLowerCase().includes(q) ||
-          s.genre.some((g) => g.toLowerCase().includes(q))
+          s.title.toLowerCase().includes(q) ||
+          (s.description || "").toLowerCase().includes(q) ||
+          s.genres.some((g) => g.toLowerCase().includes(q))
       );
     }
 
     if (selectedGenres.length > 0) {
       results = results.filter((s) =>
-        selectedGenres.every((g) => s.genre.includes(g))
+        selectedGenres.every((g) => s.genres.includes(g))
       );
     }
 
     switch (sort) {
       case "rating-desc":
-        results.sort((a, b) => b.rating - a.rating);
+        results.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
         break;
       case "rating-asc":
-        results.sort((a, b) => a.rating - b.rating);
+        results.sort((a, b) => (a.rating ?? 0) - (b.rating ?? 0));
         break;
       case "name-asc":
-        results.sort((a, b) => a.name.localeCompare(b.name));
+        results.sort((a, b) => a.title.localeCompare(b.title));
         break;
       case "name-desc":
-        results.sort((a, b) => b.name.localeCompare(a.name));
+        results.sort((a, b) => b.title.localeCompare(a.title));
         break;
       case "episodes-desc":
-        results.sort((a, b) => b.episodes - a.episodes);
+        results.sort((a, b) => b.episode_count - a.episode_count);
         break;
     }
 
     return results;
-  }, [query, selectedGenres, sort]);
+  }, [query, selectedGenres, sort, allSeries]);
 
   const filteredEpisodes = useMemo(() => {
-    if (!query) return mockEpisodes;
+    if (!query) return allEpisodes;
     const q = query.toLowerCase();
-    return mockEpisodes.filter(
+    return allEpisodes.filter(
       (ep) =>
         ep.title.toLowerCase().includes(q) ||
-        ep.animeName.toLowerCase().includes(q) ||
-        ep.description.toLowerCase().includes(q)
+        (ep.series?.title || "").toLowerCase().includes(q) ||
+        (ep.description || "").toLowerCase().includes(q)
     );
-  }, [query]);
+  }, [query, allEpisodes]);
 
   return (
     <div className="min-h-screen bg-background pt-20 pb-24 sm:pb-8">
@@ -173,11 +171,8 @@ export default function SearchPage() {
               className="overflow-hidden mb-6"
             >
               <div className="glass-card rounded-xl p-5 space-y-5">
-                {/* Genres */}
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground mb-3">
-                    Genres
-                  </h3>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Genres</h3>
                   <div className="flex flex-wrap gap-2">
                     {allGenres.map((genre) => (
                       <button
@@ -195,7 +190,6 @@ export default function SearchPage() {
                   </div>
                 </div>
 
-                {/* Sort */}
                 <div>
                   <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                     <ArrowUpDown className="w-4 h-4" />
@@ -220,7 +214,6 @@ export default function SearchPage() {
                   </div>
                 </div>
 
-                {/* Clear */}
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
@@ -294,7 +287,13 @@ export default function SearchPage() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
             >
-              {filteredSeries.length > 0 ? (
+              {seriesLoading ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <Skeleton key={i} className="aspect-[2/3] rounded-xl" />
+                  ))}
+                </div>
+              ) : filteredSeries.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                   {filteredSeries.map((series, index) => (
                     <AnimeCard key={series.id} series={series} index={index} />
@@ -312,7 +311,13 @@ export default function SearchPage() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
             >
-              {filteredEpisodes.length > 0 ? (
+              {episodesLoading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <Skeleton key={i} className="h-20 rounded-xl" />
+                  ))}
+                </div>
+              ) : filteredEpisodes.length > 0 ? (
                 <div className="space-y-3">
                   {filteredEpisodes.map((ep, index) => (
                     <EpisodeRow key={ep.id} episode={ep} index={index} />
@@ -329,7 +334,13 @@ export default function SearchPage() {
   );
 }
 
-function EpisodeRow({ episode, index }: { episode: AnimeEpisode; index: number }) {
+function EpisodeRow({
+  episode,
+  index,
+}: {
+  episode: { id: string; title: string; episode_number: number; season: number; duration: number; description: string | null; series: { id: string; title: string; image_url: string | null } | null };
+  index: number;
+}) {
   const mins = Math.floor(episode.duration / 60);
   return (
     <motion.div
@@ -346,7 +357,7 @@ function EpisodeRow({ episode, index }: { episode: AnimeEpisode; index: number }
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs text-primary font-semibold mb-0.5">
-            {episode.animeName} · S{episode.season} E{episode.episodeNumber}
+            {episode.series?.title || "Unknown"} · S{episode.season} E{episode.episode_number}
           </p>
           <h3 className="font-display font-bold text-sm text-foreground truncate">
             {episode.title}

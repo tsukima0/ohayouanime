@@ -1,42 +1,39 @@
 import { useNavigate } from "react-router-dom";
 import { Play, Heart, Share2, MessageCircle } from "lucide-react";
-import type { AnimeShort } from "@/lib/mock-data";
-import { formatTimestamp } from "@/lib/mock-data";
+import type { DbShort } from "@/hooks/useSeriesData";
+import { formatTimestamp } from "@/lib/utils";
 import { motion } from "framer-motion";
 
-import short1Img from "@/assets/short-1.jpg";
-import short2Img from "@/assets/short-2.jpg";
-import short3Img from "@/assets/short-3.jpg";
-
-const shortImages: Record<string, string> = {
-  "short-1": short1Img,
-  "short-2": short2Img,
-  "short-3": short3Img,
-};
-
 interface ShortCardProps {
-  short: AnimeShort;
+  short: DbShort;
   isActive: boolean;
 }
 
 export default function ShortCard({ short, isActive }: ShortCardProps) {
   const navigate = useNavigate();
-  const imageSrc = shortImages[short.id] || short1Img;
-
-  const handleWatchFull = () => {
-    navigate(`/watch/${short.episodeId}`);
-  };
+  const imageSrc = short.thumbnail_url || "/placeholder.svg";
+  const hasVideo = !!short.video_url;
 
   return (
     <div className="relative w-full h-full snap-start snap-always flex-shrink-0">
-      {/* Background Image */}
+      {/* Background - Video or Image */}
       <div className="absolute inset-0">
-        <img
-          src={imageSrc}
-          alt={short.title}
-          className="w-full h-full object-cover"
-        />
-        {/* Overlays */}
+        {hasVideo && isActive ? (
+          <video
+            src={short.video_url!}
+            className="w-full h-full object-cover"
+            autoPlay
+            loop
+            muted
+            playsInline
+          />
+        ) : (
+          <img
+            src={imageSrc}
+            alt={short.title}
+            className="w-full h-full object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/30" />
       </div>
 
@@ -51,11 +48,8 @@ export default function ShortCard({ short, isActive }: ShortCardProps) {
             <div className="w-10 h-10 rounded-full glass-card flex items-center justify-center">
               <Heart className="w-5 h-5 text-foreground" />
             </div>
-            <span className="text-xs font-medium text-foreground">
-              {(short.likes / 1000).toFixed(0)}K
-            </span>
           </motion.button>
-          
+
           <button className="flex flex-col items-center gap-1">
             <div className="w-10 h-10 rounded-full glass-card flex items-center justify-center">
               <MessageCircle className="w-5 h-5 text-foreground" />
@@ -78,37 +72,23 @@ export default function ShortCard({ short, isActive }: ShortCardProps) {
             animate={isActive ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.2 }}
           >
-            <p className="text-xs font-semibold text-primary mb-1">
-              {short.animeName}
-            </p>
             <h2 className="font-display text-lg font-bold text-foreground leading-tight mb-2">
               {short.title}
             </h2>
-            <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-              {short.description}
-            </p>
+            {short.description && (
+              <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+                {short.description}
+              </p>
+            )}
             <div className="flex items-center gap-3 text-xs text-muted-foreground mb-4">
-              <span>{short.views} views</span>
-              <span>•</span>
-              <span>Clip from {formatTimestamp(short.timestamp)}</span>
+              <span>{formatTimestamp(short.duration)}</span>
             </div>
           </motion.div>
-
-          {/* Watch Full Episode Button */}
-          <motion.button
-            onClick={handleWatchFull}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm glow-primary transition-all duration-200 hover:scale-105 active:scale-95"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Play className="w-4 h-4 fill-current" />
-            <span>Watch Full Episode</span>
-          </motion.button>
         </div>
       </div>
 
       {/* Play indicator when active */}
-      {isActive && (
+      {isActive && !hasVideo && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
           <motion.div
             initial={{ scale: 1, opacity: 0.6 }}
