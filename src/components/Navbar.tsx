@@ -138,7 +138,7 @@ export default function Navbar() {
       </div>
 
       {/* Mobile Bottom Nav */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 glass-card-strong border-t border-border">
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-50 glass-card-strong border-t border-border">
         <div className="flex items-center justify-around py-2">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path ||
@@ -156,10 +156,32 @@ export default function Navbar() {
               </Link>
             );
           })}
+          <Link
+            to="/search"
+            className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-colors ${
+              location.pathname === "/search" ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
+            <Search className="w-5 h-5" />
+            <span className="text-xs">Search</span>
+          </Link>
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-colors ${
+                location.pathname === "/admin" ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
+              <Shield className="w-5 h-5" />
+              <span className="text-xs">Admin</span>
+            </Link>
+          )}
           {user ? (
             <Link
               to="/profile"
-              className="flex flex-col items-center gap-1 px-3 py-1 rounded-lg text-muted-foreground transition-colors"
+              className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-colors ${
+                location.pathname === "/profile" ? "text-primary" : "text-muted-foreground"
+              }`}
             >
               {user.user_metadata?.avatar_url ? (
                 <img
@@ -176,19 +198,14 @@ export default function Navbar() {
           ) : (
             <Link
               to="/auth"
-              className="flex flex-col items-center gap-1 px-3 py-1 rounded-lg text-muted-foreground transition-colors"
+              className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-colors ${
+                location.pathname === "/auth" ? "text-primary" : "text-muted-foreground"
+              }`}
             >
               <User className="w-5 h-5" />
               <span className="text-xs">Login</span>
             </Link>
           )}
-          <button
-            onClick={toggleTheme}
-            className="flex flex-col items-center gap-1 px-3 py-1 rounded-lg text-muted-foreground transition-colors"
-          >
-            {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            <span className="text-xs">Theme</span>
-          </button>
         </div>
       </div>
     </nav>
