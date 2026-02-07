@@ -4,6 +4,7 @@ import type { DbEpisode } from "@/hooks/useSeriesData";
 import { formatTimestamp } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
+import VideoThumbnail from "@/components/VideoThumbnail";
 
 interface NewEpisodeCardProps {
   episode: DbEpisode & { series: { id: string; title: string; image_url: string | null } | null };
@@ -11,7 +12,7 @@ interface NewEpisodeCardProps {
 }
 
 export default function NewEpisodeCard({ episode, index }: NewEpisodeCardProps) {
-  const imageSrc = episode.series?.image_url || episode.thumbnail_url || "/placeholder.svg";
+  const thumbnailSrc = episode.thumbnail_url || episode.series?.image_url;
   const releasedAgo = formatDistanceToNow(new Date(episode.created_at), { addSuffix: true });
 
   return (
@@ -26,12 +27,27 @@ export default function NewEpisodeCard({ episode, index }: NewEpisodeCardProps) 
       >
         {/* Thumbnail */}
         <div className="w-28 h-16 sm:w-36 sm:h-20 rounded-lg overflow-hidden flex-shrink-0 relative">
-          <img
-            src={imageSrc}
-            alt={episode.series?.title || "Episode"}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            loading="lazy"
-          />
+          {thumbnailSrc ? (
+            <img
+              src={thumbnailSrc}
+              alt={episode.series?.title || "Episode"}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              loading="lazy"
+            />
+          ) : episode.video_url ? (
+            <VideoThumbnail
+              videoUrl={episode.video_url}
+              alt={episode.series?.title || "Episode"}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+          ) : (
+            <img
+              src="/placeholder.svg"
+              alt={episode.series?.title || "Episode"}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              loading="lazy"
+            />
+          )}
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-background/30">
             <Play className="w-6 h-6 text-primary-foreground fill-current" />
           </div>
