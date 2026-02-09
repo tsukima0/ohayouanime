@@ -74,6 +74,30 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
       series: {
         Row: {
           created_at: string
@@ -386,20 +410,7 @@ export type Database = {
           is_own: boolean | null
           short_id: string | null
           text: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string | null
-          is_own?: never
-          short_id?: string | null
-          text?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string | null
-          is_own?: never
-          short_id?: string | null
-          text?: string | null
+          username: string | null
         }
         Relationships: [
           {
