@@ -1,0 +1,252 @@
+/* Ohayou Anime — Video.js Custom Red/Black Theme */
+
+/* Base player skin */
+.vjs-ohayou.video-js {
+  font-family: 'Inter', sans-serif;
+  color: hsl(0, 0%, 100%);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+/* Big play button */
+.vjs-ohayou .vjs-big-play-button {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  border: none;
+  background: hsl(0, 100%, 50% / 0.85);
+  line-height: 4rem;
+  font-size: 2rem;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: transform 0.2s, background 0.2s;
+}
+
+.vjs-ohayou .vjs-big-play-button:hover {
+  background: hsl(0, 100%, 50%);
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.vjs-ohayou .vjs-big-play-button .vjs-icon-placeholder::before {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Control bar */
+.vjs-ohayou .vjs-control-bar {
+  background: linear-gradient(to top, hsl(0, 0%, 0% / 0.85), transparent);
+  height: 3.5rem;
+  padding: 0 0.5rem;
+  border-radius: 0 0 0.75rem 0.75rem;
+}
+
+/* Progress bar (slider) */
+.vjs-ohayou .vjs-progress-control .vjs-progress-holder {
+  height: 4px;
+  border-radius: 2px;
+  transition: height 0.15s;
+}
+
+.vjs-ohayou .vjs-progress-control:hover .vjs-progress-holder {
+  height: 8px;
+}
+
+.vjs-ohayou .vjs-play-progress {
+  background: hsl(0, 100%, 50%);
+}
+
+.vjs-ohayou .vjs-play-progress::before {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: hsl(0, 100%, 50%);
+  border: 2px solid hsl(0, 0%, 100%);
+  box-shadow: 0 0 6px hsl(0, 100%, 50% / 0.5);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.vjs-ohayou .vjs-progress-control:hover .vjs-play-progress::before {
+  opacity: 1;
+}
+
+.vjs-ohayou .vjs-load-progress {
+  background: hsl(0, 0%, 100% / 0.2);
+}
+
+.vjs-ohayou .vjs-load-progress > div {
+  background: hsl(0, 0%, 100% / 0.3);
+}
+
+/* Volume slider */
+.vjs-ohayou .vjs-volume-level {
+  background: hsl(0, 100%, 50%);
+}
+
+/* Time display */
+.vjs-ohayou .vjs-time-control {
+  font-size: 0.75rem;
+  font-family: 'Space Grotesk', monospace;
+  line-height: 3.5rem;
+}
+
+/* Control buttons hover */
+.vjs-ohayou .vjs-control:hover {
+  color: hsl(0, 100%, 50%);
+}
+
+/* Custom skip buttons */
+.vjs-ohayou .vjs-skip-backward-10,
+.vjs-ohayou .vjs-skip-forward-10 {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: hsl(0, 0%, 100%);
+  transition: color 0.15s;
+}
+
+.vjs-ohayou .vjs-skip-backward-10:hover,
+.vjs-ohayou .vjs-skip-forward-10:hover {
+  color: hsl(0, 100%, 50%);
+}
+
+/* Next episode button */
+.vjs-ohayou .vjs-next-episode-btn {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: hsl(0, 0%, 100%);
+  padding: 0 0.5rem;
+  transition: color 0.15s;
+}
+
+.vjs-ohayou .vjs-next-episode-btn:hover {
+  color: hsl(0, 100%, 50%);
+}
+
+/* Logo overlay */
+.vjs-ohayou-logo {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0.85;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.vjs-ohayou-logo img {
+  height: 28px;
+  width: auto;
+}
+
+.vjs-ohayou-logo span {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+}
+
+.vjs-ohayou-logo .logo-ohayou {
+  color: hsl(0, 100%, 50%);
+}
+
+.vjs-ohayou-logo .logo-anime {
+  color: hsl(0, 0%, 100%);
+}
+
+/* Watch Full Episode overlay (for shorts context) */
+.vjs-watch-full-overlay {
+  position: absolute;
+  bottom: 5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: 2rem;
+  background: hsl(0, 100%, 50% / 0.9);
+  color: hsl(0, 0%, 100%);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background 0.2s, transform 0.2s;
+  white-space: nowrap;
+}
+
+.vjs-watch-full-overlay:hover {
+  background: hsl(0, 100%, 50%);
+  transform: translateX(-50%) scale(1.05);
+}
+
+/* Responsive: smaller controls on mobile */
+@media (max-width: 640px) {
+  .vjs-ohayou .vjs-big-play-button {
+    width: 3rem;
+    height: 3rem;
+    line-height: 3rem;
+    font-size: 1.5rem;
+  }
+
+  .vjs-ohayou .vjs-control-bar {
+    height: 3rem;
+  }
+
+  .vjs-ohayou .vjs-time-control {
+    font-size: 0.65rem;
+    line-height: 3rem;
+  }
+
+  .vjs-ohayou-logo {
+    top: 0.5rem;
+    left: 0.5rem;
+  }
+
+  .vjs-ohayou-logo img {
+    height: 22px;
+  }
+
+  .vjs-ohayou-logo span {
+    font-size: 0.7rem;
+  }
+}
+
+/* Loading spinner override */
+.vjs-ohayou .vjs-loading-spinner {
+  border-color: hsl(0, 100%, 50% / 0.5);
+}
+
+.vjs-ohayou .vjs-loading-spinner::before,
+.vjs-ohayou .vjs-loading-spinner::after {
+  border-top-color: hsl(0, 100%, 50%);
+}
+
+/* Fullscreen rounded corners fix */
+.vjs-ohayou.vjs-fullscreen {
+  border-radius: 0;
+}
+
+.vjs-ohayou.vjs-fullscreen .vjs-control-bar {
+  border-radius: 0;
+}

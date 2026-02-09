@@ -1,8 +1,8 @@
 import { useParams } from "react-router-dom";
 import { useEpisodeById, useNextEpisode } from "@/hooks/useSeriesData";
-import VideoPlayer from "@/components/VideoPlayer";
+import OhayouVideoPlayer from "@/components/video-player/OhayouVideoPlayer";
 import NextEpisodeCard from "@/components/NextEpisodeCard";
-import { Clock, Star, Calendar } from "lucide-react";
+import { Clock, Calendar } from "lucide-react";
 import { formatTimestamp } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -46,11 +46,13 @@ export default function WatchPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <VideoPlayer
+          <OhayouVideoPlayer
             episodeTitle={episode.title}
             animeName={animeName}
             duration={episode.duration}
             videoUrl={episode.video_url}
+            nextEpisodeId={nextEpisode?.id}
+            poster={episode.thumbnail_url || episode.series?.image_url}
           />
         </motion.div>
 
