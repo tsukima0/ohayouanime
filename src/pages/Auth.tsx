@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, UserIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { lovable } from "@/integrations/lovable/index";
@@ -18,6 +18,7 @@ export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -114,7 +115,7 @@ export default function AuthPage() {
         navigate("/");
       }
     } else {
-      const { error } = await signUp(email, password);
+      const { error } = await signUp(email, password, username.trim() || undefined);
       if (error) {
         setError(error.message);
       } else {
@@ -299,6 +300,24 @@ export default function AuthPage() {
                   />
                 </div>
               </div>
+
+              {mode === "signup" && (
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Username (optional)</label>
+                  <div className="relative">
+                    <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").slice(0, 30))}
+                      maxLength={30}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-secondary border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                      placeholder="cool_username"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Letters, numbers, underscores only. You can set this later.</p>
+                </div>
+              )}
 
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Password</label>

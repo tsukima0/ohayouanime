@@ -1,15 +1,17 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 import { useWatchlist } from "@/hooks/useWatchlist";
 import { supabase } from "@/integrations/supabase/client";
 import { useSeries } from "@/hooks/useSeriesData";
-import { User, Mail, Calendar, Bookmark, LogOut, ArrowLeft, Play, Pencil, Camera, Check, X, Loader2 } from "lucide-react";
+import { User, Mail, Calendar, Bookmark, LogOut, ArrowLeft, Play, Pencil, Camera, Check, X, Loader2, AtSign } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 export default function ProfilePage() {
   const { user, signOut } = useAuth();
+  const { profile, updateUsername } = useProfile();
   const { watchlistIds, toggleWatchlist } = useWatchlist();
   const { data: allSeries } = useSeries();
 
@@ -17,6 +19,9 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState("");
   const [savingName, setSavingName] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [usernameInput, setUsernameInput] = useState("");
+  const [savingUsername, setSavingUsername] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!user) {
@@ -224,6 +229,59 @@ export default function ProfilePage() {
                     title="Edit display name"
                   >
                     <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+              {/* Username */}
+              {editingUsername ? (
+                <div className="flex items-center gap-2 mt-1">
+                  <AtSign className="w-3.5 h-3.5 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={usernameInput}
+                    onChange={(e) => setUsernameInput(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").slice(0, 30))}
+                    maxLength={30}
+                    autoFocus
+                    className="text-sm bg-secondary border border-border rounded-lg px-2 py-0.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 w-full max-w-[180px]"
+                    placeholder="username"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        setSavingUsername(true);
+                        updateUsername.mutateAsync(usernameInput.trim()).then(() => {
+                          toast.success("Username updated!");
+                          setEditingUsername(false);
+                        }).catch((err: Error) => toast.error(err.message)).finally(() => setSavingUsername(false));
+                      }
+                      if (e.key === "Escape") setEditingUsername(false);
+                    }}
+                  />
+                  <button
+                    onClick={() => {
+                      setSavingUsername(true);
+                      updateUsername.mutateAsync(usernameInput.trim()).then(() => {
+                        toast.success("Username updated!");
+                        setEditingUsername(false);
+                      }).catch((err: Error) => toast.error(err.message)).finally(() => setSavingUsername(false));
+                    }}
+                    disabled={savingUsername}
+                    className="p-1 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                  >
+                    {savingUsername ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                  </button>
+                  <button onClick={() => setEditingUsername(false)} className="p-1 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
+                  <AtSign className="w-3.5 h-3.5" />
+                  <span className="truncate">{profile?.username || "Set username"}</span>
+                  <button
+                    onClick={() => { setUsernameInput(profile?.username || ""); setEditingUsername(true); }}
+                    className="p-0.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors flex-shrink-0"
+                    title="Edit username"
+                  >
+                    <Pencil className="w-3 h-3" />
                   </button>
                 </div>
               )}
