@@ -1,9 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Film, Play, Search, Sun, Moon, User, Shield } from "lucide-react";
+import { Home, Film, Play, Search, Sun, Moon, User, Shield, Menu } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import { motion } from "framer-motion";
+import { useState } from "react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import logoImg from "@/assets/logo.png";
 
 const navItems = [
@@ -17,6 +19,7 @@ export default function Navbar() {
   const { user, signOut } = useAuth();
   const { isAdmin } = useAdmin();
   const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-card-strong">
@@ -31,7 +34,7 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Navigation Links */}
+          {/* Desktop Navigation Links */}
           <div className="hidden sm:flex items-center gap-1">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path || 
@@ -60,9 +63,8 @@ export default function Navbar() {
             })}
           </div>
 
-          {/* Right Side */}
-          <div className="flex items-center gap-2">
-            {/* Admin */}
+          {/* Desktop Right Side */}
+          <div className="hidden sm:flex items-center gap-2">
             {isAdmin && (
               <Link
                 to="/admin"
@@ -76,16 +78,12 @@ export default function Navbar() {
                 <Shield className="w-5 h-5" />
               </Link>
             )}
-
-            {/* Search */}
             <Link
               to="/search"
               className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
             >
               <Search className="w-5 h-5" />
             </Link>
-
-            {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
               className="relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-300"
@@ -98,38 +96,19 @@ export default function Navbar() {
                 exit={{ rotate: 90, opacity: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                {theme === "dark" ? (
-                  <Sun className="w-5 h-5" />
-                ) : (
-                  <Moon className="w-5 h-5" />
-                )}
+                {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </motion.div>
             </button>
-
-            {/* Auth */}
             {user ? (
-              <Link
-                to="/profile"
-                className="p-1.5 rounded-lg hover:bg-accent transition-colors"
-                title="Profile"
-              >
+              <Link to="/profile" className="p-1.5 rounded-lg hover:bg-accent transition-colors" title="Profile">
                 {user.user_metadata?.avatar_url ? (
-                  <img
-                    src={user.user_metadata.avatar_url}
-                    alt="Profile"
-                    className="w-7 h-7 rounded-full object-cover border border-border"
-                    referrerPolicy="no-referrer"
-                  />
+                  <img src={user.user_metadata.avatar_url} alt="Profile" className="w-7 h-7 rounded-full object-cover border border-border" referrerPolicy="no-referrer" />
                 ) : (
                   <User className="w-5 h-5 text-muted-foreground" />
                 )}
               </Link>
             ) : (
-              <Link
-                to="/auth"
-                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                title="Sign In"
-              >
+              <Link to="/auth" className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors" title="Sign In">
                 <User className="w-5 h-5" />
               </Link>
             )}
@@ -165,57 +144,83 @@ export default function Navbar() {
             <Search className="w-5 h-5" />
             <span className="text-xs">Search</span>
           </Link>
-          {isAdmin && (
-            <Link
-              to="/admin"
-              className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-colors ${
-                location.pathname === "/admin" ? "text-primary" : "text-muted-foreground"
-              }`}
-            >
-              <Shield className="w-5 h-5" />
-              <span className="text-xs">Admin</span>
-            </Link>
-          )}
           <button
-            onClick={toggleTheme}
+            onClick={() => setMenuOpen(true)}
             className="flex flex-col items-center gap-1 px-3 py-1 rounded-lg text-muted-foreground transition-colors"
-            aria-label="Toggle theme"
           >
-            {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            <span className="text-xs">Theme</span>
+            <Menu className="w-5 h-5" />
+            <span className="text-xs">Menu</span>
           </button>
-          {user ? (
-            <Link
-              to="/profile"
-              className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-colors ${
-                location.pathname === "/profile" ? "text-primary" : "text-muted-foreground"
-              }`}
-            >
-              {user.user_metadata?.avatar_url ? (
-                <img
-                  src={user.user_metadata.avatar_url}
-                  alt="Profile"
-                  className="w-5 h-5 rounded-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <User className="w-5 h-5" />
-              )}
-              <span className="text-xs">Profile</span>
-            </Link>
-          ) : (
-            <Link
-              to="/auth"
-              className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-colors ${
-                location.pathname === "/auth" ? "text-primary" : "text-muted-foreground"
-              }`}
-            >
-              <User className="w-5 h-5" />
-              <span className="text-xs">Login</span>
-            </Link>
-          )}
         </div>
       </div>
+
+      {/* Mobile Sidebar Menu */}
+      <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+        <SheetContent side="right" className="w-72 p-0">
+          <SheetHeader className="p-4 border-b border-border">
+            <SheetTitle className="flex items-center gap-2">
+              <img src={logoImg} alt="Ohayou Anime" className="w-7 h-7 rounded-md object-cover" />
+              <span className="font-display text-lg font-bold">
+                <span className="text-primary">Ohayou</span>{" "}
+                <span className="text-foreground">Anime</span>
+              </span>
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col py-2">
+            {/* Profile / Login */}
+            {user ? (
+              <Link
+                to="/profile"
+                onClick={() => setMenuOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 transition-colors ${
+                  location.pathname === "/profile" ? "text-primary bg-primary/10" : "text-foreground hover:bg-accent"
+                }`}
+              >
+                {user.user_metadata?.avatar_url ? (
+                  <img src={user.user_metadata.avatar_url} alt="Profile" className="w-6 h-6 rounded-full object-cover" referrerPolicy="no-referrer" />
+                ) : (
+                  <User className="w-5 h-5" />
+                )}
+                <span className="text-sm font-medium">Profile</span>
+              </Link>
+            ) : (
+              <Link
+                to="/auth"
+                onClick={() => setMenuOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 transition-colors ${
+                  location.pathname === "/auth" ? "text-primary bg-primary/10" : "text-foreground hover:bg-accent"
+                }`}
+              >
+                <User className="w-5 h-5" />
+                <span className="text-sm font-medium">Sign In</span>
+              </Link>
+            )}
+
+            {/* Admin */}
+            {isAdmin && (
+              <Link
+                to="/admin"
+                onClick={() => setMenuOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 transition-colors ${
+                  location.pathname === "/admin" ? "text-primary bg-primary/10" : "text-foreground hover:bg-accent"
+                }`}
+              >
+                <Shield className="w-5 h-5" />
+                <span className="text-sm font-medium">Admin Panel</span>
+              </Link>
+            )}
+
+            {/* Theme Toggle */}
+            <button
+              onClick={() => { toggleTheme(); setMenuOpen(false); }}
+              className="flex items-center gap-3 px-4 py-3 text-foreground hover:bg-accent transition-colors w-full text-left"
+            >
+              {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              <span className="text-sm font-medium">{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </nav>
   );
 }
