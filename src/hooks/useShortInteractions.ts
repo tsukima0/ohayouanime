@@ -75,9 +75,9 @@ export function useShortLike(shortId: string) {
 export interface DbShortComment {
   id: string;
   short_id: string;
-  user_id: string;
   text: string;
   created_at: string;
+  is_own: boolean;
 }
 
 export function useShortComments(shortId: string) {
@@ -88,12 +88,18 @@ export function useShortComments(shortId: string) {
     queryKey: ["short-comments", shortId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("short_comments")
+        .from("short_comments_public" as any)
         .select("*")
         .eq("short_id", shortId)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data as DbShortComment[];
+      return (data as any[]).map((c) => ({
+        id: c.id,
+        short_id: c.short_id,
+        text: c.text,
+        created_at: c.created_at,
+        is_own: !!c.is_own,
+      })) as DbShortComment[];
     },
     enabled: !!shortId,
   });
@@ -107,10 +113,10 @@ export function useShortComments(shortId: string) {
       const { data, error } = await supabase
         .from("short_comments")
         .insert({ short_id: shortId, user_id: user.id, text: trimmed })
-        .select()
+        .select("id, short_id, text, created_at")
         .single();
       if (error) throw error;
-      return data as DbShortComment;
+      return { ...data, is_own: true } as DbShortComment;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["short-comments", shortId] });

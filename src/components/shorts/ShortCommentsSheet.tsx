@@ -64,7 +64,7 @@ export default function ShortCommentsSheet({ open, onOpenChange, shortId }: Shor
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-foreground">
-                        {comment.user_id === user?.id ? "You" : "User"}
+                        {comment.is_own ? "You" : "User"}
                       </span>
                       <span className="text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
@@ -72,7 +72,7 @@ export default function ShortCommentsSheet({ open, onOpenChange, shortId }: Shor
                     </div>
                     <p className="text-sm text-foreground/90 mt-0.5">{comment.text}</p>
                   </div>
-                  {comment.user_id === user?.id && (
+                  {comment.is_own && (
                     <button
                       onClick={() => deleteComment(comment.id)}
                       className="shrink-0 pt-1 text-muted-foreground hover:text-destructive transition-colors"
