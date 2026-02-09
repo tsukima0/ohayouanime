@@ -379,6 +379,45 @@ export type Database = {
         }
         Relationships: []
       }
+      short_comments_public: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          is_own: boolean | null
+          short_id: string | null
+          text: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          is_own?: never
+          short_id?: string | null
+          text?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          is_own?: never
+          short_id?: string | null
+          text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "short_comments_short_id_fkey"
+            columns: ["short_id"]
+            isOneToOne: false
+            referencedRelation: "shorts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "short_comments_short_id_fkey"
+            columns: ["short_id"]
+            isOneToOne: false
+            referencedRelation: "shorts_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shorts_public: {
         Row: {
           comments_count: number | null
