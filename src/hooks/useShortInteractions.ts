@@ -78,6 +78,7 @@ export interface DbShortComment {
   text: string;
   created_at: string;
   is_own: boolean;
+  username: string | null;
 }
 
 export function useShortComments(shortId: string) {
@@ -99,6 +100,7 @@ export function useShortComments(shortId: string) {
         text: c.text,
         created_at: c.created_at,
         is_own: !!c.is_own,
+        username: c.username ?? null,
       })) as DbShortComment[];
     },
     enabled: !!shortId,

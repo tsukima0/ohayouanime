@@ -64,7 +64,7 @@ export default function ShortCommentsSheet({ open, onOpenChange, shortId }: Shor
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-foreground">
-                        {comment.is_own ? "You" : "User"}
+                        {comment.is_own ? "You" : (comment.username || "Anonymous")}
                       </span>
                       <span className="text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
