@@ -57,6 +57,10 @@ export default function OhayouVideoPlayer({
       }
     }
 
+    // Disable picture-in-picture
+    videoElement.disablePictureInPicture = true;
+    videoElement.setAttribute("disablePictureInPicture", "");
+
     const player = videojs(videoElement, {
       controls: true,
       autoplay: false,
@@ -66,6 +70,9 @@ export default function OhayouVideoPlayer({
       playbackRates: [0.5, 0.75, 1, 1.25, 1.5, 2],
       sources,
       poster: poster || undefined,
+      controlBar: {
+        pictureInPictureToggle: false,
+      },
     });
 
     playerRef.current = player;
