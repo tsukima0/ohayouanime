@@ -39,7 +39,7 @@ export default function Footer() {
             <div className="space-y-3">
               <h4 className="font-display text-sm font-semibold text-foreground">Support</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">Copyright Policy</a></li>
+                <li><Link to="/copyright-policy" className="text-sm text-muted-foreground hover:text-primary transition-colors">Copyright Policy</Link></li>
                 <li><a href="mailto:tsukimapodcast@gmail.com" className="text-sm text-muted-foreground hover:text-primary transition-colors">Contact</a></li>
               </ul>
             </div>
