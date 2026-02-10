@@ -15,6 +15,7 @@ import ProfilePage from "./pages/Profile";
 import SearchPage from "./pages/Search";
 import AdminPage from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import CopyrightPolicyPage from "./pages/CopyrightPolicy";
 import Footer from "@/components/Footer";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/copyright-policy" element={<CopyrightPolicyPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
