@@ -48,10 +48,10 @@ export default function Footer() {
             <div className="space-y-3">
               <h4 className="font-display text-sm font-semibold text-foreground">Follow Us</h4>
               <div className="flex items-center gap-3">
-                <a href="#" className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors" aria-label="Facebook">
+                <a href="https://www.facebook.com/share/18LB36h4SR/" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors" aria-label="Facebook">
                   <Facebook className="w-5 h-5" />
                 </a>
-                <a href="#" className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors" aria-label="Telegram">
+                <a href="https://t.me/OhayouAM" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors" aria-label="Telegram">
                   <Send className="w-5 h-5" />
                 </a>
               </div>
