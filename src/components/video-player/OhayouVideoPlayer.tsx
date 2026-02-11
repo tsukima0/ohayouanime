@@ -5,6 +5,7 @@ import "./videojs-theme.css";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import logoImg from "@/assets/logo.png";
+import DoubleTapSkip from "./DoubleTapSkip";
 
 interface OhayouVideoPlayerProps {
   videoUrl?: string | null;
@@ -39,6 +40,21 @@ export default function OhayouVideoPlayer({
   const handleWatchFull = useCallback(() => {
     if (fullEpisodeId) navigate(`/watch/${fullEpisodeId}`);
   }, [fullEpisodeId, navigate]);
+
+  const handleSkipForward = useCallback(() => {
+    const p = playerRef.current;
+    if (!p || (p as any).isDisposed()) return;
+    const ct = p.currentTime() ?? 0;
+    const dur = p.duration() ?? 0;
+    p.currentTime(Math.min(dur, ct + 10));
+  }, []);
+
+  const handleSkipBackward = useCallback(() => {
+    const p = playerRef.current;
+    if (!p || (p as any).isDisposed()) return;
+    const ct = p.currentTime() ?? 0;
+    p.currentTime(Math.max(0, ct - 10));
+  }, []);
 
   useEffect(() => {
     if (!videoElRef.current) return;
@@ -159,6 +175,9 @@ export default function OhayouVideoPlayer({
           Watch Full Episode
         </button>
       )}
+
+      {/* Double-tap skip overlay */}
+      <DoubleTapSkip onSkipForward={handleSkipForward} onSkipBackward={handleSkipBackward} />
 
       {/* Video.js container */}
       <div ref={videoElRef} data-vjs-player>
