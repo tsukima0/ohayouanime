@@ -101,11 +101,23 @@ export default function OhayouVideoPlayer({
       // --- Custom Button Factory ---
       const Button = videojs.getComponent("Button") as any;
 
+      // Mobile-friendly handler: use touchstart + click with preventDefault
+      const mobileTap = (el: HTMLElement, handler: () => void) => {
+        el.addEventListener("touchstart", (e) => {
+          e.preventDefault();
+          handler();
+        }, { passive: false });
+        el.addEventListener("click", (e) => {
+          e.preventDefault();
+          handler();
+        });
+      };
+
       // Skip Back 10s
       const skipBack = new Button(player, {});
       skipBack.addClass("vjs-skip-backward-10");
       skipBack.el().innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.5 8-3-3 3-3"/><path d="M9.5 5H16a4 4 0 0 1 0 8h-1"/><path d="M7 15h3v5"/><path d="M14 15a2 2 0 1 0 0 5 2 2 0 0 0 0-5Z"/></svg>`;
-      skipBack.on("click", () => {
+      mobileTap(skipBack.el(), () => {
         const ct = player.currentTime() ?? 0;
         player.currentTime(Math.max(0, ct - 10));
       });
@@ -114,7 +126,7 @@ export default function OhayouVideoPlayer({
       const skipFwd = new Button(player, {});
       skipFwd.addClass("vjs-skip-forward-10");
       skipFwd.el().innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11.5 8 3-3-3-3"/><path d="M14.5 5H8a4 4 0 0 0 0 8h1"/><path d="M7 15h3v5"/><path d="M17 15a2 2 0 1 0 0 5 2 2 0 0 0 0-5Z"/></svg>`;
-      skipFwd.on("click", () => {
+      mobileTap(skipFwd.el(), () => {
         const ct = player.currentTime() ?? 0;
         const dur = player.duration() ?? 0;
         player.currentTime(Math.min(dur, ct + 10));
@@ -124,7 +136,7 @@ export default function OhayouVideoPlayer({
       const nextBtn = new Button(player, {});
       nextBtn.addClass("vjs-next-episode-btn");
       nextBtn.el().innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 5v14l11-7z"/><rect x="17" y="5" width="2" height="14" rx="1"/></svg><span>Next</span>`;
-      nextBtn.on("click", () => {
+      mobileTap(nextBtn.el(), () => {
         if (nextEpRef.current) {
           navigate(`/watch/${nextEpRef.current}`);
         } else {

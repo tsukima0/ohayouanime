@@ -19,17 +19,10 @@ export default function DoubleTapSkip({ onSkipForward, onSkipBackward }: DoubleT
   const idRef = useRef(0);
 
   const handleTap = useCallback(
-    (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
-      const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-      let clientX: number, clientY: number;
-
-      if ("touches" in e) {
-        clientX = e.changedTouches[0].clientX;
-        clientY = e.changedTouches[0].clientY;
-      } else {
-        clientX = e.clientX;
-        clientY = e.clientY;
-      }
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const clientX = e.clientX;
+      const clientY = e.clientY;
 
       const relX = clientX - rect.left;
       const side: "left" | "right" = relX < rect.width / 2 ? "left" : "right";
@@ -63,8 +56,8 @@ export default function DoubleTapSkip({ onSkipForward, onSkipBackward }: DoubleT
   return (
     <div
       className="absolute inset-0 z-10"
-      onClick={handleTap}
-      style={{ pointerEvents: "auto" }}
+      onPointerDown={handleTap}
+      style={{ pointerEvents: "auto", touchAction: "manipulation" }}
     >
       <AnimatePresence>
         {ripples.map((r) => (
