@@ -5,7 +5,7 @@ import {
   Maximize,
   Minimize,
 
-  Subtitles, FastForward } from
+  Subtitles, SkipForward, SkipBack } from
 "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import VideoProgressBar from "./VideoProgressBar";
@@ -289,7 +289,7 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
               }}
               className="text-[hsl(0,0%,100%)] hover:text-primary transition-colors p-1 shrink-0">
 
-            <FastForward className="w-5 h-5" />
+            <SkipForward className="w-5 h-5" />
           </button>
 
           {/* Fullscreen */}
