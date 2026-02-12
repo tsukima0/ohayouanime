@@ -151,7 +151,7 @@ export default function OhayouVideoPlayer({
       <CustomControlBar playerRef={playerRef} onNext={handleNext} playerReady={playerReady} />
 
       {/* Video.js container */}
-      <div ref={videoElRef} data-vjs-player>
+      <div ref={videoElRef} data-vjs-player style={{ position: "relative", zIndex: 0 }}>
         <video className="video-js vjs-ohayou vjs-big-play-centered" playsInline crossOrigin="anonymous" />
       </div>
     </div>
