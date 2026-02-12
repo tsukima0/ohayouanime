@@ -216,7 +216,7 @@ export default function CustomControlBar({ playerRef, onNext, playerReady }: Cus
         style={{
           opacity: visible ? 1 : 0,
           pointerEvents: visible ? "auto" : "none",
-          zIndex: isFullscreen ? 2147483647 : 20
+          zIndex: 2147483646
         }}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}>
