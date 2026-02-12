@@ -229,10 +229,10 @@ export default function CustomControlBar({ playerRef, onNext, playerReady, onAre
         <div
             className="flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full mx-auto max-w-3xl"
             style={{
-              background: "hsla(0, 0%, 0%, 0.6)",
-              backdropFilter: "blur(16px)",
-              WebkitBackdropFilter: "blur(16px)",
-              border: "1px solid hsla(0, 0%, 100%, 0.08)"
+              background: "hsla(0, 0%, 0%, 0.25)",
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(8px)",
+              border: "1px solid hsla(0, 0%, 100%, 0.06)"
             }}>
 
           {/* Play/Pause */}
