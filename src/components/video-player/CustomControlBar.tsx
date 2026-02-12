@@ -199,7 +199,7 @@ export default function CustomControlBar({ playerRef, onNext, playerReady }: Cus
       <div
         className="absolute inset-0"
         style={{
-          zIndex: 8,
+          zIndex: 2147483630,
           touchAction: "manipulation",
           pointerEvents: "auto"
         }}

@@ -52,18 +52,18 @@ export default function DoubleTapSkip({ onSkipForward, onSkipBackward }: DoubleT
       {/* Left 30% zone — pointer-events auto so it can receive taps */}
       <div
         className="absolute top-0 left-0 bottom-0"
-        style={{ width: "30%", pointerEvents: "auto", touchAction: "manipulation", zIndex: 11 }}
+        style={{ width: "30%", pointerEvents: "auto", touchAction: "manipulation", zIndex: 2147483640 }}
         onPointerDown={createHandler("left")}
       />
       {/* Right 30% zone */}
       <div
         className="absolute top-0 right-0 bottom-0"
-        style={{ width: "30%", pointerEvents: "auto", touchAction: "manipulation", zIndex: 11 }}
+        style={{ width: "30%", pointerEvents: "auto", touchAction: "manipulation", zIndex: 2147483640 }}
         onPointerDown={createHandler("right")}
       />
 
       {/* Ripple animations (full overlay, pointer-events-none) */}
-      <div className="absolute inset-0 z-[12] pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 2147483641 }}>
         <AnimatePresence>
           {ripples.map((r) => {
             const centerX = r.side === "left" ? "15%" : "85%";
