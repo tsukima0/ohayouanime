@@ -22,9 +22,10 @@ function formatTime(seconds: number): string {
 interface CustomControlBarProps {
   playerRef: React.RefObject<ReturnType<typeof import("video.js").default> | null>;
   onNext: () => void;
+  playerReady?: boolean;
 }
 
-export default function CustomControlBar({ playerRef, onNext }: CustomControlBarProps) {
+export default function CustomControlBar({ playerRef, onNext, playerReady }: CustomControlBarProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -90,7 +91,7 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
       pl.off("fullscreenchange", onFsChange);
       pl.off("ratechange", onRateChange);
     };
-  }, [getPlayer]);
+  }, [getPlayer, playerReady]);
 
   // Auto-hide logic
   const resetHideTimer = useCallback(() => {
