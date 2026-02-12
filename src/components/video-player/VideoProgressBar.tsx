@@ -5,6 +5,8 @@ interface VideoProgressBarProps {
   duration: number;
   buffered: number;
   onSeek: (time: number) => void;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }
 
 export default function VideoProgressBar({
@@ -12,6 +14,8 @@ export default function VideoProgressBar({
   duration,
   buffered,
   onSeek,
+  onDragStart,
+  onDragEnd,
 }: VideoProgressBarProps) {
   const barRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -30,11 +34,15 @@ export default function VideoProgressBar({
       e.stopPropagation();
       setIsDragging(true);
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
+
+      // Pause video while scrubbing (YouTube-style)
+      onDragStart?.();
+
       const ratio = getProgress(e.clientX);
       const seekTime = Math.round(ratio * duration * 10) / 10;
       onSeek(seekTime);
     },
-    [duration, onSeek]
+    [duration, onSeek, onDragStart]
   );
 
   const handlePointerMove = useCallback(
@@ -56,8 +64,11 @@ export default function VideoProgressBar({
       if (!isDragging) return;
       e.stopPropagation();
       setIsDragging(false);
+
+      // Resume playback after scrubbing
+      onDragEnd?.();
     },
-    [isDragging]
+    [isDragging, onDragEnd]
   );
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
