@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Facebook, Send, Mail } from "lucide-react";
+import { Facebook, Send } from "lucide-react";
 import logoImg from "@/assets/logo.png";
 
 export default function Footer() {
@@ -53,9 +53,6 @@ export default function Footer() {
                 </a>
                 <a href="https://t.me/OhayouAM" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors" aria-label="Telegram">
                   <Send className="w-5 h-5" />
-                </a>
-                <a href="mailto:tsukimapodcast@gmail.com" className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors" aria-label="Contact Email">
-                  <Mail className="w-5 h-5" />
                 </a>
               </div>
             </div>
