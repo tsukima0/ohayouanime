@@ -134,14 +134,14 @@ export default function OhayouVideoPlayer({
         </button>
       )}
 
-      {/* Double-tap skip overlay */}
+      {/* Double-tap skip overlay (sides only, z-11) */}
       <DoubleTapSkip onSkipForward={handleSkipForward} onSkipBackward={handleSkipBackward} />
 
-      {/* Center click-to-play zone (between double-tap zones) */}
+      {/* Center click-to-play zone (between double-tap zones, below control bar) */}
       <div
-        className="absolute top-0 bottom-0 left-[30%] right-[30%] z-[9] cursor-pointer"
-        onClick={handleCenterClick}
-        style={{ touchAction: "manipulation" }}
+        className="absolute top-0 bottom-0 left-[30%] right-[30%] cursor-pointer"
+        style={{ zIndex: 7, touchAction: "manipulation", pointerEvents: "auto" }}
+        onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleCenterClick(); }}
       />
 
       {/* Custom floating control bar */}

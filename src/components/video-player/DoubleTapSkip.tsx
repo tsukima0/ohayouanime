@@ -49,24 +49,23 @@ export default function DoubleTapSkip({ onSkipForward, onSkipBackward }: DoubleT
 
   return (
     <>
-      {/* Left 30% zone — pointer-events: none by default, only captures double-tap via JS */}
+      {/* Left 30% zone — pointer-events auto so it can receive taps */}
       <div
         className="absolute top-0 left-0 bottom-0"
-        style={{ width: "30%", pointerEvents: "none", touchAction: "manipulation", zIndex: 10 }}
+        style={{ width: "30%", pointerEvents: "auto", touchAction: "manipulation", zIndex: 11 }}
         onPointerDown={createHandler("left")}
       />
       {/* Right 30% zone */}
       <div
         className="absolute top-0 right-0 bottom-0"
-        style={{ width: "30%", pointerEvents: "none", touchAction: "manipulation", zIndex: 10 }}
+        style={{ width: "30%", pointerEvents: "auto", touchAction: "manipulation", zIndex: 11 }}
         onPointerDown={createHandler("right")}
       />
 
       {/* Ripple animations (full overlay, pointer-events-none) */}
-      <div className="absolute inset-0 z-10 pointer-events-none">
+      <div className="absolute inset-0 z-[12] pointer-events-none">
         <AnimatePresence>
           {ripples.map((r) => {
-            // Position ripple within its side zone
             const centerX = r.side === "left" ? "15%" : "85%";
             return (
               <motion.div

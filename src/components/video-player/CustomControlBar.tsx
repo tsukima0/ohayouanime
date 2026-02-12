@@ -5,9 +5,9 @@ import {
   Maximize,
   Minimize,
   SkipForward,
+  SkipBack,
   Subtitles,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import VideoProgressBar from "./VideoProgressBar";
 import VideoVolumeControl from "./VideoVolumeControl";
 import VideoSettingsMenu from "./VideoSettingsMenu";
@@ -38,6 +38,7 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
 
   const hideTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const containerRef = useRef<HTMLDivElement>(null);
+  const wasPlayingRef = useRef(false);
 
   const getPlayer = useCallback(() => {
     const p = playerRef.current;
@@ -55,7 +56,6 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
     const onTime = () => {
       setCurrentTime(p.currentTime() ?? 0);
       setDuration(p.duration() ?? 0);
-      // buffered
       const buf = p.buffered();
       if (buf && buf.length > 0) {
         setBuffered(buf.end(buf.length - 1));
@@ -65,14 +65,12 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
       setVolume(p.volume() ?? 1);
       setMuted(p.muted() ?? false);
     };
-    const onFsChange = () => setIsFullscreen(p.isFullscreen() ?? false);
     const onRateChange = () => setSpeed(p.playbackRate() ?? 1);
 
     p.on("play", onPlay);
     p.on("pause", onPause);
     p.on("timeupdate", onTime);
     p.on("volumechange", onVolChange);
-    p.on("fullscreenchange", onFsChange);
     p.on("ratechange", onRateChange);
 
     // initial sync
@@ -87,10 +85,16 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
       pl.off("pause", onPause);
       pl.off("timeupdate", onTime);
       pl.off("volumechange", onVolChange);
-      pl.off("fullscreenchange", onFsChange);
       pl.off("ratechange", onRateChange);
     };
   }, [getPlayer]);
+
+  // Fullscreen change via document event (works for container-based fullscreen)
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
 
   // Auto-hide logic
   const resetHideTimer = useCallback(() => {
@@ -104,7 +108,6 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
     }, 3000);
   }, [getPlayer, settingsOpen]);
 
-  // Toggle controls on tap in video area
   const handleVideoAreaTap = useCallback(() => {
     if (visible) {
       setVisible(false);
@@ -117,13 +120,9 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
   useEffect(() => {
     const el = containerRef.current?.parentElement;
     if (!el) return;
-
     const onMove = () => resetHideTimer();
-
     el.addEventListener("mousemove", onMove);
-
     resetHideTimer();
-
     return () => {
       el.removeEventListener("mousemove", onMove);
       if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
@@ -135,8 +134,11 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
     if (!isPlaying) setVisible(true);
   }, [isPlaying]);
 
+  // --- Player actions with stopPropagation + preventDefault ---
+
   const togglePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     const p = getPlayer();
     if (!p) return;
     if (p.paused()) p.play();
@@ -147,6 +149,20 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
     const p = getPlayer();
     if (p) p.currentTime(time);
   };
+
+  // Pause while scrubbing, resume on release (YouTube-style)
+  const handleDragStart = useCallback(() => {
+    const p = getPlayer();
+    if (!p) return;
+    wasPlayingRef.current = !p.paused();
+    if (!p.paused()) p.pause();
+  }, [getPlayer]);
+
+  const handleDragEnd = useCallback(() => {
+    const p = getPlayer();
+    if (!p) return;
+    if (wasPlayingRef.current) p.play();
+  }, [getPlayer]);
 
   const handleVolumeChange = (v: number) => {
     const p = getPlayer();
@@ -167,30 +183,32 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
     setSettingsOpen(false);
   };
 
+  const handleSkip = useCallback((amount: number) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const p = getPlayer();
+    if (!p) return;
+    const ct = p.currentTime() ?? 0;
+    const dur = p.duration() ?? 0;
+    p.currentTime(Math.max(0, Math.min(dur, ct + amount)));
+  }, [getPlayer]);
+
   const toggleFullscreen = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Target the outer cinema-player container so controls stay inside fullscreen
+    e.preventDefault();
     const container = containerRef.current?.closest(".cinema-player") as HTMLElement | null;
     if (!container) return;
     if (document.fullscreenElement) {
       await document.exitFullscreen();
-      try {
-        await (screen.orientation as any)?.lock?.("portrait");
-      } catch { /* not supported or denied */ }
+      try { await (screen.orientation as any)?.lock?.("portrait"); } catch {}
     } else {
       await container.requestFullscreen();
-      try {
-        await (screen.orientation as any)?.lock?.("landscape");
-      } catch { /* not supported or denied */ }
+      try { await (screen.orientation as any)?.lock?.("landscape"); } catch {}
     }
   };
 
-  // Track fullscreen state via document events (works for container-based fullscreen)
-  useEffect(() => {
-    const handler = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", handler);
-    return () => document.removeEventListener("fullscreenchange", handler);
-  }, []);
+  const fsZBase = isFullscreen ? 2147483640 : 8;
+  const fsZControls = isFullscreen ? 2147483647 : 20;
 
   return (
     <>
@@ -198,7 +216,7 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
       <div
         className="absolute inset-0"
         style={{
-          zIndex: isFullscreen ? 2147483646 : 8,
+          zIndex: fsZBase,
           touchAction: "manipulation",
           pointerEvents: "auto",
         }}
@@ -209,101 +227,127 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
           }
         }}
       />
+
+      {/* Control bar container — always interactive */}
       <div
         ref={containerRef}
         className="absolute bottom-0 left-0 right-0 transition-opacity duration-300"
         style={{
           opacity: visible ? 1 : 0,
           pointerEvents: visible ? "auto" : "none",
-          zIndex: isFullscreen ? 2147483647 : 20,
+          zIndex: fsZControls,
         }}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
-      {/* Progress bar above control bar */}
-      <div className="px-3 sm:px-4 mb-1">
-        <VideoProgressBar
-          currentTime={currentTime}
-          duration={duration}
-          buffered={buffered}
-          onSeek={handleSeek}
-        />
-      </div>
-
-      {/* Floating pill control bar */}
-      <div className="px-3 sm:px-4 pb-3 sm:pb-4">
-        <div
-          className="flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full mx-auto max-w-3xl"
-          style={{
-            background: "hsla(0, 0%, 0%, 0.6)",
-            backdropFilter: "blur(16px)",
-            WebkitBackdropFilter: "blur(16px)",
-            border: "1px solid hsla(0, 0%, 100%, 0.08)",
-          }}
-        >
-          {/* Play/Pause */}
-          <button
-            onClick={togglePlay}
-            className="text-[hsl(0,0%,100%)] hover:text-primary transition-colors p-1 shrink-0"
-          >
-            {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-          </button>
-
-          {/* Volume */}
-          <VideoVolumeControl
-            volume={volume}
-            muted={muted}
-            onVolumeChange={handleVolumeChange}
-            onMuteToggle={handleMuteToggle}
+        {/* Progress bar */}
+        <div className="px-3 sm:px-4 mb-1">
+          <VideoProgressBar
+            currentTime={currentTime}
+            duration={duration}
+            buffered={buffered}
+            onSeek={handleSeek}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
           />
-
-          {/* Time display */}
-          <span className="text-[hsl(0,0%,100%)] text-xs font-mono whitespace-nowrap select-none shrink-0">
-            {formatTime(currentTime)} / {formatTime(duration)}
-          </span>
-
-          {/* Center spacer */}
-          <div className="flex-1" />
-
-          {/* CC / Subtitles */}
-          <button
-            onClick={(e) => e.stopPropagation()}
-            className="text-[hsl(0,0%,100%)] hover:text-primary transition-colors p-1 shrink-0"
-          >
-            <Subtitles className="w-5 h-5" />
-          </button>
-
-          {/* Settings */}
-          <VideoSettingsMenu
-            isOpen={settingsOpen}
-            onToggle={() => setSettingsOpen((o) => !o)}
-            speed={speed}
-            onSpeedChange={handleSpeedChange}
-          />
-
-          {/* Next Episode */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onNext();
-            }}
-            className="text-[hsl(0,0%,100%)] hover:text-primary transition-colors p-1 shrink-0"
-          >
-            <SkipForward className="w-5 h-5" />
-          </button>
-
-          {/* Fullscreen */}
-          <button
-            onClick={toggleFullscreen}
-            className="text-[hsl(0,0%,100%)] hover:text-primary transition-colors p-1 shrink-0"
-          >
-            {isFullscreen ? (
-              <Minimize className="w-5 h-5" />
-            ) : (
-              <Maximize className="w-5 h-5" />
-            )}
-          </button>
         </div>
+
+        {/* Floating pill control bar */}
+        <div className="px-3 sm:px-4 pb-3 sm:pb-4">
+          <div
+            className="flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full mx-auto max-w-3xl"
+            style={{
+              background: "hsla(0, 0%, 0%, 0.6)",
+              backdropFilter: "blur(16px)",
+              WebkitBackdropFilter: "blur(16px)",
+              border: "1px solid hsla(0, 0%, 100%, 0.08)",
+              position: "relative",
+              zIndex: fsZControls,
+            }}
+          >
+            {/* Skip Back 10s */}
+            <button
+              onClick={handleSkip(-10)}
+              className="text-[hsl(0,0%,100%)] hover:text-primary transition-colors p-1 shrink-0"
+              style={{ position: "relative", zIndex: 999 }}
+            >
+              <SkipBack className="w-5 h-5" />
+            </button>
+
+            {/* Play/Pause */}
+            <button
+              onClick={togglePlay}
+              className="text-[hsl(0,0%,100%)] hover:text-primary transition-colors p-1 shrink-0"
+              style={{ position: "relative", zIndex: 999 }}
+            >
+              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+            </button>
+
+            {/* Skip Forward 10s */}
+            <button
+              onClick={handleSkip(10)}
+              className="text-[hsl(0,0%,100%)] hover:text-primary transition-colors p-1 shrink-0"
+              style={{ position: "relative", zIndex: 999 }}
+            >
+              <SkipForward className="w-5 h-5" />
+            </button>
+
+            {/* Volume */}
+            <VideoVolumeControl
+              volume={volume}
+              muted={muted}
+              onVolumeChange={handleVolumeChange}
+              onMuteToggle={handleMuteToggle}
+            />
+
+            {/* Time display */}
+            <span className="text-[hsl(0,0%,100%)] text-xs font-mono whitespace-nowrap select-none shrink-0">
+              {formatTime(currentTime)} / {formatTime(duration)}
+            </span>
+
+            {/* Center spacer */}
+            <div className="flex-1" />
+
+            {/* CC / Subtitles */}
+            <button
+              onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+              className="text-[hsl(0,0%,100%)] hover:text-primary transition-colors p-1 shrink-0"
+            >
+              <Subtitles className="w-5 h-5" />
+            </button>
+
+            {/* Settings */}
+            <VideoSettingsMenu
+              isOpen={settingsOpen}
+              onToggle={() => setSettingsOpen((o) => !o)}
+              speed={speed}
+              onSpeedChange={handleSpeedChange}
+            />
+
+            {/* Next Episode */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onNext();
+              }}
+              className="text-[hsl(0,0%,100%)] hover:text-primary transition-colors p-1 shrink-0"
+            >
+              <SkipForward className="w-5 h-5" />
+            </button>
+
+            {/* Fullscreen */}
+            <button
+              onClick={toggleFullscreen}
+              className="text-[hsl(0,0%,100%)] hover:text-primary transition-colors p-1 shrink-0"
+            >
+              {isFullscreen ? (
+                <Minimize className="w-5 h-5" />
+              ) : (
+                <Maximize className="w-5 h-5" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </>
