@@ -168,39 +168,52 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
 
   const toggleFullscreen = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const p = getPlayer();
-    if (!p) return;
-    if (p.isFullscreen()) {
-      p.exitFullscreen();
+    // Target the outer cinema-player container so controls stay inside fullscreen
+    const container = containerRef.current?.closest(".cinema-player") as HTMLElement | null;
+    if (!container) return;
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
       try {
         await (screen.orientation as any)?.lock?.("portrait");
       } catch { /* not supported or denied */ }
     } else {
-      p.requestFullscreen();
+      await container.requestFullscreen();
       try {
         await (screen.orientation as any)?.lock?.("landscape");
       } catch { /* not supported or denied */ }
     }
   };
 
+  // Track fullscreen state via document events (works for container-based fullscreen)
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
+
   return (
     <>
       {/* Tap zone to toggle controls */}
       <div
-        className="absolute inset-0 z-[8]"
+        className="absolute inset-0"
+        style={{ zIndex: isFullscreen ? 9998 : 8, touchAction: "manipulation", pointerEvents: "auto" }}
         onPointerDown={(e) => {
-          // Only handle direct taps on the overlay itself
           if (e.target === e.currentTarget) {
             e.stopPropagation();
             handleVideoAreaTap();
           }
         }}
-        style={{ touchAction: "manipulation", pointerEvents: "auto" }}
       />
       <div
         ref={containerRef}
-        className="absolute bottom-0 left-0 right-0 z-20 transition-opacity duration-300"
-        style={{ opacity: visible ? 1 : 0, pointerEvents: visible ? "auto" : "none" }}
+        className="absolute bottom-0 left-0 right-0 transition-opacity duration-300"
+        style={{
+          opacity: visible ? 1 : 0,
+          pointerEvents: visible ? "auto" : "none",
+          zIndex: isFullscreen ? 9999 : 20,
+        }}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
       {/* Progress bar above control bar */}
       <div className="px-3 sm:px-4 mb-1">
