@@ -143,7 +143,7 @@ export default function OhayouVideoPlayer({
       {/* Center click-to-play zone — sits ABOVE tap-toggle and double-tap zones */}
       <div
         className="absolute top-0 bottom-0 left-[30%] right-[30%] cursor-pointer"
-        style={{ zIndex: 15, touchAction: "manipulation", pointerEvents: "auto" }}
+        style={{ zIndex: 2147483642, touchAction: "manipulation", pointerEvents: "auto" }}
         onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleCenterClick(); }}
       />
 

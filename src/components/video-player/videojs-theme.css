@@ -262,18 +262,34 @@ video::-webkit-media-controls-enclosure {
 
 /* Ensure cinema-player fills screen in fullscreen */
 .cinema-player:fullscreen {
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   background: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+.cinema-player:fullscreen [data-vjs-player] {
+  width: 100%;
+  height: 100%;
+}
+
+.cinema-player:fullscreen [data-vjs-player] video,
 .cinema-player:fullscreen video {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
-/* Fullscreen: ensure custom controls stay interactive above native layers */
+/* Fullscreen: make video.js fluid container fill properly */
+.cinema-player:fullscreen .video-js {
+  width: 100% !important;
+  height: 100% !important;
+  padding-top: 0 !important;
+}
+
+/* Fullscreen: ensure custom controls & overlays stay interactive above native layers */
 .cinema-player:fullscreen > * {
   pointer-events: auto !important;
 }
