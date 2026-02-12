@@ -198,7 +198,7 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
       <div
         className="absolute inset-0"
         style={{
-          zIndex: isFullscreen ? 2147483646 : 8,
+          zIndex: 8,
           touchAction: "manipulation",
           pointerEvents: "auto"
         }}
