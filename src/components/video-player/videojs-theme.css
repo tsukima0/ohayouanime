@@ -250,3 +250,25 @@
 .vjs-ohayou.vjs-fullscreen .vjs-control-bar {
   border-radius: 0;
 }
+
+/* Hide native browser video controls so custom Ohayou controls are always used */
+video::-webkit-media-controls {
+  display: none !important;
+}
+
+video::-webkit-media-controls-enclosure {
+  display: none !important;
+}
+
+/* Ensure cinema-player fills screen in fullscreen */
+.cinema-player:fullscreen {
+  width: 100%;
+  height: 100%;
+  background: black;
+}
+
+.cinema-player:fullscreen video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
