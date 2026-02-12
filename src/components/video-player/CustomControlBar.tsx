@@ -153,6 +153,7 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
     if (!p) return;
     p.volume(v);
     if (v > 0 && p.muted()) p.muted(false);
+    if (v === 0) p.muted(true);
   };
 
   const handleMuteToggle = () => {
@@ -196,7 +197,11 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
       {/* Tap zone to toggle controls */}
       <div
         className="absolute inset-0"
-        style={{ zIndex: isFullscreen ? 9998 : 8, touchAction: "manipulation", pointerEvents: "auto" }}
+        style={{
+          zIndex: isFullscreen ? 2147483646 : 8,
+          touchAction: "manipulation",
+          pointerEvents: "auto",
+        }}
         onPointerDown={(e) => {
           if (e.target === e.currentTarget) {
             e.stopPropagation();
@@ -210,7 +215,7 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
         style={{
           opacity: visible ? 1 : 0,
           pointerEvents: visible ? "auto" : "none",
-          zIndex: isFullscreen ? 9999 : 20,
+          zIndex: isFullscreen ? 2147483647 : 20,
         }}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}

@@ -31,7 +31,8 @@ export default function VideoProgressBar({
       setIsDragging(true);
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
       const ratio = getProgress(e.clientX);
-      onSeek(ratio * duration);
+      const seekTime = Math.round(ratio * duration * 10) / 10;
+      onSeek(seekTime);
     },
     [duration, onSeek]
   );
@@ -43,7 +44,8 @@ export default function VideoProgressBar({
       if (isDragging) {
         e.preventDefault();
         e.stopPropagation();
-        onSeek(ratio * duration);
+        const seekTime = Math.round(ratio * duration * 10) / 10;
+        onSeek(seekTime);
       }
     },
     [isDragging, duration, onSeek]

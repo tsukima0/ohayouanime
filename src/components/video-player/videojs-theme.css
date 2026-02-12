@@ -272,3 +272,16 @@ video::-webkit-media-controls-enclosure {
   height: 100%;
   object-fit: contain;
 }
+
+/* Fullscreen: ensure custom controls stay interactive above native layers */
+.cinema-player:fullscreen > * {
+  pointer-events: auto !important;
+}
+
+.cinema-player:fullscreen [data-vjs-player] {
+  pointer-events: none;
+}
+
+.cinema-player:fullscreen [data-vjs-player] video {
+  pointer-events: none;
+}
