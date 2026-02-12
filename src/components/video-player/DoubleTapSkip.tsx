@@ -49,16 +49,16 @@ export default function DoubleTapSkip({ onSkipForward, onSkipBackward }: DoubleT
 
   return (
     <>
-      {/* Left 30% zone */}
+      {/* Left 30% zone — pointer-events: none by default, only captures double-tap via JS */}
       <div
-        className="absolute top-0 left-0 bottom-0 z-10"
-        style={{ width: "30%", pointerEvents: "auto", touchAction: "manipulation" }}
+        className="absolute top-0 left-0 bottom-0"
+        style={{ width: "30%", pointerEvents: "none", touchAction: "manipulation", zIndex: 10 }}
         onPointerDown={createHandler("left")}
       />
       {/* Right 30% zone */}
       <div
-        className="absolute top-0 right-0 bottom-0 z-10"
-        style={{ width: "30%", pointerEvents: "auto", touchAction: "manipulation" }}
+        className="absolute top-0 right-0 bottom-0"
+        style={{ width: "30%", pointerEvents: "none", touchAction: "manipulation", zIndex: 10 }}
         onPointerDown={createHandler("right")}
       />
 
