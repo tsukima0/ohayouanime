@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
 import "./videojs-theme.css";
@@ -30,6 +30,7 @@ export default function OhayouVideoPlayer({
   const videoElRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<ReturnType<typeof videojs> | null>(null);
   const nextEpRef = useRef(nextEpisodeId);
+  const [playerReady, setPlayerReady] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -102,11 +103,13 @@ export default function OhayouVideoPlayer({
     });
 
     playerRef.current = player;
+    setPlayerReady(true);
 
     return () => {
       if (playerRef.current && !(playerRef.current as any).isDisposed()) {
         playerRef.current.dispose();
         playerRef.current = null;
+        setPlayerReady(false);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -145,7 +148,7 @@ export default function OhayouVideoPlayer({
       />
 
       {/* Custom floating control bar */}
-      <CustomControlBar playerRef={playerRef} onNext={handleNext} />
+      <CustomControlBar playerRef={playerRef} onNext={handleNext} playerReady={playerReady} />
 
       {/* Video.js container */}
       <div ref={videoElRef} data-vjs-player>
