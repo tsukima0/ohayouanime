@@ -104,21 +104,28 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
     }, 3000);
   }, [getPlayer, settingsOpen]);
 
+  // Toggle controls on tap in video area
+  const handleVideoAreaTap = useCallback(() => {
+    if (visible) {
+      setVisible(false);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    } else {
+      resetHideTimer();
+    }
+  }, [visible, resetHideTimer]);
+
   useEffect(() => {
     const el = containerRef.current?.parentElement;
     if (!el) return;
 
     const onMove = () => resetHideTimer();
-    const onTouch = () => resetHideTimer();
 
     el.addEventListener("mousemove", onMove);
-    el.addEventListener("touchstart", onTouch, { passive: true });
 
     resetHideTimer();
 
     return () => {
       el.removeEventListener("mousemove", onMove);
-      el.removeEventListener("touchstart", onTouch);
       if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     };
   }, [resetHideTimer]);
@@ -159,20 +166,42 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
     setSettingsOpen(false);
   };
 
-  const toggleFullscreen = (e: React.MouseEvent) => {
+  const toggleFullscreen = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const p = getPlayer();
     if (!p) return;
-    if (p.isFullscreen()) p.exitFullscreen();
-    else p.requestFullscreen();
+    if (p.isFullscreen()) {
+      p.exitFullscreen();
+      try {
+        await (screen.orientation as any)?.lock?.("portrait");
+      } catch { /* not supported or denied */ }
+    } else {
+      p.requestFullscreen();
+      try {
+        await (screen.orientation as any)?.lock?.("landscape");
+      } catch { /* not supported or denied */ }
+    }
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="absolute bottom-0 left-0 right-0 z-20 transition-opacity duration-300"
-      style={{ opacity: visible ? 1 : 0, pointerEvents: visible ? "auto" : "none" }}
-    >
+    <>
+      {/* Tap zone to toggle controls */}
+      <div
+        className="absolute inset-0 z-[8]"
+        onPointerDown={(e) => {
+          // Only handle direct taps on the overlay itself
+          if (e.target === e.currentTarget) {
+            e.stopPropagation();
+            handleVideoAreaTap();
+          }
+        }}
+        style={{ touchAction: "manipulation", pointerEvents: "auto" }}
+      />
+      <div
+        ref={containerRef}
+        className="absolute bottom-0 left-0 right-0 z-20 transition-opacity duration-300"
+        style={{ opacity: visible ? 1 : 0, pointerEvents: visible ? "auto" : "none" }}
+      >
       {/* Progress bar above control bar */}
       <div className="px-3 sm:px-4 mb-1">
         <VideoProgressBar
@@ -257,7 +286,8 @@ export default function CustomControlBar({ playerRef, onNext }: CustomControlBar
             )}
           </button>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
