@@ -11,9 +11,10 @@ interface RippleEvent {
 interface DoubleTapSkipProps {
   onSkipForward: () => void;
   onSkipBackward: () => void;
+  onFirstTap?: () => void;
 }
 
-export default function DoubleTapSkip({ onSkipForward, onSkipBackward }: DoubleTapSkipProps) {
+export default function DoubleTapSkip({ onSkipForward, onSkipBackward, onFirstTap }: DoubleTapSkipProps) {
   const [ripples, setRipples] = useState<RippleEvent[]>([]);
   const lastTapRef = useRef<{ time: number; side: "left" | "right" } | null>(null);
   const idRef = useRef(0);
@@ -42,6 +43,7 @@ export default function DoubleTapSkip({ onSkipForward, onSkipBackward }: DoubleT
         lastTapRef.current = null;
       } else {
         lastTapRef.current = { time: now, side };
+        onFirstTap?.();
       }
     },
     [onSkipForward, onSkipBackward]

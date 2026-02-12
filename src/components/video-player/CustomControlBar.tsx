@@ -23,9 +23,10 @@ interface CustomControlBarProps {
   playerRef: React.RefObject<ReturnType<typeof import("video.js").default> | null>;
   onNext: () => void;
   playerReady?: boolean;
+  onAreaTapRef?: React.MutableRefObject<(() => void) | null>;
 }
 
-export default function CustomControlBar({ playerRef, onNext, playerReady }: CustomControlBarProps) {
+export default function CustomControlBar({ playerRef, onNext, playerReady, onAreaTapRef }: CustomControlBarProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -115,6 +116,12 @@ export default function CustomControlBar({ playerRef, onNext, playerReady }: Cus
     }
   }, [visible, resetHideTimer]);
 
+  // Expose handleVideoAreaTap to parent
+  useEffect(() => {
+    if (onAreaTapRef) onAreaTapRef.current = handleVideoAreaTap;
+    return () => { if (onAreaTapRef) onAreaTapRef.current = null; };
+  }, [handleVideoAreaTap, onAreaTapRef]);
+
   useEffect(() => {
     const el = containerRef.current?.parentElement;
     if (!el) return;
@@ -195,20 +202,6 @@ export default function CustomControlBar({ playerRef, onNext, playerReady }: Cus
 
   return (
     <>
-      {/* Tap zone to toggle controls */}
-      <div
-        className="absolute inset-0"
-        style={{
-          zIndex: 2147483630,
-          touchAction: "manipulation",
-          pointerEvents: "auto"
-        }}
-        onPointerDown={(e) => {
-          if (e.target === e.currentTarget) {
-            e.stopPropagation();
-            handleVideoAreaTap();
-          }
-        }} />
 
       <div
         ref={containerRef}

@@ -8,6 +8,7 @@ import logoImg from "@/assets/logo.png";
 import DoubleTapSkip from "./DoubleTapSkip";
 import CustomControlBar from "./CustomControlBar";
 
+
 interface OhayouVideoPlayerProps {
   videoUrl?: string | null;
   episodeTitle: string;
@@ -30,6 +31,7 @@ export default function OhayouVideoPlayer({
   const videoElRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<ReturnType<typeof videojs> | null>(null);
   const nextEpRef = useRef(nextEpisodeId);
+  const areaTapRef = useRef<(() => void) | null>(null);
   const [playerReady, setPlayerReady] = useState(false);
   const navigate = useNavigate();
 
@@ -70,6 +72,7 @@ export default function OhayouVideoPlayer({
     if (!p || (p as any).isDisposed()) return;
     if (p.paused()) p.play();
     else p.pause();
+    areaTapRef.current?.();
   }, []);
 
   useEffect(() => {
@@ -138,7 +141,7 @@ export default function OhayouVideoPlayer({
       )}
 
       {/* Double-tap skip overlay (sides only) */}
-      <DoubleTapSkip onSkipForward={handleSkipForward} onSkipBackward={handleSkipBackward} />
+      <DoubleTapSkip onSkipForward={handleSkipForward} onSkipBackward={handleSkipBackward} onFirstTap={() => areaTapRef.current?.()} />
 
       {/* Center click-to-play zone — sits ABOVE tap-toggle and double-tap zones */}
       <div
@@ -148,7 +151,7 @@ export default function OhayouVideoPlayer({
       />
 
       {/* Custom floating control bar */}
-      <CustomControlBar playerRef={playerRef} onNext={handleNext} playerReady={playerReady} />
+      <CustomControlBar playerRef={playerRef} onNext={handleNext} playerReady={playerReady} onAreaTapRef={areaTapRef} />
 
       {/* Video.js container */}
       <div ref={videoElRef} data-vjs-player style={{ position: "relative", zIndex: 0 }}>
