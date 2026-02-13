@@ -150,14 +150,12 @@ export default function OhayouVideoPlayer({
       {/* Double-tap skip overlay (sides only) */}
       <DoubleTapSkip onSkipForward={handleSkipForward} onSkipBackward={handleSkipBackward} onFirstTap={() => areaTapRef.current?.()} />
 
-      {/* Center click-to-play zone — only outside fullscreen */}
-      {!isFullscreen && (
-        <div
-          className="absolute top-0 bottom-0 left-[30%] right-[30%] cursor-pointer"
-          style={{ zIndex: 2147483643, touchAction: "manipulation", pointerEvents: "auto" }}
-          onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleCenterClick(); }}
-        />
-      )}
+      {/* Center click-to-play zone */}
+      <div
+        className="absolute top-0 bottom-0 left-[35%] right-[35%] cursor-pointer"
+        style={{ zIndex: 2147483643, touchAction: "manipulation", pointerEvents: "auto" }}
+        onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleCenterClick(); }}
+      />
 
       {/* Custom floating control bar */}
       <CustomControlBar playerRef={playerRef} onNext={handleNext} playerReady={playerReady} onAreaTapRef={areaTapRef} />

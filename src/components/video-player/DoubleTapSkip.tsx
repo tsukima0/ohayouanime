@@ -54,13 +54,13 @@ export default function DoubleTapSkip({ onSkipForward, onSkipBackward, onFirstTa
       {/* Left zone */}
       <div
         className="absolute top-0 left-0 bottom-0"
-        style={{ width: "50%", pointerEvents: "auto", touchAction: "manipulation", zIndex: 2147483644 }}
+        style={{ width: "35%", pointerEvents: "auto", touchAction: "manipulation", zIndex: 2147483644 }}
         onPointerDown={createHandler("left")}
       />
       {/* Right zone */}
       <div
         className="absolute top-0 right-0 bottom-0"
-        style={{ width: "50%", pointerEvents: "auto", touchAction: "manipulation", zIndex: 2147483644 }}
+        style={{ width: "35%", pointerEvents: "auto", touchAction: "manipulation", zIndex: 2147483644 }}
         onPointerDown={createHandler("right")}
       />
 
