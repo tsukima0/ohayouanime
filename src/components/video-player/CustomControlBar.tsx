@@ -4,13 +4,13 @@ import {
   Pause,
   Maximize,
   Minimize,
-
-  Subtitles, SkipForward, SkipBack } from
+  SkipForward, SkipBack } from
 "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import VideoProgressBar from "./VideoProgressBar";
 import VideoVolumeControl from "./VideoVolumeControl";
 import VideoSettingsMenu from "./VideoSettingsMenu";
+import VideoSubtitleMenu, { type SubtitleTrack } from "./VideoSubtitleMenu";
 
 function formatTime(seconds: number): string {
   if (!seconds || !isFinite(seconds)) return "0:00";
@@ -24,9 +24,12 @@ interface CustomControlBarProps {
   onNext: () => void;
   playerReady?: boolean;
   onAreaTapRef?: React.MutableRefObject<(() => void) | null>;
+  subtitleTracks?: SubtitleTrack[];
+  activeSubtitleId?: string | null;
+  onSubtitleChange?: (track: SubtitleTrack | null) => void;
 }
 
-export default function CustomControlBar({ playerRef, onNext, playerReady, onAreaTapRef }: CustomControlBarProps) {
+export default function CustomControlBar({ playerRef, onNext, playerReady, onAreaTapRef, subtitleTracks = [], activeSubtitleId = null, onSubtitleChange }: CustomControlBarProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -260,12 +263,11 @@ export default function CustomControlBar({ playerRef, onNext, playerReady, onAre
           <div className="flex-1" />
 
           {/* CC / Subtitles */}
-          <button
-              onClick={(e) => e.stopPropagation()}
-              className="text-[hsl(0,0%,100%)] hover:text-primary transition-colors p-1 shrink-0">
-
-            <Subtitles className="w-5 h-5" />
-          </button>
+          <VideoSubtitleMenu
+            tracks={subtitleTracks}
+            activeTrackId={activeSubtitleId}
+            onSelect={(t) => onSubtitleChange?.(t)}
+          />
 
           {/* Settings */}
           <VideoSettingsMenu

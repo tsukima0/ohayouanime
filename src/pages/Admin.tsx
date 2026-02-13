@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Tv, Film, Clapperboard } from "lucide-react";
+import { ArrowLeft, Tv, Film, Clapperboard, Subtitles } from "lucide-react";
 import { motion } from "framer-motion";
 import AdminGuard from "@/components/admin/AdminGuard";
 import SeriesManager from "@/components/admin/SeriesManager";
 import EpisodeManager from "@/components/admin/EpisodeManager";
 import ShortsManager from "@/components/admin/ShortsManager";
+import SubtitleManager from "@/components/admin/SubtitleManager";
 
 const tabs = [
   { id: "series", label: "Series", icon: Tv },
   { id: "episodes", label: "Episodes", icon: Clapperboard },
   { id: "shorts", label: "Shorts", icon: Film },
+  { id: "subtitles", label: "Subtitles", icon: Subtitles },
 ] as const;
 
 type Tab = (typeof tabs)[number]["id"];
@@ -72,6 +74,7 @@ export default function AdminPage() {
             {activeTab === "series" && <SeriesManager />}
             {activeTab === "episodes" && <EpisodeManager />}
             {activeTab === "shorts" && <ShortsManager />}
+            {activeTab === "subtitles" && <SubtitleManager />}
           </motion.div>
         </div>
       </div>
