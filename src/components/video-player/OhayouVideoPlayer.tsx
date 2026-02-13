@@ -127,42 +127,45 @@ export default function OhayouVideoPlayer({
 
   return (
     <div className="relative w-full rounded-xl overflow-hidden cinema-player">
-      {/* Logo overlay */}
-      <div className="vjs-ohayou-logo">
-        <img src={logoImg} alt="Ohayou Anime" />
-        <span>
-          <span className="logo-ohayou">Ohayou</span>{" "}
-          <span className="logo-anime">Anime</span>
-        </span>
-      </div>
-
-      {/* Watch Full Episode overlay for shorts */}
-      {fullEpisodeId && (
-        <button className="vjs-watch-full-overlay" onClick={handleWatchFull}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" opacity="0.3" />
-            <path d="M10 9l5 3-5 3V9z" />
-          </svg>
-          Watch Full Episode
-        </button>
-      )}
-
-      {/* Double-tap skip overlay (sides only) */}
-      <DoubleTapSkip onSkipForward={handleSkipForward} onSkipBackward={handleSkipBackward} onFirstTap={() => areaTapRef.current?.()} />
-
-      {/* Center click-to-play zone */}
-      <div
-        className="absolute top-0 bottom-0 left-[35%] right-[35%] cursor-pointer"
-        style={{ zIndex: 2147483643, touchAction: "manipulation", pointerEvents: "auto" }}
-        onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleCenterClick(); }}
-      />
-
-      {/* Custom floating control bar */}
-      <CustomControlBar playerRef={playerRef} onNext={handleNext} playerReady={playerReady} onAreaTapRef={areaTapRef} />
-
-      {/* Video.js container */}
+      {/* Video.js container — rendered first, sits at the bottom */}
       <div ref={videoElRef} data-vjs-player style={{ position: "relative", zIndex: 0 }}>
         <video className="video-js vjs-ohayou vjs-big-play-centered" playsInline crossOrigin="anonymous" />
+      </div>
+
+      {/* Interaction overlay — sits above video in all modes including fullscreen */}
+      <div className="absolute inset-0" style={{ zIndex: 2147483640 }}>
+        {/* Logo overlay */}
+        <div className="vjs-ohayou-logo">
+          <img src={logoImg} alt="Ohayou Anime" />
+          <span>
+            <span className="logo-ohayou">Ohayou</span>{" "}
+            <span className="logo-anime">Anime</span>
+          </span>
+        </div>
+
+        {/* Watch Full Episode overlay for shorts */}
+        {fullEpisodeId && (
+          <button className="vjs-watch-full-overlay" onClick={handleWatchFull}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" opacity="0.3" />
+              <path d="M10 9l5 3-5 3V9z" />
+            </svg>
+            Watch Full Episode
+          </button>
+        )}
+
+        {/* Double-tap skip overlay (sides) */}
+        <DoubleTapSkip onSkipForward={handleSkipForward} onSkipBackward={handleSkipBackward} onFirstTap={() => areaTapRef.current?.()} />
+
+        {/* Center click-to-play zone */}
+        <div
+          className="absolute top-0 bottom-0 left-[35%] right-[35%] cursor-pointer"
+          style={{ zIndex: 2147483643, touchAction: "manipulation", pointerEvents: "auto" }}
+          onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleCenterClick(); }}
+        />
+
+        {/* Custom floating control bar */}
+        <CustomControlBar playerRef={playerRef} onNext={handleNext} playerReady={playerReady} onAreaTapRef={areaTapRef} />
       </div>
     </div>
   );
