@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export async function uploadFile(
-  bucket: "videos" | "thumbnails",
+  bucket: "videos" | "thumbnails" | "subtitles",
   file: File,
   path?: string
 ): Promise<string> {

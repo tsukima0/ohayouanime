@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useEpisodeById, useNextEpisode } from "@/hooks/useSeriesData";
+import { useSubtitles } from "@/hooks/useSubtitles";
 import OhayouVideoPlayer from "@/components/video-player/OhayouVideoPlayer";
 import NextEpisodeCard from "@/components/NextEpisodeCard";
 import { Clock, Calendar } from "lucide-react";
@@ -11,6 +12,7 @@ export default function WatchPage() {
   const { episodeId } = useParams();
   const { data: episode, isLoading } = useEpisodeById(episodeId);
   const { data: nextEpisode } = useNextEpisode(episode);
+  const { data: subtitles = [] } = useSubtitles(episodeId);
 
   if (isLoading) {
     return (
@@ -53,6 +55,7 @@ export default function WatchPage() {
             videoUrl={episode.video_url}
             nextEpisodeId={nextEpisode?.id}
             poster={episode.thumbnail_url || episode.series?.image_url}
+            subtitleTracks={subtitles}
           />
         </motion.div>
 

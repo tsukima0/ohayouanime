@@ -7,6 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import logoImg from "@/assets/logo.png";
 import DoubleTapSkip from "./DoubleTapSkip";
 import CustomControlBar from "./CustomControlBar";
+import type { SubtitleTrack } from "./VideoSubtitleMenu";
 
 
 interface OhayouVideoPlayerProps {
@@ -17,6 +18,7 @@ interface OhayouVideoPlayerProps {
   nextEpisodeId?: string | null;
   fullEpisodeId?: string | null;
   poster?: string | null;
+  subtitleTracks?: SubtitleTrack[];
 }
 
 export default function OhayouVideoPlayer({
@@ -27,6 +29,7 @@ export default function OhayouVideoPlayer({
   nextEpisodeId,
   fullEpisodeId,
   poster,
+  subtitleTracks = [],
 }: OhayouVideoPlayerProps) {
   const videoElRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<ReturnType<typeof videojs> | null>(null);
@@ -34,6 +37,7 @@ export default function OhayouVideoPlayer({
   const areaTapRef = useRef<(() => void) | null>(null);
   const [playerReady, setPlayerReady] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [activeSubtitleId, setActiveSubtitleId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -80,6 +84,38 @@ export default function OhayouVideoPlayer({
     if (p.paused()) p.play();
     else p.pause();
     areaTapRef.current?.();
+  }, []);
+
+  // Handle subtitle track changes
+  const handleSubtitleChange = useCallback((track: SubtitleTrack | null) => {
+    const p = playerRef.current;
+    if (!p || (p as any).isDisposed()) return;
+
+    const videoEl = (p as any).el()?.querySelector("video") as HTMLVideoElement | null;
+    if (!videoEl) return;
+
+    // Remove existing tracks
+    const existing = videoEl.querySelectorAll("track");
+    existing.forEach((t) => t.remove());
+
+    if (track) {
+      const trackEl = document.createElement("track");
+      trackEl.kind = "subtitles";
+      trackEl.label = track.label;
+      trackEl.srclang = track.language;
+      trackEl.src = track.file_url;
+      trackEl.default = true;
+      videoEl.appendChild(trackEl);
+      // Show the track
+      setTimeout(() => {
+        if (videoEl.textTracks.length > 0) {
+          videoEl.textTracks[0].mode = "showing";
+        }
+      }, 100);
+      setActiveSubtitleId(track.id);
+    } else {
+      setActiveSubtitleId(null);
+    }
   }, []);
 
   useEffect(() => {
@@ -165,7 +201,15 @@ export default function OhayouVideoPlayer({
         />
 
         {/* Custom floating control bar */}
-        <CustomControlBar playerRef={playerRef} onNext={handleNext} playerReady={playerReady} onAreaTapRef={areaTapRef} />
+        <CustomControlBar
+          playerRef={playerRef}
+          onNext={handleNext}
+          playerReady={playerReady}
+          onAreaTapRef={areaTapRef}
+          subtitleTracks={subtitleTracks}
+          activeSubtitleId={activeSubtitleId}
+          onSubtitleChange={handleSubtitleChange}
+        />
       </div>
     </div>
   );

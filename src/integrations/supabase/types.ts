@@ -275,6 +275,51 @@ export type Database = {
           },
         ]
       }
+      subtitles: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          episode_id: string
+          file_url: string
+          id: string
+          label: string
+          language: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          episode_id: string
+          file_url: string
+          id?: string
+          label?: string
+          language?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          episode_id?: string
+          file_url?: string
+          id?: string
+          label?: string
+          language?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subtitles_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subtitles_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -470,6 +515,48 @@ export type Database = {
           },
           {
             foreignKeyName: "shorts_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subtitles_public: {
+        Row: {
+          created_at: string | null
+          episode_id: string | null
+          file_url: string | null
+          id: string | null
+          label: string | null
+          language: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          episode_id?: string | null
+          file_url?: string | null
+          id?: string | null
+          label?: string | null
+          language?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          episode_id?: string | null
+          file_url?: string | null
+          id?: string | null
+          label?: string | null
+          language?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subtitles_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subtitles_episode_id_fkey"
             columns: ["episode_id"]
             isOneToOne: false
             referencedRelation: "episodes_public"
