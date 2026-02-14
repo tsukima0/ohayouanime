@@ -178,7 +178,7 @@ export default function SubtitleDisplay({ fileUrl, playerRef, playerReady }: Sub
   return (
     <div
       className="absolute left-0 right-0 flex justify-center pointer-events-none"
-      style={{ bottom: "4.5rem", zIndex: 2147483644 }}
+      style={{ bottom: "2.5rem", zIndex: 2147483644 }}
     >
       <div
         className="px-3 py-1.5 rounded-lg max-w-[85%] text-center"
