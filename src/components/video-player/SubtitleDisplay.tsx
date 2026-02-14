@@ -10,9 +10,6 @@ interface SubtitleDisplayProps {
   fileUrl: string | null;
   playerRef: React.RefObject<ReturnType<typeof import("video.js").default> | null>;
   playerReady: boolean;
-  fontScale?: number;
-  bgOpacity?: number;
-  position?: "bottom" | "top";
 }
 
 function parseTimestamp(ts: string): number {
@@ -63,7 +60,7 @@ function parseVTT(text: string): Cue[] {
 function parseASS(text: string): Cue[] {
   const cues: Cue[] = [];
   const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
-  
+
   for (const line of lines) {
     // Dialogue lines: "Dialogue: 0,0:00:01.00,0:00:04.00,Default,,0,0,0,,Text here"
     if (line.startsWith("Dialogue:")) {
@@ -80,7 +77,7 @@ function parseASS(text: string): Cue[] {
           .replace(/\\N/g, "\n")
           .replace(/\\n/g, "\n")
           .trim();
-        
+
         if (cleanText) {
           cues.push({
             start: parseASSTimestamp(startStr),
@@ -91,7 +88,7 @@ function parseASS(text: string): Cue[] {
       }
     }
   }
-  
+
   // Sort by start time
   cues.sort((a, b) => a.start - b.start);
   return cues;
@@ -112,11 +109,12 @@ function parseASSTimestamp(ts: string): number {
 function detectFormat(text: string): "vtt" | "srt" | "ass" {
   const trimmed = text.trim();
   if (trimmed.startsWith("WEBVTT")) return "vtt";
-  if (trimmed.includes("[Script Info]") || trimmed.includes("[V4+ Styles]") || trimmed.includes("[Events]")) return "ass";
+  if (trimmed.includes("[Script Info]") || trimmed.includes("[V4+ Styles]") || trimmed.includes("[Events]"))
+    return "ass";
   return "srt"; // SRT and VTT parsing are similar enough
 }
 
-export default function SubtitleDisplay({ fileUrl, playerRef, playerReady, fontScale = 1, bgOpacity = 0.75, position = "bottom" }: SubtitleDisplayProps) {
+export default function SubtitleDisplay({ fileUrl, playerRef, playerReady }: SubtitleDisplayProps) {
   const [cues, setCues] = useState<Cue[]>([]);
   const [currentText, setCurrentText] = useState<string | null>(null);
   const rafRef = useRef<number>();
@@ -156,13 +154,14 @@ export default function SubtitleDisplay({ fileUrl, playerRef, playerReady, fontS
         return;
       }
       const ct = p.currentTime() ?? 0;
+      // Binary search or simple scan for active cue
       let found: string | null = null;
       for (const cue of cues) {
         if (ct >= cue.start && ct <= cue.end) {
           found = cue.text;
           break;
         }
-        if (cue.start > ct) break;
+        if (cue.start > ct) break; // cues sorted, no point continuing
       }
       setCurrentText(found);
       rafRef.current = requestAnimationFrame(tick);
@@ -176,21 +175,17 @@ export default function SubtitleDisplay({ fileUrl, playerRef, playerReady, fontS
 
   if (!currentText) return null;
 
-  const posStyle = position === "top"
-    ? { top: "3rem", zIndex: 2147483644 }
-    : { bottom: "4.5rem", zIndex: 2147483644 };
-
   return (
     <div
       className="absolute left-0 right-0 flex justify-center pointer-events-none"
-      style={posStyle}
+      style={{ bottom: "2.5rem", zIndex: 2147483644 }}
     >
       <div
         className="px-3 py-1.5 rounded-lg max-w-[85%] text-center"
         style={{
-          background: `hsla(0, 0%, 0%, ${bgOpacity})`,
+          background: "hsla(0, 0%, 0%, 0.75)",
           color: "hsl(0, 0%, 100%)",
-          fontSize: `calc(clamp(0.85rem, 2.2vw, 1.25rem) * ${fontScale})`,
+          fontSize: "clamp(0.85rem, 2.2vw, 1.25rem)",
           lineHeight: 1.4,
           textShadow: "0 1px 3px hsla(0, 0%, 0%, 0.8)",
         }}
