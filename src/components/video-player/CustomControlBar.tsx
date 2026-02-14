@@ -9,7 +9,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import VideoProgressBar from "./VideoProgressBar";
 import VideoVolumeControl from "./VideoVolumeControl";
-import VideoSettingsMenu from "./VideoSettingsMenu";
+import VideoSettingsMenu, { type SubtitleAppearance, DEFAULT_SUBTITLE_APPEARANCE } from "./VideoSettingsMenu";
 import VideoSubtitleMenu, { type SubtitleTrack } from "./VideoSubtitleMenu";
 
 function formatTime(seconds: number): string {
@@ -27,9 +27,11 @@ interface CustomControlBarProps {
   subtitleTracks?: SubtitleTrack[];
   activeSubtitleId?: string | null;
   onSubtitleChange?: (track: SubtitleTrack | null) => void;
+  subtitleAppearance?: SubtitleAppearance;
+  onSubtitleAppearanceChange?: (a: SubtitleAppearance) => void;
 }
 
-export default function CustomControlBar({ playerRef, onNext, playerReady, onAreaTapRef, subtitleTracks = [], activeSubtitleId = null, onSubtitleChange }: CustomControlBarProps) {
+export default function CustomControlBar({ playerRef, onNext, playerReady, onAreaTapRef, subtitleTracks = [], activeSubtitleId = null, onSubtitleChange, subtitleAppearance = DEFAULT_SUBTITLE_APPEARANCE, onSubtitleAppearanceChange }: CustomControlBarProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -274,7 +276,10 @@ export default function CustomControlBar({ playerRef, onNext, playerReady, onAre
               isOpen={settingsOpen}
               onToggle={() => setSettingsOpen((o) => !o)}
               speed={speed}
-              onSpeedChange={handleSpeedChange} />
+              onSpeedChange={handleSpeedChange}
+              subtitleAppearance={subtitleAppearance}
+              onSubtitleAppearanceChange={(a) => onSubtitleAppearanceChange?.(a)}
+          />
 
 
           {/* Next Episode */}
