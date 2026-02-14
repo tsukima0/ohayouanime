@@ -10,6 +10,9 @@ interface SubtitleDisplayProps {
   fileUrl: string | null;
   playerRef: React.RefObject<ReturnType<typeof import("video.js").default> | null>;
   playerReady: boolean;
+  fontScale?: number;
+  bgOpacity?: number;
+  position?: "bottom" | "top";
 }
 
 function parseTimestamp(ts: string): number {
@@ -113,7 +116,7 @@ function detectFormat(text: string): "vtt" | "srt" | "ass" {
   return "srt"; // SRT and VTT parsing are similar enough
 }
 
-export default function SubtitleDisplay({ fileUrl, playerRef, playerReady }: SubtitleDisplayProps) {
+export default function SubtitleDisplay({ fileUrl, playerRef, playerReady, fontScale = 1, bgOpacity = 0.75, position = "bottom" }: SubtitleDisplayProps) {
   const [cues, setCues] = useState<Cue[]>([]);
   const [currentText, setCurrentText] = useState<string | null>(null);
   const rafRef = useRef<number>();
@@ -153,14 +156,13 @@ export default function SubtitleDisplay({ fileUrl, playerRef, playerReady }: Sub
         return;
       }
       const ct = p.currentTime() ?? 0;
-      // Binary search or simple scan for active cue
       let found: string | null = null;
       for (const cue of cues) {
         if (ct >= cue.start && ct <= cue.end) {
           found = cue.text;
           break;
         }
-        if (cue.start > ct) break; // cues sorted, no point continuing
+        if (cue.start > ct) break;
       }
       setCurrentText(found);
       rafRef.current = requestAnimationFrame(tick);
@@ -174,17 +176,21 @@ export default function SubtitleDisplay({ fileUrl, playerRef, playerReady }: Sub
 
   if (!currentText) return null;
 
+  const posStyle = position === "top"
+    ? { top: "3rem", zIndex: 2147483644 }
+    : { bottom: "4.5rem", zIndex: 2147483644 };
+
   return (
     <div
       className="absolute left-0 right-0 flex justify-center pointer-events-none"
-      style={{ bottom: "4.5rem", zIndex: 2147483644 }}
+      style={posStyle}
     >
       <div
         className="px-3 py-1.5 rounded-lg max-w-[85%] text-center"
         style={{
-          background: "hsla(0, 0%, 0%, 0.75)",
+          background: `hsla(0, 0%, 0%, ${bgOpacity})`,
           color: "hsl(0, 0%, 100%)",
-          fontSize: "clamp(0.85rem, 2.2vw, 1.25rem)",
+          fontSize: `calc(clamp(0.85rem, 2.2vw, 1.25rem) * ${fontScale})`,
           lineHeight: 1.4,
           textShadow: "0 1px 3px hsla(0, 0%, 0%, 0.8)",
         }}

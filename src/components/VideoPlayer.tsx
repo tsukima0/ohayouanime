@@ -349,6 +349,8 @@ export default function VideoPlayer({
                 onToggle={() => setShowSettings((p) => !p)}
                 speed={speed}
                 onSpeedChange={setSpeed}
+                subtitleAppearance={{ fontScale: 1, bgOpacity: 0.75, position: "bottom" }}
+                onSubtitleAppearanceChange={() => {}}
               />
               <button
                 onClick={toggleFullscreen}
