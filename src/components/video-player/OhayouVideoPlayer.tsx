@@ -7,6 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import logoImg from "@/assets/logo.png";
 import DoubleTapSkip from "./DoubleTapSkip";
 import CustomControlBar from "./CustomControlBar";
+import SubtitleDisplay from "./SubtitleDisplay";
 import type { SubtitleTrack } from "./VideoSubtitleMenu";
 
 
@@ -86,35 +87,16 @@ export default function OhayouVideoPlayer({
     areaTapRef.current?.();
   }, []);
 
-  // Handle subtitle track changes
+  // Handle subtitle track changes — just track the active URL, SubtitleDisplay handles rendering
+  const [activeSubtitleUrl, setActiveSubtitleUrl] = useState<string | null>(null);
+
   const handleSubtitleChange = useCallback((track: SubtitleTrack | null) => {
-    const p = playerRef.current;
-    if (!p || (p as any).isDisposed()) return;
-
-    const videoEl = (p as any).el()?.querySelector("video") as HTMLVideoElement | null;
-    if (!videoEl) return;
-
-    // Remove existing tracks
-    const existing = videoEl.querySelectorAll("track");
-    existing.forEach((t) => t.remove());
-
     if (track) {
-      const trackEl = document.createElement("track");
-      trackEl.kind = "subtitles";
-      trackEl.label = track.label;
-      trackEl.srclang = track.language;
-      trackEl.src = track.file_url;
-      trackEl.default = true;
-      videoEl.appendChild(trackEl);
-      // Show the track
-      setTimeout(() => {
-        if (videoEl.textTracks.length > 0) {
-          videoEl.textTracks[0].mode = "showing";
-        }
-      }, 100);
       setActiveSubtitleId(track.id);
+      setActiveSubtitleUrl(track.file_url);
     } else {
       setActiveSubtitleId(null);
+      setActiveSubtitleUrl(null);
     }
   }, []);
 
@@ -189,6 +171,9 @@ export default function OhayouVideoPlayer({
             Watch Full Episode
           </button>
         )}
+
+        {/* Custom subtitle display */}
+        <SubtitleDisplay fileUrl={activeSubtitleUrl} playerRef={playerRef} playerReady={playerReady} />
 
         {/* Double-tap skip overlay (sides) */}
         <DoubleTapSkip onSkipForward={handleSkipForward} onSkipBackward={handleSkipBackward} onFirstTap={() => areaTapRef.current?.()} />

@@ -132,7 +132,7 @@ export default function SubtitleManager() {
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1 block">VTT File *</label>
-              <input type="file" accept=".vtt,.srt" onChange={(e) => setSubtitleFile(e.target.files?.[0] || null)} required
+              <input type="file" accept=".vtt,.srt,.ass,.ssa" onChange={(e) => setSubtitleFile(e.target.files?.[0] || null)} required
                 className="text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 file:cursor-pointer" />
             </div>
           </div>
