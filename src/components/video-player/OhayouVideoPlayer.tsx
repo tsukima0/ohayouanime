@@ -9,7 +9,7 @@ import DoubleTapSkip from "./DoubleTapSkip";
 import CustomControlBar from "./CustomControlBar";
 import SubtitleDisplay from "./SubtitleDisplay";
 import type { SubtitleTrack } from "./VideoSubtitleMenu";
-import { type SubtitleAppearance, DEFAULT_SUBTITLE_APPEARANCE } from "./VideoSettingsMenu";
+import { type SubtitleAppearance, DEFAULT_SUBTITLE_APPEARANCE, loadSubtitleAppearance, saveSubtitleAppearance } from "./VideoSettingsMenu";
 
 
 interface OhayouVideoPlayerProps {
@@ -40,7 +40,7 @@ export default function OhayouVideoPlayer({
   const [playerReady, setPlayerReady] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeSubtitleId, setActiveSubtitleId] = useState<string | null>(null);
-  const [subtitleAppearance, setSubtitleAppearance] = useState<SubtitleAppearance>(DEFAULT_SUBTITLE_APPEARANCE);
+  const [subtitleAppearance, setSubtitleAppearance] = useState<SubtitleAppearance>(loadSubtitleAppearance);
   const [controlsVisible, setControlsVisible] = useState(true);
   const navigate = useNavigate();
 
@@ -198,7 +198,7 @@ export default function OhayouVideoPlayer({
           activeSubtitleId={activeSubtitleId}
           onSubtitleChange={handleSubtitleChange}
           subtitleAppearance={subtitleAppearance}
-          onSubtitleAppearanceChange={setSubtitleAppearance}
+          onSubtitleAppearanceChange={(a) => { setSubtitleAppearance(a); saveSubtitleAppearance(a); }}
           onVisibilityChange={setControlsVisible}
         />
       </div>

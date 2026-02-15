@@ -33,6 +33,29 @@ export const DEFAULT_SUBTITLE_APPEARANCE: SubtitleAppearance = {
   position: "bottom",
 };
 
+const STORAGE_KEY = "ohayou-subtitle-appearance";
+
+export function loadSubtitleAppearance(): SubtitleAppearance {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return {
+        fontScale: typeof parsed.fontScale === "number" ? parsed.fontScale : DEFAULT_SUBTITLE_APPEARANCE.fontScale,
+        bgOpacity: typeof parsed.bgOpacity === "number" ? parsed.bgOpacity : DEFAULT_SUBTITLE_APPEARANCE.bgOpacity,
+        position: parsed.position === "top" || parsed.position === "bottom" ? parsed.position : DEFAULT_SUBTITLE_APPEARANCE.position,
+      };
+    }
+  } catch {}
+  return { ...DEFAULT_SUBTITLE_APPEARANCE };
+}
+
+export function saveSubtitleAppearance(appearance: SubtitleAppearance) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(appearance));
+  } catch {}
+}
+
 type Page = "main" | "speed" | "subtitleSize" | "subtitleBg" | "subtitlePos";
 
 interface VideoSettingsMenuProps {
