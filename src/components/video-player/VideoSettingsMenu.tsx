@@ -93,7 +93,7 @@ export default function VideoSettingsMenu({
   }, [isOpen, onToggle]);
 
   const itemClass = (active: boolean) =>
-    `flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors w-full text-left ${
+    `flex items-center justify-between px-2.5 py-2 sm:py-1.5 rounded-md text-sm sm:text-xs transition-colors w-full text-left ${
       active
         ? "bg-primary/15 text-primary"
         : "text-[hsl(0,0%,80%)] hover:bg-[hsl(0,0%,15%)]"
@@ -245,7 +245,7 @@ export default function VideoSettingsMenu({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute bottom-full right-0 mb-2 w-48 rounded-xl bg-[hsl(0,0%,8%,0.95)] border border-[hsl(0,0%,20%)] shadow-2xl overflow-hidden backdrop-blur-sm"
+            className="absolute bottom-full right-0 mb-2 w-56 sm:w-48 rounded-xl bg-[hsl(0,0%,8%,0.95)] border border-[hsl(0,0%,20%)] shadow-2xl overflow-hidden backdrop-blur-sm"
             onClick={(e) => e.stopPropagation()}
           >
             {renderPage()}
