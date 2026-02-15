@@ -181,7 +181,7 @@ export default function SubtitleDisplay({ fileUrl, playerRef, playerReady, fontS
     ? (controlsVisible ? "4rem" : "1.5rem") 
     : undefined;
   const posStyle = position === "top"
-    ? { top: "3rem", zIndex: 2147483644 }
+    ? { top: "1.5rem", zIndex: 2147483644 }
     : { bottom: bottomOffset, zIndex: 2147483644, transition: "bottom 0.3s ease" };
 
   return (
