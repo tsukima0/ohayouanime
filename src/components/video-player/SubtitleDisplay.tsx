@@ -13,6 +13,7 @@ interface SubtitleDisplayProps {
   fontScale?: number;
   bgOpacity?: number;
   position?: "bottom" | "top";
+  controlsVisible?: boolean;
 }
 
 function parseTimestamp(ts: string): number {
@@ -116,7 +117,7 @@ function detectFormat(text: string): "vtt" | "srt" | "ass" {
   return "srt"; // SRT and VTT parsing are similar enough
 }
 
-export default function SubtitleDisplay({ fileUrl, playerRef, playerReady, fontScale = 1, bgOpacity = 0.75, position = "bottom" }: SubtitleDisplayProps) {
+export default function SubtitleDisplay({ fileUrl, playerRef, playerReady, fontScale = 1, bgOpacity = 0.75, position = "bottom", controlsVisible = true }: SubtitleDisplayProps) {
   const [cues, setCues] = useState<Cue[]>([]);
   const [currentText, setCurrentText] = useState<string | null>(null);
   const rafRef = useRef<number>();
@@ -176,9 +177,12 @@ export default function SubtitleDisplay({ fileUrl, playerRef, playerReady, fontS
 
   if (!currentText) return null;
 
+  const bottomOffset = position === "bottom" 
+    ? (controlsVisible ? "4rem" : "2.5rem") 
+    : undefined;
   const posStyle = position === "top"
     ? { top: "3rem", zIndex: 2147483644 }
-    : { bottom: "6.5rem", zIndex: 2147483644 };
+    : { bottom: bottomOffset, zIndex: 2147483644, transition: "bottom 0.3s ease" };
 
   return (
     <div

@@ -41,6 +41,7 @@ export default function OhayouVideoPlayer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeSubtitleId, setActiveSubtitleId] = useState<string | null>(null);
   const [subtitleAppearance, setSubtitleAppearance] = useState<SubtitleAppearance>(DEFAULT_SUBTITLE_APPEARANCE);
+  const [controlsVisible, setControlsVisible] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -175,7 +176,7 @@ export default function OhayouVideoPlayer({
         )}
 
         {/* Custom subtitle display */}
-        <SubtitleDisplay fileUrl={activeSubtitleUrl} playerRef={playerRef} playerReady={playerReady} fontScale={subtitleAppearance.fontScale} bgOpacity={subtitleAppearance.bgOpacity} position={subtitleAppearance.position} />
+        <SubtitleDisplay fileUrl={activeSubtitleUrl} playerRef={playerRef} playerReady={playerReady} fontScale={subtitleAppearance.fontScale} bgOpacity={subtitleAppearance.bgOpacity} position={subtitleAppearance.position} controlsVisible={controlsVisible} />
 
         {/* Double-tap skip overlay (sides) */}
         <DoubleTapSkip onSkipForward={handleSkipForward} onSkipBackward={handleSkipBackward} onFirstTap={() => areaTapRef.current?.()} />
@@ -198,6 +199,7 @@ export default function OhayouVideoPlayer({
           onSubtitleChange={handleSubtitleChange}
           subtitleAppearance={subtitleAppearance}
           onSubtitleAppearanceChange={setSubtitleAppearance}
+          onVisibilityChange={setControlsVisible}
         />
       </div>
     </div>
