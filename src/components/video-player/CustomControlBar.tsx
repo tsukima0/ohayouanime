@@ -29,9 +29,10 @@ interface CustomControlBarProps {
   onSubtitleChange?: (track: SubtitleTrack | null) => void;
   subtitleAppearance?: SubtitleAppearance;
   onSubtitleAppearanceChange?: (a: SubtitleAppearance) => void;
+  onVisibilityChange?: (visible: boolean) => void;
 }
 
-export default function CustomControlBar({ playerRef, onNext, playerReady, onAreaTapRef, subtitleTracks = [], activeSubtitleId = null, onSubtitleChange, subtitleAppearance = DEFAULT_SUBTITLE_APPEARANCE, onSubtitleAppearanceChange }: CustomControlBarProps) {
+export default function CustomControlBar({ playerRef, onNext, playerReady, onAreaTapRef, subtitleTracks = [], activeSubtitleId = null, onSubtitleChange, subtitleAppearance = DEFAULT_SUBTITLE_APPEARANCE, onSubtitleAppearanceChange, onVisibilityChange }: CustomControlBarProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -147,6 +148,11 @@ export default function CustomControlBar({ playerRef, onNext, playerReady, onAre
   useEffect(() => {
     if (!isPlaying) setVisible(true);
   }, [isPlaying]);
+
+  // Notify parent of visibility changes
+  useEffect(() => {
+    onVisibilityChange?.(visible);
+  }, [visible, onVisibilityChange]);
 
   const togglePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
