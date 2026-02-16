@@ -160,7 +160,8 @@ export default function CustomControlBar({ playerRef, onNext, playerReady, onAre
     if (!p) return;
     if (p.paused()) {
       p.play();
-      resetHideTimer();
+      setVisible(false);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     } else {
       p.pause();
     }
