@@ -238,7 +238,7 @@ export default function CustomControlBar({ playerRef, onNext, playerReady, onAre
       {/* Floating pill control bar */}
       <div className="px-3 sm:px-4 pb-3 sm:pb-4">
         <div
-            className="flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full mx-auto max-w-3xl"
+            className="flex items-center gap-1 sm:gap-4 px-2 sm:px-5 py-2 sm:py-2.5 rounded-full mx-auto max-w-3xl"
             style={{
               background: "hsla(0, 0%, 0%, 0.15)",
               backdropFilter: "blur(4px)",
@@ -254,16 +254,17 @@ export default function CustomControlBar({ playerRef, onNext, playerReady, onAre
             {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
           </button>
 
-          {/* Volume */}
-          <VideoVolumeControl
-              volume={volume}
-              muted={muted}
-              onVolumeChange={handleVolumeChange}
-              onMuteToggle={handleMuteToggle} />
-
+          {/* Volume — hidden on mobile to save space */}
+          <div className="hidden sm:block">
+            <VideoVolumeControl
+                volume={volume}
+                muted={muted}
+                onVolumeChange={handleVolumeChange}
+                onMuteToggle={handleMuteToggle} />
+          </div>
 
           {/* Time display */}
-          <span className="text-[hsl(0,0%,100%)] text-xs font-mono whitespace-nowrap select-none shrink-0">
+          <span className="text-[hsl(0,0%,100%)] text-[10px] sm:text-xs font-mono whitespace-nowrap select-none shrink-0">
             {formatTime(currentTime)} / {formatTime(duration)}
           </span>
 
