@@ -11,6 +11,7 @@ import { useWatchlist } from "@/hooks/useWatchlist";
 import { motion } from "framer-motion";
 import { formatTimestamp } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
   const { user } = useAuth();
@@ -18,6 +19,7 @@ const Index = () => {
   const { data: allSeries, isLoading: seriesLoading } = useSeries();
   const { data: shorts, isLoading: shortsLoading } = useShorts();
   const { data: latestEpisodes, isLoading: episodesLoading } = useLatestEpisodes();
+  const isMobile = useIsMobile();
 
   const heroSeries = allSeries?.[0];
   const heroImage = heroSeries?.image_url || "/placeholder.svg";
@@ -122,8 +124,8 @@ const Index = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {shorts.map((short, index) => (
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            {(isMobile ? shorts.slice(0, 2) : shorts).map((short, index) => (
               <motion.div
                 key={short.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -134,7 +136,7 @@ const Index = () => {
                   to={`/shorts/${short.id}`}
                   className="group block relative rounded-xl overflow-hidden glass-card hover:scale-[1.02] transition-transform duration-300"
                 >
-                  <div className="aspect-[9/14] sm:aspect-[9/12] relative overflow-hidden">
+                  <div className="aspect-[9/14] relative overflow-hidden">
                     {short.thumbnail_url ? (
                       <img
                         src={short.thumbnail_url}
@@ -150,22 +152,22 @@ const Index = () => {
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-primary/20 via-muted to-accent flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
-                        <Play className="w-10 h-10 text-muted-foreground/40" />
+                        <Play className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground/40" />
                       </div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
 
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="w-14 h-14 rounded-full bg-primary/90 flex items-center justify-center glow-primary">
-                        <Play className="w-6 h-6 text-primary-foreground fill-current ml-0.5" />
+                      <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-primary/90 flex items-center justify-center glow-primary">
+                        <Play className="w-4 h-4 sm:w-6 sm:h-6 text-primary-foreground fill-current ml-0.5" />
                       </div>
                     </div>
 
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <h3 className="font-display font-bold text-sm mb-1 text-foreground">
+                    <div className="absolute bottom-0 left-0 right-0 p-2.5 sm:p-4">
+                      <h3 className="font-display font-bold text-xs sm:text-sm mb-0.5 sm:mb-1 text-foreground line-clamp-1">
                         {short.title}
                       </h3>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2 text-[10px] sm:text-xs text-muted-foreground">
                         <span>{formatTimestamp(short.duration)}</span>
                       </div>
                     </div>
