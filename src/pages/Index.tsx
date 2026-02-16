@@ -125,7 +125,7 @@ const Index = () => {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {(isMobile ? shorts.slice(0, 2) : shorts).map((short, index) => (
+            {(isMobile ? shorts.slice(0, 2) : shorts.slice(0, 3)).map((short, index) => (
               <motion.div
                 key={short.id}
                 initial={{ opacity: 0, y: 20 }}
