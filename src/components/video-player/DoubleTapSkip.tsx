@@ -43,7 +43,6 @@ export default function DoubleTapSkip({ onSkipForward, onSkipBackward, onFirstTa
         lastTapRef.current = null;
       } else {
         lastTapRef.current = { time: now, side };
-        onFirstTap?.();
       }
     },
     [onSkipForward, onSkipBackward]
