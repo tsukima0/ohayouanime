@@ -158,8 +158,12 @@ export default function CustomControlBar({ playerRef, onNext, playerReady, onAre
     e.stopPropagation();
     const p = getPlayer();
     if (!p) return;
-    if (p.paused()) p.play();else
-    p.pause();
+    if (p.paused()) {
+      p.play();
+      resetHideTimer();
+    } else {
+      p.pause();
+    }
   };
 
   const handleSeek = (time: number) => {
