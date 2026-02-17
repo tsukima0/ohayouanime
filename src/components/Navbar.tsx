@@ -21,8 +21,10 @@ export default function Navbar() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const isShorts = location.pathname.startsWith("/shorts");
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass-card-strong">
+    <nav className={`fixed top-0 left-0 right-0 z-50 ${isShorts ? "bg-background/30 backdrop-blur-sm" : "glass-card-strong"}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
