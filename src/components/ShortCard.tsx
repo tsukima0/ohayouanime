@@ -142,9 +142,9 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
       )}
 
       {/* Content overlay */}
-      <div className="relative h-full flex flex-col justify-end pb-20 sm:pb-6 pointer-events-none">
+      <div className="relative h-full flex flex-col justify-end pb-6 sm:pb-6 pointer-events-none">
         {/* Right-side actions */}
-        <div className="absolute right-3 bottom-36 sm:bottom-20 z-20 pointer-events-auto">
+        <div className="absolute right-3 bottom-20 sm:bottom-20 z-20 pointer-events-auto">
           <ShortActions
             liked={liked}
             likesCount={likesCount}
