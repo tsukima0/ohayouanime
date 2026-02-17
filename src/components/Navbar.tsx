@@ -25,9 +25,44 @@ export default function Navbar() {
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 ${isShorts ? "bg-background/30 backdrop-blur-sm" : "glass-card-strong"}`}>
+      {/* Mobile Top Nav */}
+      <div className="sm:hidden flex items-center justify-between h-14 px-3">
+        <Link to="/" className="flex items-center gap-2">
+          <img src={logoImg} alt="Ohayou Anime" className="w-7 h-7 rounded-md object-cover" />
+          <span className="font-display text-lg font-bold tracking-tight">
+            <span className="text-primary">Ohayou</span>{" "}
+            <span className="text-foreground">Anime</span>
+          </span>
+        </Link>
+        <div className="flex items-center gap-1">
+          <Link
+            to="/"
+            className={`p-2 rounded-lg transition-colors ${
+              location.pathname === "/" ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
+            <Home className="w-5 h-5" />
+          </Link>
+          <Link
+            to="/search"
+            className={`p-2 rounded-lg transition-colors ${
+              location.pathname === "/search" ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
+            <Search className="w-5 h-5" />
+          </Link>
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="p-2 rounded-lg text-muted-foreground transition-colors"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Desktop Nav */}
       <div className="hidden sm:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <img src={logoImg} alt="Ohayou Anime" className="w-8 h-8 rounded-md object-cover" />
             <span className="font-display text-xl font-bold tracking-tight">
@@ -35,9 +70,7 @@ export default function Navbar() {
               <span className="text-foreground">Anime</span>
             </span>
           </Link>
-
-          {/* Desktop Navigation Links */}
-          <div className="hidden sm:flex items-center gap-1">
+          <div className="flex items-center gap-1">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path || 
                 (item.path === "/watch/ep-001" && location.pathname.startsWith("/watch"));
@@ -64,9 +97,7 @@ export default function Navbar() {
               );
             })}
           </div>
-
-          {/* Desktop Right Side */}
-          <div className="hidden sm:flex items-center gap-2">
+          <div className="flex items-center gap-2">
             {isAdmin && (
               <Link
                 to="/admin"
@@ -118,44 +149,6 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Bottom Nav */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-50 glass-card-strong border-t border-border">
-        <div className="flex items-center justify-around py-2">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path ||
-              (item.path === "/watch/ep-001" && location.pathname.startsWith("/watch"));
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-colors ${
-                  isActive ? "text-primary" : "text-muted-foreground"
-                }`}
-              >
-                <item.icon className="w-5 h-5" />
-                <span className="text-xs">{item.label}</span>
-              </Link>
-            );
-          })}
-          <Link
-            to="/search"
-            className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-colors ${
-              location.pathname === "/search" ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            <Search className="w-5 h-5" />
-            <span className="text-xs">Search</span>
-          </Link>
-          <button
-            onClick={() => setMenuOpen(true)}
-            className="flex flex-col items-center gap-1 px-3 py-1 rounded-lg text-muted-foreground transition-colors"
-          >
-            <Menu className="w-5 h-5" />
-            <span className="text-xs">Menu</span>
-          </button>
-        </div>
-      </div>
-
       {/* Mobile Sidebar Menu */}
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
         <SheetContent side="right" className="w-72 p-0">
@@ -169,6 +162,27 @@ export default function Navbar() {
             </SheetTitle>
           </SheetHeader>
           <div className="flex flex-col py-2">
+            {/* Nav Links (mobile only) */}
+            <div className="sm:hidden flex flex-col">
+              {navItems.map((item) => {
+                const isActive = location.pathname === item.path ||
+                  (item.path === "/watch/ep-001" && location.pathname.startsWith("/watch"));
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMenuOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3 transition-colors ${
+                      isActive ? "text-primary bg-primary/10" : "text-foreground hover:bg-accent"
+                    }`}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </Link>
+                );
+              })}
+              <div className="border-b border-border my-1" />
+            </div>
             {/* Profile / Login */}
             {user ? (
               <Link
