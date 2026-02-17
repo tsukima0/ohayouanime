@@ -99,13 +99,11 @@ export default function VideoProgressBar({
           style={{ width: `${progress}%` }}
         />
       </div>
-      {/* Hover preview line */}
-      {hoverProgress !== null && !isDragging && (
-        <div
-          className="absolute top-0 h-full w-0.5 bg-[hsl(0,0%,100%,0.5)]"
-          style={{ left: `${hoverProgress}%` }}
-        />
-      )}
+      {/* Red dot at current progress */}
+      <div
+        className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-primary shadow-lg"
+        style={{ left: `calc(${progress}% - 6px)` }}
+      />
     </div>
   );
 }
