@@ -21,6 +21,8 @@ interface OhayouVideoPlayerProps {
   fullEpisodeId?: string | null;
   poster?: string | null;
   subtitleTracks?: SubtitleTrack[];
+  /** Called periodically with (currentTime, duration) so callers can save progress */
+  onTimeUpdate?: React.MutableRefObject<(currentTime: number, duration: number) => void>;
 }
 
 export default function OhayouVideoPlayer({
@@ -32,6 +34,7 @@ export default function OhayouVideoPlayer({
   fullEpisodeId,
   poster,
   subtitleTracks = [],
+  onTimeUpdate,
 }: OhayouVideoPlayerProps) {
   const videoElRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<ReturnType<typeof videojs> | null>(null);
@@ -136,7 +139,20 @@ export default function OhayouVideoPlayer({
     playerRef.current = player;
     setPlayerReady(true);
 
+    // Save progress every 10 seconds
+    let saveInterval: ReturnType<typeof setInterval> | null = null;
+    if (onTimeUpdate) {
+      saveInterval = setInterval(() => {
+        const p = playerRef.current;
+        if (!p || (p as any).isDisposed()) return;
+        const ct = p.currentTime() ?? 0;
+        const dur = p.duration() ?? 0;
+        if (ct > 0 && dur > 0) onTimeUpdate.current(ct, dur);
+      }, 10_000);
+    }
+
     return () => {
+      if (saveInterval) clearInterval(saveInterval);
       if (playerRef.current && !(playerRef.current as any).isDisposed()) {
         playerRef.current.dispose();
         playerRef.current = null;

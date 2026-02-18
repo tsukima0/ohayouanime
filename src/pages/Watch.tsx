@@ -1,18 +1,33 @@
 import { useParams } from "react-router-dom";
 import { useEpisodeById, useNextEpisode } from "@/hooks/useSeriesData";
 import { useSubtitles } from "@/hooks/useSubtitles";
+import { useUpsertWatchHistory } from "@/hooks/useWatchHistory";
+import { useAuth } from "@/hooks/useAuth";
 import OhayouVideoPlayer from "@/components/video-player/OhayouVideoPlayer";
 import NextEpisodeCard from "@/components/NextEpisodeCard";
 import { Clock, Calendar } from "lucide-react";
 import { formatTimestamp } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCallback, useEffect, useRef } from "react";
 
 export default function WatchPage() {
   const { episodeId } = useParams();
   const { data: episode, isLoading } = useEpisodeById(episodeId);
   const { data: nextEpisode } = useNextEpisode(episode);
   const { data: subtitles = [] } = useSubtitles(episodeId);
+  const { user } = useAuth();
+  const { mutate: upsertHistory } = useUpsertWatchHistory();
+
+  // Save progress periodically (every 10s) using a ref to avoid re-creating the player
+  const saveProgressRef = useRef<(currentTime: number, duration: number) => void>(() => {});
+
+  useEffect(() => {
+    saveProgressRef.current = (currentTime: number, duration: number) => {
+      if (!user || !episodeId || duration <= 0) return;
+      upsertHistory({ episodeId, watchedSeconds: Math.floor(currentTime), duration: Math.floor(duration) });
+    };
+  }, [user, episodeId, upsertHistory]);
 
   if (isLoading) {
     return (
@@ -56,6 +71,7 @@ export default function WatchPage() {
             nextEpisodeId={nextEpisode?.id}
             poster={episode.thumbnail_url || episode.series?.image_url}
             subtitleTracks={subtitles}
+            onTimeUpdate={saveProgressRef}
           />
         </motion.div>
 
@@ -63,9 +79,7 @@ export default function WatchPage() {
         <div className="mt-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold text-primary mb-1">
-                {animeName}
-              </p>
+              <p className="text-sm font-semibold text-primary mb-1">{animeName}</p>
               <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground">
                 Episode {episode.episode_number}: {episode.title}
               </h1>
@@ -81,7 +95,6 @@ export default function WatchPage() {
               </div>
             </div>
           </div>
-
           <p className="text-muted-foreground text-sm mt-4 max-w-3xl leading-relaxed">
             {episode.description}
           </p>

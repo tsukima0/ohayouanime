@@ -56,7 +56,7 @@ export interface PublicShort {
 }
 
 // Helper to convert PublicEpisode to the shape components expect
-function toEpisodeWithSeries(ep: PublicEpisode) {
+export function toEpisodeWithSeries(ep: PublicEpisode) {
   return {
     id: ep.id,
     video_url: ep.video_url,
