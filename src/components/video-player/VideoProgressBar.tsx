@@ -19,7 +19,6 @@ export default function VideoProgressBar({
 }: VideoProgressBarProps) {
   const barRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [hoverProgress, setHoverProgress] = useState<number | null>(null);
 
   const getProgress = (clientX: number) => {
     const bar = barRef.current;
@@ -34,10 +33,7 @@ export default function VideoProgressBar({
       e.stopPropagation();
       setIsDragging(true);
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
-
-      // Pause video while scrubbing (YouTube-style)
       onDragStart?.();
-
       const ratio = getProgress(e.clientX);
       const seekTime = Math.round(ratio * duration * 10) / 10;
       onSeek(seekTime);
@@ -47,11 +43,10 @@ export default function VideoProgressBar({
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
-      const ratio = getProgress(e.clientX);
-      setHoverProgress(ratio * 100);
       if (isDragging) {
         e.preventDefault();
         e.stopPropagation();
+        const ratio = getProgress(e.clientX);
         const seekTime = Math.round(ratio * duration * 10) / 10;
         onSeek(seekTime);
       }
@@ -64,8 +59,6 @@ export default function VideoProgressBar({
       if (!isDragging) return;
       e.stopPropagation();
       setIsDragging(false);
-
-      // Resume playback after scrubbing
       onDragEnd?.();
     },
     [isDragging, onDragEnd]
@@ -75,31 +68,36 @@ export default function VideoProgressBar({
   const bufferedPercent = duration > 0 ? (buffered / duration) * 100 : 0;
 
   return (
+    /* Tall hit area so the dot never clips */
     <div
       ref={barRef}
-      className={`relative w-full cursor-pointer transition-all ${
-        isDragging ? "h-3" : "h-1.5 hover:h-3"
-      }`}
+      className="relative w-full h-4 flex items-center cursor-pointer"
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
-      onPointerLeave={() => setHoverProgress(null)}
       style={{ touchAction: "none" }}
     >
-      <div className="relative w-full h-full rounded-full overflow-hidden bg-[hsl(0,0%,100%,0.2)]">
+      {/* Track */}
+      <div
+        className={`relative w-full rounded-full overflow-hidden bg-[hsl(0,0%,100%,0.2)] transition-all ${
+          isDragging ? "h-2" : "h-1.5 group-hover:h-2"
+        }`}
+        style={{ height: isDragging ? "8px" : "6px" }}
+      >
         {/* Buffered */}
         <div
-          className="absolute top-0 left-0 h-full bg-[hsl(0,0%,100%,0.3)] transition-[width] duration-300"
+          className="absolute top-0 left-0 h-full bg-[hsl(0,0%,100%,0.3)]"
           style={{ width: `${bufferedPercent}%` }}
         />
         {/* Progress */}
         <div
-          className="absolute top-0 left-0 h-full bg-primary transition-[width] duration-75"
+          className="absolute top-0 left-0 h-full bg-primary"
           style={{ width: `${progress}%` }}
         />
       </div>
-      {/* Red dot at current progress - centered on the bar */}
+
+      {/* Red dot — positioned absolute within the 16px tall container, centered */}
       <div
         className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-primary shadow-lg pointer-events-none"
         style={{ left: `calc(${progress}% - 6px)` }}
