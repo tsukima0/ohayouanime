@@ -77,7 +77,7 @@ export default function VideoProgressBar({
   return (
     <div
       ref={barRef}
-      className={`w-full cursor-pointer transition-all ${
+      className={`relative w-full cursor-pointer transition-all ${
         isDragging ? "h-3" : "h-1.5 hover:h-3"
       }`}
       onPointerDown={handlePointerDown}
@@ -99,9 +99,9 @@ export default function VideoProgressBar({
           style={{ width: `${progress}%` }}
         />
       </div>
-      {/* Red dot at current progress */}
+      {/* Red dot at current progress - centered on the bar */}
       <div
-        className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-primary shadow-lg"
+        className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-primary shadow-lg pointer-events-none"
         style={{ left: `calc(${progress}% - 6px)` }}
       />
     </div>
