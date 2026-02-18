@@ -338,6 +338,54 @@ export type Database = {
         }
         Relationships: []
       }
+      watch_history: {
+        Row: {
+          completed: boolean
+          created_at: string
+          duration: number
+          episode_id: string
+          id: string
+          updated_at: string
+          user_id: string
+          watched_seconds: number
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          duration?: number
+          episode_id: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          watched_seconds?: number
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          duration?: number
+          episode_id?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          watched_seconds?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watch_history_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "watch_history_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       watchlist: {
         Row: {
           created_at: string

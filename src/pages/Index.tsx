@@ -1,10 +1,13 @@
 import { Link } from "react-router-dom";
-import { Play, TrendingUp, Tv, ArrowRight, Sparkles } from "lucide-react";
-import { useSeries, useShorts, useLatestEpisodes } from "@/hooks/useSeriesData";
+import { Play, TrendingUp, Tv, ArrowRight, Sparkles, Flame, History } from "lucide-react";
+import { useSeries, useShorts, useLatestEpisodes, toEpisodeWithSeries, type PublicEpisode } from "@/hooks/useSeriesData";
+import { useNewEpisodes, useMostPopularEpisodes } from "@/hooks/useHomepageData";
+import { useWatchHistory } from "@/hooks/useWatchHistory";
 import AnimeCard from "@/components/AnimeCard";
-import NewEpisodeCard from "@/components/NewEpisodeCard";
 import MyListSection from "@/components/MyListSection";
 import VideoThumbnail from "@/components/VideoThumbnail";
+import EpisodeScrollCard from "@/components/EpisodeScrollCard";
+import HorizontalScrollSection from "@/components/HorizontalScrollSection";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useWatchlist } from "@/hooks/useWatchlist";
@@ -12,22 +15,57 @@ import { motion } from "framer-motion";
 import { formatTimestamp } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useQueries } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+// Mini hook to load episodes for continue-watching entries
+function useContinueWatchingEpisodes(episodeIds: string[]) {
+  return useQueries({
+    queries: episodeIds.map((id) => ({
+      queryKey: ["episode", id],
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from("episodes_public" as any)
+          .select("*")
+          .eq("id", id)
+          .maybeSingle();
+        if (error) throw error;
+        if (!data) return null;
+        return toEpisodeWithSeries(data as unknown as PublicEpisode);
+      },
+      enabled: !!id,
+      staleTime: 60_000,
+    })),
+  });
+}
 
 const Index = () => {
   const { user } = useAuth();
   const { watchlistIds } = useWatchlist();
   const { data: allSeries, isLoading: seriesLoading } = useSeries();
-  const { data: shorts, isLoading: shortsLoading } = useShorts();
-  const { data: latestEpisodes, isLoading: episodesLoading } = useLatestEpisodes();
+  const { data: shorts } = useShorts();
+  const { data: latestEpisodes } = useLatestEpisodes();
+  const { data: newEpisodes } = useNewEpisodes();
+  const { data: popularEpisodes } = useMostPopularEpisodes();
+  const { data: watchHistory } = useWatchHistory();
   const isMobile = useIsMobile();
 
   const heroSeries = allSeries?.[0];
   const heroImage = heroSeries?.image_url || "/placeholder.svg";
+  const heroEpisode = latestEpisodes?.find((ep) => ep.series_id === heroSeries?.id);
 
-  // Find first episode of hero series to link to
-  const heroEpisode = latestEpisodes?.find(
-    (ep) => ep.series_id === heroSeries?.id
-  );
+  // Load episodes for continue watching
+  const continueIds = (watchHistory ?? []).map((h) => h.episode_id);
+  const continueEpisodeResults = useContinueWatchingEpisodes(continueIds);
+  const continueWatchingItems = continueIds
+    .map((id, i) => {
+      const ep = continueEpisodeResults[i]?.data;
+      const hist = watchHistory?.find((h) => h.episode_id === id);
+      if (!ep || !hist) return null;
+      const progress = hist.duration > 0 ? (hist.watched_seconds / hist.duration) * 100 : 0;
+      return { ep, progress, watched_seconds: hist.watched_seconds };
+    })
+    .filter(Boolean) as { ep: ReturnType<typeof toEpisodeWithSeries>; progress: number; watched_seconds: number }[];
 
   return (
     <div className="min-h-screen bg-background pb-20 sm:pb-0">
@@ -42,7 +80,6 @@ const Index = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
-
             <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-12 lg:p-16 max-w-3xl">
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
@@ -86,24 +123,74 @@ const Index = () => {
       {/* My List (only for logged-in users) */}
       {user && <MyListSection watchlistIds={watchlistIds} />}
 
-      {/* New Episodes Section */}
-      {latestEpisodes && latestEpisodes.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <h2 className="font-display text-xl sm:text-2xl font-bold">
-                Latest Episodes
-              </h2>
+      {/* Continue Watching */}
+      {user && continueWatchingItems.length > 0 && (
+        <HorizontalScrollSection
+          title="Continue Watching"
+          icon={<History className="w-5 h-5 text-primary" />}
+        >
+          {continueWatchingItems.map(({ ep, progress }) => (
+            <div key={ep.id} style={{ scrollSnapAlign: "start" }}>
+              <EpisodeScrollCard
+                id={ep.id}
+                title={ep.title}
+                episode_number={ep.episode_number}
+                season={ep.season}
+                duration={ep.duration}
+                thumbnail_url={ep.thumbnail_url}
+                video_url={ep.video_url}
+                series={ep.series}
+                progress={progress}
+              />
             </div>
-          </div>
+          ))}
+        </HorizontalScrollSection>
+      )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {latestEpisodes.map((episode, index) => (
-              <NewEpisodeCard key={episode.id} episode={episode} index={index} />
-            ))}
-          </div>
-        </section>
+      {/* New Episodes (latest per series in last 7 days) */}
+      {newEpisodes && newEpisodes.length > 0 && (
+        <HorizontalScrollSection
+          title="New Episodes"
+          icon={<Sparkles className="w-5 h-5 text-primary" />}
+        >
+          {newEpisodes.map((ep) => (
+            <div key={ep.id} style={{ scrollSnapAlign: "start" }}>
+              <EpisodeScrollCard
+                id={ep.id}
+                title={ep.title}
+                episode_number={ep.episode_number}
+                season={ep.season}
+                duration={ep.duration}
+                thumbnail_url={ep.thumbnail_url}
+                video_url={ep.video_url}
+                series={ep.series}
+              />
+            </div>
+          ))}
+        </HorizontalScrollSection>
+      )}
+
+      {/* Most Popular */}
+      {popularEpisodes && popularEpisodes.length > 0 && (
+        <HorizontalScrollSection
+          title="Most Popular"
+          icon={<Flame className="w-5 h-5 text-primary" />}
+        >
+          {popularEpisodes.map((ep) => (
+            <div key={ep.id} style={{ scrollSnapAlign: "start" }}>
+              <EpisodeScrollCard
+                id={ep.id}
+                title={ep.title}
+                episode_number={ep.episode_number}
+                season={ep.season}
+                duration={ep.duration}
+                thumbnail_url={ep.thumbnail_url}
+                video_url={ep.video_url}
+                series={ep.series}
+              />
+            </div>
+          ))}
+        </HorizontalScrollSection>
       )}
 
       {/* Trending Shorts Section */}
@@ -112,9 +199,7 @@ const Index = () => {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <TrendingUp className="w-5 h-5 text-primary" />
-              <h2 className="font-display text-xl sm:text-2xl font-bold">
-                Shorts
-              </h2>
+              <h2 className="font-display text-xl sm:text-2xl font-bold">Shorts</h2>
             </div>
             <Link
               to="/shorts"
@@ -123,7 +208,6 @@ const Index = () => {
               View All <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {(isMobile ? shorts.slice(0, 2) : shorts.slice(0, 3)).map((short, index) => (
               <motion.div
@@ -156,13 +240,11 @@ const Index = () => {
                       </div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
-
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-primary/90 flex items-center justify-center glow-primary">
                         <Play className="w-4 h-4 sm:w-6 sm:h-6 text-primary-foreground fill-current ml-0.5" />
                       </div>
                     </div>
-
                     <div className="absolute bottom-0 left-0 right-0 p-2.5 sm:p-4">
                       <h3 className="font-display font-bold text-xs sm:text-sm mb-0.5 sm:mb-1 text-foreground line-clamp-1">
                         {short.title}
@@ -183,11 +265,8 @@ const Index = () => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 mb-12">
         <div className="flex items-center gap-3 mb-6">
           <Tv className="w-5 h-5 text-primary" />
-          <h2 className="font-display text-xl sm:text-2xl font-bold">
-            All Series
-          </h2>
+          <h2 className="font-display text-xl sm:text-2xl font-bold">All Series</h2>
         </div>
-
         {seriesLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
