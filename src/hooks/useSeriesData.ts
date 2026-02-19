@@ -55,8 +55,25 @@ export interface PublicShort {
   episode_series_title: string | null;
 }
 
+// Episode with series info shape used by components
+export interface EpisodeWithSeries {
+  id: string;
+  video_url: string | null;
+  description: string | null;
+  title: string;
+  thumbnail_url: string | null;
+  updated_at: string;
+  created_at: string;
+  created_by: string | null;
+  duration: number;
+  episode_number: number;
+  season: number;
+  series_id: string;
+  series: { id: string; title: string; image_url: string | null } | null;
+}
+
 // Helper to convert PublicEpisode to the shape components expect
-export function toEpisodeWithSeries(ep: PublicEpisode) {
+export function toEpisodeWithSeries(ep: PublicEpisode): EpisodeWithSeries {
   return {
     id: ep.id,
     video_url: ep.video_url,
@@ -170,7 +187,7 @@ export function useEpisodeById(episodeId: string | undefined) {
   });
 }
 
-export function useNextEpisode(episode: DbEpisode | null | undefined) {
+export function useNextEpisode(episode: EpisodeWithSeries | null | undefined) {
   return useQuery({
     queryKey: ["nextEpisode", episode?.id],
     queryFn: async () => {

@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useEpisodeById, useNextEpisode } from "@/hooks/useSeriesData";
+import { useEpisodeById, useNextEpisode, type EpisodeWithSeries } from "@/hooks/useSeriesData";
 import { useSubtitles } from "@/hooks/useSubtitles";
 import { useUpsertWatchHistory } from "@/hooks/useWatchHistory";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,6 +10,7 @@ import { formatTimestamp } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCallback, useEffect, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function WatchPage() {
   const { episodeId } = useParams();
@@ -21,6 +22,12 @@ export default function WatchPage() {
 
   // Save progress periodically (every 10s) using a ref to avoid re-creating the player
   const saveProgressRef = useRef<(currentTime: number, duration: number) => void>(() => {});
+
+  // Increment view count once per episode load
+  useEffect(() => {
+    if (!episodeId) return;
+    supabase.rpc("increment_episode_view_count" as any, { episode_id: episodeId }).then(() => {});
+  }, [episodeId]);
 
   useEffect(() => {
     saveProgressRef.current = (currentTime: number, duration: number) => {
