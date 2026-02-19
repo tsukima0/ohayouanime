@@ -11,7 +11,7 @@ import logoImg from "@/assets/logo.png";
 const navItems = [
   { label: "Home", path: "/", icon: Home },
   { label: "Shorts", path: "/shorts", icon: Film },
-  { label: "Watch", path: "/watch/ep-001", icon: Play },
+  { label: "Watch", path: "/browse", icon: Play },
 ];
 
 export default function Navbar() {
@@ -72,8 +72,8 @@ export default function Navbar() {
           </Link>
           <div className="flex items-center gap-1">
             {navItems.map((item) => {
-              const isActive = location.pathname === item.path || 
-                (item.path === "/watch/ep-001" && location.pathname.startsWith("/watch"));
+      const isActive = location.pathname === item.path || 
+                (item.path === "/browse" && location.pathname.startsWith("/watch"));
               return (
                 <Link
                   key={item.path}
@@ -166,7 +166,7 @@ export default function Navbar() {
             <div className="sm:hidden flex flex-col">
               {navItems.map((item) => {
                 const isActive = location.pathname === item.path ||
-                  (item.path === "/watch/ep-001" && location.pathname.startsWith("/watch"));
+                  (item.path === "/browse" && location.pathname.startsWith("/watch"));
                 return (
                   <Link
                     key={item.path}

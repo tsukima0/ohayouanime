@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
-import { Play, ChevronRight } from "lucide-react";
-import type { DbEpisode } from "@/hooks/useSeriesData";
+import { ChevronRight } from "lucide-react";
+import type { EpisodeWithSeries } from "@/hooks/useSeriesData";
 import { formatTimestamp } from "@/lib/utils";
 import { motion } from "framer-motion";
 
 interface NextEpisodeCardProps {
-  episode: DbEpisode & { series: { id: string; title: string; image_url: string | null } | null };
+  episode: EpisodeWithSeries;
 }
 
 export default function NextEpisodeCard({ episode }: NextEpisodeCardProps) {

@@ -28,6 +28,7 @@ export type Database = {
           title: string
           updated_at: string
           video_url: string | null
+          view_count: number
         }
         Insert: {
           created_at?: string
@@ -42,6 +43,7 @@ export type Database = {
           title: string
           updated_at?: string
           video_url?: string | null
+          view_count?: number
         }
         Update: {
           created_at?: string
@@ -56,6 +58,7 @@ export type Database = {
           title?: string
           updated_at?: string
           video_url?: string | null
+          view_count?: number
         }
         Relationships: [
           {
@@ -620,6 +623,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_episode_view_count: {
+        Args: { episode_id: string }
+        Returns: undefined
       }
     }
     Enums: {

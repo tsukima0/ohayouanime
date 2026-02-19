@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar";
 import Index from "./pages/Index";
 import ShortsPage from "./pages/Shorts";
 import WatchPage from "./pages/Watch";
+import BrowsePage from "./pages/Browse";
 import SeriesDetailPage from "./pages/SeriesDetail";
 import AuthPage from "./pages/Auth";
 import ProfilePage from "./pages/Profile";
@@ -31,6 +32,7 @@ const App = () => (
             <Navbar />
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/browse" element={<BrowsePage />} />
               <Route path="/shorts" element={<ShortsPage />} />
               <Route path="/shorts/:shortId" element={<ShortsPage />} />
               <Route path="/series/:seriesId" element={<SeriesDetailPage />} />
