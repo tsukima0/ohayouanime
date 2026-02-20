@@ -25,7 +25,7 @@ export function useShortLike(shortId: string) {
     queryKey: ["short-likes-count", shortId],
     queryFn: async () => {
       const { data } = await supabase
-        .from("shorts_public" as any)
+        .from("shorts_public")
         .select("likes_count")
         .eq("id", shortId)
         .maybeSingle();
@@ -89,16 +89,16 @@ export function useShortComments(shortId: string) {
     queryKey: ["short-comments", shortId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("short_comments_public" as any)
+        .from("short_comments_public")
         .select("*")
         .eq("short_id", shortId)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data as any[]).map((c) => ({
-        id: c.id,
-        short_id: c.short_id,
-        text: c.text,
-        created_at: c.created_at,
+      return (data ?? []).map((c) => ({
+        id: c.id ?? "",
+        short_id: c.short_id ?? shortId,
+        text: c.text ?? "",
+        created_at: c.created_at ?? new Date().toISOString(),
         is_own: !!c.is_own,
         username: c.username ?? null,
       })) as DbShortComment[];
