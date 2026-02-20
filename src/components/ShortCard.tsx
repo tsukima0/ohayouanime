@@ -3,7 +3,7 @@ import { Play, Pause } from "lucide-react";
 import type { ShortWithEpisode } from "@/hooks/useSeriesData";
 import { formatTimestamp } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { useShortLike } from "@/hooks/useShortInteractions";
+import { useShortLike, useShortCommentsCount } from "@/hooks/useShortInteractions";
 import { useNavigate } from "react-router-dom";
 import ShortActions from "@/components/shorts/ShortActions";
 import ShortCommentsSheet from "@/components/shorts/ShortCommentsSheet";
@@ -29,6 +29,7 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
   const lastTapRef = useRef(0);
 
   const { liked, likesCount, toggleLike } = useShortLike(short.id);
+  const commentsCount = useShortCommentsCount(short.id);
 
   const hasVideo = !!short.video_url && !videoError;
   const renderVideo = hasVideo && shouldLoad;
@@ -148,7 +149,7 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
           <ShortActions
             liked={liked}
             likesCount={likesCount}
-            commentsCount={(short as any).comments_count ?? 0}
+            commentsCount={commentsCount}
             isMuted={isMuted}
             onToggleLike={toggleLike}
             onCommentOpen={() => setCommentsOpen(true)}

@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -122,6 +123,7 @@ export function useShortComments(shortId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["short-comments", shortId] });
+      queryClient.invalidateQueries({ queryKey: ["short-comments-count", shortId] });
     },
   });
 
@@ -131,8 +133,48 @@ export function useShortComments(shortId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["short-comments", shortId] });
+      queryClient.invalidateQueries({ queryKey: ["short-comments-count", shortId] });
     },
   });
 
   return { comments, isLoading, addComment: addComment.mutate, deleteComment: deleteComment.mutate, user };
+}
+
+export function useShortCommentsCount(shortId: string) {
+  const queryClient = useQueryClient();
+
+  const { data: commentsCount = 0 } = useQuery({
+    queryKey: ["short-comments-count", shortId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("shorts_public")
+        .select("comments_count")
+        .eq("id", shortId)
+        .maybeSingle();
+      return (data as any)?.comments_count ?? 0;
+    },
+    enabled: !!shortId,
+  });
+
+  // Realtime: update count when the shorts row changes
+  useEffect(() => {
+    if (!shortId) return;
+    const channel = supabase
+      .channel(`short-comments-count-${shortId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "shorts", filter: `id=eq.${shortId}` },
+        (payload) => {
+          const newCount = (payload.new as any)?.comments_count;
+          if (typeof newCount === "number") {
+            queryClient.setQueryData(["short-comments-count", shortId], newCount);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [shortId, queryClient]);
+
+  return commentsCount;
 }
