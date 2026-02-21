@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
-import { Play, TrendingUp, Tv, ArrowRight } from "lucide-react";
+import { Play, TrendingUp, Tv, ArrowRight, Clock, Flame, History } from "lucide-react";
 import { useSeries, useShorts, useLatestEpisodes } from "@/hooks/useSeriesData";
+import { usePopularSeries } from "@/hooks/usePopularSeries";
+import { useContinueWatching } from "@/hooks/useContinueWatching";
 import AnimeCard from "@/components/AnimeCard";
 import MyListSection from "@/components/MyListSection";
 import VideoThumbnail from "@/components/VideoThumbnail";
@@ -17,6 +19,8 @@ const Index = () => {
   const { data: allSeries, isLoading: seriesLoading } = useSeries();
   const { data: shorts } = useShorts();
   const { data: latestEpisodes } = useLatestEpisodes();
+  const { data: popularSeries } = usePopularSeries();
+  const { data: continueWatching } = useContinueWatching();
   const isMobile = useIsMobile();
 
   const heroSeries = allSeries?.[0];
@@ -76,8 +80,87 @@ const Index = () => {
         )}
       </section>
 
+      {/* Continue Watching (logged-in users only) */}
+      {user && continueWatching && continueWatching.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+          <div className="flex items-center gap-3 mb-6">
+            <History className="w-5 h-5 text-primary" />
+            <h2 className="font-display text-xl sm:text-2xl font-bold">Continue Watching</h2>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide" style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
+            {continueWatching.map((item, index) => (
+              <motion.div
+                key={item.episodeId}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="min-w-[260px] sm:min-w-[300px] flex-shrink-0"
+                style={{ scrollSnapAlign: "start" }}
+              >
+                <Link
+                  to={`/watch/${item.episodeId}`}
+                  className="group block relative rounded-xl overflow-hidden glass-card hover:scale-[1.02] transition-transform duration-300"
+                >
+                  <div className="aspect-video relative overflow-hidden">
+                    {item.thumbnailUrl || item.seriesImage ? (
+                      <img
+                        src={item.thumbnailUrl || item.seriesImage || "/placeholder.svg"}
+                        alt={item.episodeTitle}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-primary/20 via-muted to-accent flex items-center justify-center">
+                        <Play className="w-8 h-8 text-muted-foreground/40" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center glow-primary">
+                        <Play className="w-5 h-5 text-primary-foreground fill-current ml-0.5" />
+                      </div>
+                    </div>
+                    <div className="absolute top-2 right-2">
+                      <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-background/80 backdrop-blur-sm text-xs text-foreground">
+                        <Clock className="w-3 h-3" />
+                        <span>{formatTimestamp(item.duration - item.watchedSeconds)} left</span>
+                      </div>
+                    </div>
+                    {/* Progress bar */}
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted/50">
+                      <div className="h-full bg-primary transition-all" style={{ width: `${item.progress}%` }} />
+                    </div>
+                  </div>
+                  <div className="p-3">
+                    <p className="text-xs font-semibold text-primary mb-0.5">{item.seriesTitle}</p>
+                    <h3 className="font-display font-bold text-sm text-foreground truncate">
+                      E{item.episodeNumber}: {item.episodeTitle}
+                    </h3>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* My List (only for logged-in users) */}
       {user && <MyListSection watchlistIds={watchlistIds} />}
+
+      {/* Popular Series */}
+      {popularSeries && popularSeries.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+          <div className="flex items-center gap-3 mb-6">
+            <Flame className="w-5 h-5 text-primary" />
+            <h2 className="font-display text-xl sm:text-2xl font-bold">Popular Series</h2>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+            {popularSeries.map((series, index) => (
+              <AnimeCard key={series.id} series={series} index={index} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Trending Shorts Section */}
       {shorts && shorts.length > 0 && (
