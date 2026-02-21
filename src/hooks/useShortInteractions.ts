@@ -35,6 +35,26 @@ export function useShortLike(shortId: string) {
     enabled: !!shortId,
   });
 
+  // Realtime: update likes count when the shorts row changes
+  useEffect(() => {
+    if (!shortId) return;
+    const channel = supabase
+      .channel(`short-likes-count-${shortId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "shorts", filter: `id=eq.${shortId}` },
+        (payload) => {
+          const newCount = (payload.new as any)?.likes_count;
+          if (typeof newCount === "number") {
+            queryClient.setQueryData(["short-likes-count", shortId], newCount);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [shortId, queryClient]);
+
   const toggleLike = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Must be logged in");
