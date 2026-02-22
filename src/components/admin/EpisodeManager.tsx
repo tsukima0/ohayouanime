@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { uploadFile } from "@/lib/storage";
+import { uploadFile, uploadVideoToR2 } from "@/lib/storage";
 import { useAuth } from "@/hooks/useAuth";
 import { Plus, Trash2, Edit2, Loader2, ImageIcon, Film } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -97,8 +97,8 @@ export default function EpisodeManager() {
       let thumbUrl = thumbnailPreview;
 
       if (videoFile) {
-        setUploadProgress("Uploading video...");
-        videoUrl = await uploadFile("videos", videoFile, `episodes/${crypto.randomUUID()}.${videoFile.name.split(".").pop()}`);
+        setUploadProgress("Uploading video to R2...");
+        videoUrl = await uploadVideoToR2(videoFile, "episodes");
       }
       if (thumbnailFile) {
         setUploadProgress("Uploading thumbnail...");
