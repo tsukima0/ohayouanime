@@ -43,7 +43,7 @@ serve(async (req) => {
 
     await s3.send(
       new PutObjectCommand({
-        Bucket: "ohayou-videos",
+        Bucket: "ohayou-anime-storage",
         Key: key,
         Body: new Uint8Array(arrayBuffer),
         ContentType: file.type || "video/mp4",
