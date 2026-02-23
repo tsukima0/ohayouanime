@@ -154,9 +154,15 @@ const Index = () => {
             <Flame className="w-5 h-5 text-primary" />
             <h2 className="font-display text-xl sm:text-2xl font-bold">Popular Series</h2>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+          <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide" style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
             {popularSeries.map((series, index) => (
-              <AnimeCard key={series.id} series={series} index={index} />
+              <div
+                key={series.id}
+                className="flex-shrink-0 w-[130px] sm:w-[180px] lg:w-[200px]"
+                style={{ scrollSnapAlign: "start" }}
+              >
+                <AnimeCard series={series} index={index} />
+              </div>
             ))}
           </div>
         </section>
