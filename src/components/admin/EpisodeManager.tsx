@@ -44,6 +44,7 @@ export default function EpisodeManager() {
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<string>("");
+  const [uploadPercent, setUploadPercent] = useState(0);
 
   useEffect(() => {
     const loadSeries = async () => {
@@ -73,7 +74,7 @@ export default function EpisodeManager() {
   const resetForm = () => {
     setTitle(""); setDescription(""); setSeason("1"); setEpisodeNumber("1"); setDuration("0");
     setVideoFile(null); setThumbnailFile(null); setThumbnailPreview(null); setEditingId(null);
-    setShowForm(false); setUploadProgress("");
+    setShowForm(false); setUploadProgress(""); setUploadPercent(0);
   };
 
   const startEdit = (ep: Episode) => {
@@ -97,8 +98,9 @@ export default function EpisodeManager() {
       let thumbUrl = thumbnailPreview;
 
       if (videoFile) {
-        setUploadProgress("Uploading video to R2...");
-        videoUrl = await uploadVideoToR2(videoFile, "episodes");
+        setUploadProgress("Uploading video...");
+        setUploadPercent(0);
+        videoUrl = await uploadVideoToR2(videoFile, "episodes", (p) => setUploadPercent(p));
       }
       if (thumbnailFile) {
         setUploadProgress("Uploading thumbnail...");
@@ -249,9 +251,17 @@ export default function EpisodeManager() {
           </div>
 
           {uploadProgress && (
-            <p className="text-xs text-primary flex items-center gap-2">
-              <Loader2 className="w-3 h-3 animate-spin" /> {uploadProgress}
-            </p>
+            <div className="space-y-1.5">
+              <p className="text-xs text-primary flex items-center gap-2">
+                <Loader2 className="w-3 h-3 animate-spin" /> {uploadProgress} {uploadPercent > 0 && `${uploadPercent}%`}
+              </p>
+              <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
+                <div
+                  className="h-full bg-primary rounded-full transition-all duration-300"
+                  style={{ width: `${uploadPercent}%` }}
+                />
+              </div>
+            </div>
           )}
 
           <div className="flex gap-3 pt-2">
