@@ -31,11 +31,7 @@ export async function uploadVideoToR2(
   formData.append("file", file);
   formData.append("folder", folder);
 
-  // Always refresh session to avoid stale tokens on repeated uploads
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError || !session) {
-    throw new Error("Authentication required. Please log in and try again.");
-  }
+  const { data: { session } } = await supabase.auth.getSession();
   const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/r2-upload`;
 
   return new Promise((resolve, reject) => {
@@ -43,7 +39,6 @@ export async function uploadVideoToR2(
     xhr.open("POST", url);
     xhr.setRequestHeader("Authorization", `Bearer ${session?.access_token}`);
     xhr.setRequestHeader("apikey", import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
-    xhr.timeout = 600000; // 10 minutes for large files
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable && onProgress) {
@@ -69,19 +64,7 @@ export async function uploadVideoToR2(
       }
     };
 
-    xhr.onerror = () => {
-      console.error("XHR network error - readyState:", xhr.readyState, "status:", xhr.status);
-      reject(new Error("Network error during upload. Please check your connection and try again."));
-    };
-
-    xhr.ontimeout = () => {
-      reject(new Error("Upload timed out. The file may be too large."));
-    };
-
-    xhr.onabort = () => {
-      reject(new Error("Upload was cancelled."));
-    };
-
+    xhr.onerror = () => reject(new Error("Network error during upload"));
     xhr.send(formData);
   });
 }
