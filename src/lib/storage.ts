@@ -34,11 +34,16 @@ export async function uploadVideoToR2(
   const { data: { session } } = await supabase.auth.getSession();
   const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/r2-upload`;
 
+  // Refresh session to ensure token is valid for long uploads
+  const { data: refreshed } = await supabase.auth.refreshSession();
+  const token = refreshed?.session?.access_token || session?.access_token;
+
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", url);
-    xhr.setRequestHeader("Authorization", `Bearer ${session?.access_token}`);
+    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
     xhr.setRequestHeader("apikey", import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+    xhr.timeout = 600000; // 10 minute timeout for large files
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable && onProgress) {
@@ -55,16 +60,20 @@ export async function uploadVideoToR2(
           reject(new Error("Invalid response from upload"));
         }
       } else {
+        let msg = `Upload failed (${xhr.status})`;
         try {
           const err = JSON.parse(xhr.responseText);
-          reject(new Error(err.error || "R2 upload failed"));
+          msg = err.error || err.message || msg;
         } catch {
-          reject(new Error(`R2 upload failed (${xhr.status})`));
+          msg = xhr.responseText || msg;
         }
+        console.error("R2 upload error:", xhr.status, xhr.responseText);
+        reject(new Error(msg));
       }
     };
 
     xhr.onerror = () => reject(new Error("Network error during upload"));
+    xhr.ontimeout = () => reject(new Error("Upload timed out — file may be too large"));
     xhr.send(formData);
   });
 }

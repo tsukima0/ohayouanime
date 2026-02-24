@@ -135,7 +135,8 @@ export default function EpisodeManager() {
       const { data } = await supabase.from("episodes" as any).select("*").eq("series_id", selectedSeries).order("season").order("episode_number");
       if (data) setEpisodes(data as any as Episode[]);
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      console.error("Episode submit error:", err);
+      toast({ title: "Error", description: err.message || "Unknown error", variant: "destructive" });
     } finally {
       setSubmitting(false);
       setUploadProgress("");
