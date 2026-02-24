@@ -43,7 +43,7 @@ export async function uploadVideoToR2(
     xhr.open("POST", url);
     xhr.setRequestHeader("Authorization", `Bearer ${token}`);
     xhr.setRequestHeader("apikey", import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
-    xhr.timeout = 600000; // 10 minute timeout for large files
+    xhr.timeout = 0; // No timeout for large file uploads
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable && onProgress) {
