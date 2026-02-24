@@ -27,23 +27,41 @@ export async function uploadVideoToR2(
   folder: string = "episodes",
   onProgress?: (percent: number) => void
 ): Promise<string> {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("folder", folder);
-
-  const { data: { session } } = await supabase.auth.getSession();
-  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/r2-upload`;
-
-  // Refresh session to ensure token is valid for long uploads
+  // Step 1: Get a presigned PUT URL from the edge function
   const { data: refreshed } = await supabase.auth.refreshSession();
+  const { data: { session } } = await supabase.auth.getSession();
   const token = refreshed?.session?.access_token || session?.access_token;
 
+  const presignRes = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/r2-presign`,
+    {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        fileName: file.name,
+        contentType: file.type || "video/mp4",
+        folder,
+      }),
+    }
+  );
+
+  if (!presignRes.ok) {
+    const err = await presignRes.json().catch(() => ({ error: "Failed to get upload URL" }));
+    throw new Error(err.error || `Failed to get upload URL (${presignRes.status})`);
+  }
+
+  const { presignedUrl, publicUrl, contentType } = await presignRes.json();
+
+  // Step 2: Upload directly to R2 using the presigned URL
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", url);
-    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-    xhr.setRequestHeader("apikey", import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
-    xhr.timeout = 0; // No timeout for large file uploads
+    xhr.open("PUT", presignedUrl);
+    xhr.setRequestHeader("Content-Type", contentType);
+    xhr.timeout = 0; // No timeout for large files
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable && onProgress) {
@@ -53,27 +71,14 @@ export async function uploadVideoToR2(
 
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
-        try {
-          const data = JSON.parse(xhr.responseText);
-          resolve(data.url);
-        } catch {
-          reject(new Error("Invalid response from upload"));
-        }
+        resolve(publicUrl);
       } else {
-        let msg = `Upload failed (${xhr.status})`;
-        try {
-          const err = JSON.parse(xhr.responseText);
-          msg = err.error || err.message || msg;
-        } catch {
-          msg = xhr.responseText || msg;
-        }
-        console.error("R2 upload error:", xhr.status, xhr.responseText);
-        reject(new Error(msg));
+        console.error("R2 direct upload error:", xhr.status, xhr.responseText);
+        reject(new Error(`Upload failed (${xhr.status})`));
       }
     };
 
     xhr.onerror = () => reject(new Error("Network error during upload"));
-    xhr.ontimeout = () => reject(new Error("Upload timed out — file may be too large"));
-    xhr.send(formData);
+    xhr.send(file);
   });
 }
