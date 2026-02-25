@@ -8,6 +8,7 @@ import MyListSection from "@/components/MyListSection";
 import VideoThumbnail from "@/components/VideoThumbnail";
 import EpisodeScrollCard from "@/components/EpisodeScrollCard";
 import HorizontalScrollSection from "@/components/HorizontalScrollSection";
+import AdBanner from "@/components/AdBanner";
 import HeroBanner from "@/components/HeroBanner";
 import { useAuth } from "@/hooks/useAuth";
 import { useWatchlist } from "@/hooks/useWatchlist";
@@ -88,6 +89,11 @@ const Index = () => {
           ))}
         </HorizontalScrollSection>
       )}
+
+      {/* Ad Banner */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <AdBanner placement="banner" />
+      </div>
 
       {/* My List (only for logged-in users) */}
       {user && <MyListSection watchlistIds={watchlistIds} />}
