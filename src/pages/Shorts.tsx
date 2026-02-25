@@ -1,13 +1,30 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useShorts } from "@/hooks/useSeriesData";
 import ShortCard from "@/components/ShortCard";
+import ShortsAdCard from "@/components/ShortsAdCard";
+import { useAds } from "@/hooks/useAds";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ShortsPage() {
   const { shortId } = useParams();
   const { data: shorts = [], isLoading } = useShorts();
+  const { data: shortsAds = [] } = useAds("shorts");
+  const hasAds = shortsAds.length > 0;
+
+  // Build feed: insert ad after every 3 shorts
+  type FeedItem = { type: "short"; short: (typeof shorts)[number]; idx: number } | { type: "ad"; key: string };
+  const feed = useMemo<FeedItem[]>(() => {
+    const items: FeedItem[] = [];
+    shorts.forEach((s, i) => {
+      items.push({ type: "short", short: s, idx: i });
+      if ((i + 1) % 3 === 0 && hasAds) {
+        items.push({ type: "ad", key: `ad-${i}` });
+      }
+    });
+    return items;
+  }, [shorts, hasAds]);
 
   const initialIndex = shortId
     ? shorts.findIndex((s) => s.id === shortId)
@@ -101,7 +118,7 @@ export default function ShortsPage() {
         </button>
         <button
           onClick={() => scrollTo("down")}
-          disabled={activeIndex === shorts.length - 1}
+          disabled={activeIndex === feed.length - 1}
           className="p-2 rounded-full bg-background/30 backdrop-blur-sm text-foreground hover:text-primary disabled:opacity-30 transition-all"
         >
           <ChevronDown className="w-5 h-5" />
@@ -113,24 +130,28 @@ export default function ShortsPage() {
         ref={containerRef}
         className="h-full overflow-y-scroll snap-y snap-mandatory hide-scrollbar"
       >
-        {shorts.map((short, index) => (
+        {feed.map((item, index) => (
           <div
-            key={short.id}
+            key={item.type === "short" ? item.short.id : item.key}
             data-index={index}
-            className="h-full w-full max-w-lg mx-auto"
+            className="h-full w-full max-w-lg mx-auto snap-start"
           >
-            <ShortCard
-              short={short}
-              isActive={activeIndex === index}
-              shouldLoad={Math.abs(activeIndex - index) <= 1}
-            />
+            {item.type === "short" ? (
+              <ShortCard
+                short={item.short}
+                isActive={activeIndex === index}
+                shouldLoad={Math.abs(activeIndex - index) <= 1}
+              />
+            ) : (
+              <ShortsAdCard />
+            )}
           </div>
         ))}
       </div>
 
       {/* Minimal progress dots — desktop side */}
       <div className="hidden sm:flex fixed left-4 bottom-6 flex-col gap-1.5 z-30">
-        {shorts.map((_, index) => (
+        {feed.map((_, index) => (
           <div
             key={index}
             className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${

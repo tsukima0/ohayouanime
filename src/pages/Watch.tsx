@@ -5,6 +5,7 @@ import { useUpsertWatchHistory } from "@/hooks/useWatchHistory";
 import { useAuth } from "@/hooks/useAuth";
 import OhayouVideoPlayer from "@/components/video-player/OhayouVideoPlayer";
 import NextEpisodeCard from "@/components/NextEpisodeCard";
+import AdBanner from "@/components/AdBanner";
 import { Clock, Calendar } from "lucide-react";
 import { formatTimestamp } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -113,6 +114,11 @@ export default function WatchPage() {
             <NextEpisodeCard episode={nextEpisode} />
           </div>
         )}
+
+        {/* Ad Banner */}
+        <div className="mt-8">
+          <AdBanner placement="banner" />
+        </div>
       </div>
     </div>
   );
