@@ -8,6 +8,7 @@ import MyListSection from "@/components/MyListSection";
 import VideoThumbnail from "@/components/VideoThumbnail";
 import EpisodeScrollCard from "@/components/EpisodeScrollCard";
 import HorizontalScrollSection from "@/components/HorizontalScrollSection";
+import HeroBanner from "@/components/HeroBanner";
 import { useAuth } from "@/hooks/useAuth";
 import { useWatchlist } from "@/hooks/useWatchlist";
 import { useQueries } from "@tanstack/react-query";
@@ -56,62 +57,13 @@ const Index = () => {
     })
     .filter(Boolean) as { ep: ReturnType<typeof toEpisodeWithSeries>; progress: number }[];
 
-  const heroSeries = allSeries?.[0];
-  const heroImage = heroSeries?.image_url || "/placeholder.svg";
-  const heroEpisode = latestEpisodes?.find((ep) => ep.series_id === heroSeries?.id);
+  // Use popular series for hero carousel, fallback to all series
+  const heroSeries = (popularSeries && popularSeries.length > 0) ? popularSeries : (allSeries?.slice(0, 5) ?? []);
 
   return (
     <div className="min-h-screen bg-background pb-20 sm:pb-0">
-      {/* Hero Banner */}
-      <section className="relative w-full h-[70vh] sm:h-[80vh] overflow-hidden">
-        {heroSeries ? (
-          <>
-            <img
-              src={heroImage}
-              alt={heroSeries.title}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-12 lg:p-16 max-w-3xl">
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
-              >
-                <span className="inline-block px-3 py-1 rounded-md bg-primary text-primary-foreground text-xs font-bold mb-4">
-                  FEATURED
-                </span>
-                <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-3">
-                  {heroSeries.title}
-                </h1>
-                <p className="text-muted-foreground text-sm sm:text-base max-w-lg mb-6 leading-relaxed">
-                  {heroSeries.description}
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  {heroEpisode && (
-                    <Link
-                      to={`/watch/${heroEpisode.id}`}
-                      className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm transition-all hover:scale-105 glow-primary"
-                    >
-                      <Play className="w-4 h-4 fill-current" />
-                      Watch Now
-                    </Link>
-                  )}
-                  <Link
-                    to={`/series/${heroSeries.id}`}
-                    className="flex items-center gap-2 px-6 py-3 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm transition-all hover:scale-105 border border-border"
-                  >
-                    View Series
-                  </Link>
-                </div>
-              </motion.div>
-            </div>
-          </>
-        ) : (
-          <div className="w-full h-full bg-muted animate-pulse" />
-        )}
-      </section>
+      {/* Hero Banner - auto-scrolling popular series */}
+      <HeroBanner series={heroSeries} latestEpisodes={latestEpisodes} />
 
       {/* Continue Watching (logged-in users only) */}
       {user && continueWatchingItems.length > 0 && (
