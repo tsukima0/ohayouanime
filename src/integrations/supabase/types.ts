@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      ads: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          image_url: string
+          is_active: boolean
+          link_url: string | null
+          placement: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url: string
+          is_active?: boolean
+          link_url?: string | null
+          placement?: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          link_url?: string | null
+          placement?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       episodes: {
         Row: {
           created_at: string
@@ -427,6 +466,42 @@ export type Database = {
       }
     }
     Views: {
+      ads_public: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          image_url: string | null
+          is_active: boolean | null
+          link_url: string | null
+          placement: string | null
+          sort_order: number | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          image_url?: string | null
+          is_active?: boolean | null
+          link_url?: string | null
+          placement?: string | null
+          sort_order?: number | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          image_url?: string | null
+          is_active?: boolean | null
+          link_url?: string | null
+          placement?: string | null
+          sort_order?: number | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       episodes_public: {
         Row: {
           created_at: string | null
