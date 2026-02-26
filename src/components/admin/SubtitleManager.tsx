@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { uploadFile } from "@/lib/storage";
+import { uploadFile, deleteR2File } from "@/lib/storage";
 import { useAuth } from "@/hooks/useAuth";
 import { Plus, Trash2, Loader2, Subtitles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -76,10 +76,12 @@ export default function SubtitleManager() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this subtitle?")) return;
+    const sub = subtitles.find((s) => s.id === id);
     const { error } = await supabase.from("subtitles" as any).delete().eq("id", id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
+      if (sub) deleteR2File(sub.file_url);
       toast({ title: "Subtitle deleted" });
       setSubtitles((prev) => prev.filter((s) => s.id !== id));
     }

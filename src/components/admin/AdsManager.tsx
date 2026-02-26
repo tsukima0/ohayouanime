@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Trash2, Plus, ExternalLink, ImageIcon, Upload, Video, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { uploadFile } from "@/lib/storage";
+import { uploadFile, deleteR2Files } from "@/lib/storage";
 
 export default function AdsManager() {
   const { data: ads = [], isLoading } = useAdminAds();
@@ -86,8 +86,10 @@ export default function AdsManager() {
   };
 
   const handleDelete = async (id: string) => {
+    const ad = ads.find((a) => a.id === id);
     try {
       await deleteAd.mutateAsync(id);
+      if (ad) deleteR2Files([ad.image_url, ad.video_url]);
       toast.success("Ad deleted");
     } catch {
       toast.error("Failed to delete ad");
