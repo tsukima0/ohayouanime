@@ -1,21 +1,43 @@
 import { useAds } from "@/hooks/useAds";
 import { ExternalLink } from "lucide-react";
+import { useRef, useEffect } from "react";
 
 export default function ShortsAdCard() {
   const { data: ads } = useAds("shorts");
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch(() => {});
+    }
+  }, []);
 
   if (!ads || ads.length === 0) return null;
 
   const ad = ads[Math.floor(Math.random() * ads.length)];
 
+  const media = ad.video_url ? (
+    <video
+      ref={videoRef}
+      src={ad.video_url}
+      className="w-full h-full object-cover"
+      loop
+      muted
+      playsInline
+      autoPlay
+    />
+  ) : (
+    <img
+      src={ad.image_url}
+      alt={ad.title}
+      className="w-full h-full object-cover"
+    />
+  );
+
   const content = (
     <div className="h-full w-full flex items-center justify-center bg-background relative">
       <div className="relative w-full h-full max-w-lg mx-auto overflow-hidden">
-        <img
-          src={ad.image_url}
-          alt={ad.title}
-          className="w-full h-full object-cover"
-        />
+        {media}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
         <div className="absolute bottom-20 left-0 right-0 px-6 text-center">
           <span className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2 block">
