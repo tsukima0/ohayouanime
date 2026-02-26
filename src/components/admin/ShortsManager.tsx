@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { uploadFile, uploadVideoToR2 } from "@/lib/storage";
+import { uploadFile, uploadVideoToR2, deleteR2Files } from "@/lib/storage";
 import { useAuth } from "@/hooks/useAuth";
 import { Plus, Trash2, Edit2, Loader2, ImageIcon, Film, Link2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -146,10 +146,12 @@ export default function ShortsManager() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this short?")) return;
+    const short = shorts.find((s) => s.id === id);
     const { error } = await supabase.from("shorts").delete().eq("id", id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
+      if (short) deleteR2Files([short.video_url, short.thumbnail_url]);
       toast({ title: "Short deleted" });
       fetchShorts();
     }

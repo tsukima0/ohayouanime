@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { uploadFile } from "@/lib/storage";
+import { uploadFile, deleteR2Files } from "@/lib/storage";
 import { useAuth } from "@/hooks/useAuth";
 import { Plus, Trash2, Edit2, Loader2, ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -123,10 +123,17 @@ export default function SeriesManager() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this series and all its episodes?")) return;
+    const series = seriesList.find((s) => s.id === id);
+    // Fetch episodes to delete their R2 files too
+    const { data: eps } = await supabase.from("episodes" as any).select("video_url, thumbnail_url").eq("series_id", id);
     const { error } = await supabase.from("series" as any).delete().eq("id", id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
+      // Delete R2 files in background
+      const urls: (string | null)[] = [series?.image_url ?? null];
+      if (eps) eps.forEach((ep: any) => { urls.push(ep.video_url, ep.thumbnail_url); });
+      deleteR2Files(urls);
       toast({ title: "Series deleted" });
       fetchSeries();
     }

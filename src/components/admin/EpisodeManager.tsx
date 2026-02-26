@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { uploadFile, uploadVideoToR2 } from "@/lib/storage";
+import { uploadFile, uploadVideoToR2, deleteR2Files } from "@/lib/storage";
 import { useAuth } from "@/hooks/useAuth";
 import { Plus, Trash2, Edit2, Loader2, ImageIcon, Film } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -145,12 +145,14 @@ export default function EpisodeManager() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this episode?")) return;
+    const ep = episodes.find((e) => e.id === id);
     const { error } = await supabase.from("episodes" as any).delete().eq("id", id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
+      if (ep) deleteR2Files([ep.video_url, ep.thumbnail_url]);
       toast({ title: "Episode deleted" });
-      setEpisodes((prev) => prev.filter((ep) => ep.id !== id));
+      setEpisodes((prev) => prev.filter((e) => e.id !== id));
     }
   };
 
