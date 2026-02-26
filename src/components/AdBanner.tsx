@@ -19,7 +19,7 @@ export default function AdBanner({ placement = "banner", className = "" }: AdBan
       <img
         src={ad.image_url}
         alt={ad.title}
-        className="w-full h-auto object-cover max-h-[200px] sm:max-h-[280px]"
+        className="w-full h-auto object-contain max-h-[180px] sm:max-h-[240px]"
         loading="lazy"
       />
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/80 to-transparent p-3 sm:p-4">
