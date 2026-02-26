@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAdminAds, useCreateAd, useUpdateAd, useDeleteAd, type Ad } from "@/hooks/useAds";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Trash2, Plus, ExternalLink, ImageIcon } from "lucide-react";
+import { Trash2, Plus, ExternalLink, ImageIcon, Upload, Video, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { uploadFile } from "@/lib/storage";
 
 export default function AdsManager() {
   const { data: ads = [], isLoading } = useAdminAds();
@@ -14,23 +15,56 @@ export default function AdsManager() {
   const deleteAd = useDeleteAd();
 
   const [title, setTitle] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
   const [placement, setPlacement] = useState<string>("banner");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const handleCreate = async () => {
-    if (!title.trim() || !imageUrl.trim()) {
-      toast.error("Title and image URL are required");
+    if (!title.trim()) {
+      toast.error("Title is required");
       return;
     }
+    if (!imageFile) {
+      toast.error("Please select an image");
+      return;
+    }
+
     try {
-      await createAd.mutateAsync({ title: title.trim(), image_url: imageUrl.trim(), link_url: linkUrl.trim() || undefined, placement });
+      setUploading(true);
+
+      // Upload image to thumbnails bucket
+      const imageUrl = await uploadFile("thumbnails", imageFile, `ads/${crypto.randomUUID()}.${imageFile.name.split(".").pop()}`);
+
+      // Upload video if provided (for shorts ads)
+      let videoUrl: string | undefined;
+      if (videoFile && placement === "shorts") {
+        videoUrl = await uploadFile("videos", videoFile, `ads/${crypto.randomUUID()}.${videoFile.name.split(".").pop()}`);
+      }
+
+      await createAd.mutateAsync({
+        title: title.trim(),
+        image_url: imageUrl,
+        link_url: linkUrl.trim() || undefined,
+        placement,
+        video_url: videoUrl,
+      });
+
       setTitle("");
-      setImageUrl("");
       setLinkUrl("");
+      setImageFile(null);
+      setVideoFile(null);
+      if (imageInputRef.current) imageInputRef.current.value = "";
+      if (videoInputRef.current) videoInputRef.current.value = "";
       toast.success("Ad created");
     } catch {
       toast.error("Failed to create ad");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -58,9 +92,67 @@ export default function AdsManager() {
       <div className="p-4 rounded-xl border border-border bg-card space-y-3">
         <h3 className="text-sm font-semibold text-foreground">Add New Ad</h3>
         <Input placeholder="Ad title" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <Input placeholder="Image URL" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+
+        {/* Image upload */}
+        <div>
+          <label className="text-xs text-muted-foreground mb-1 block">Ad Image *</label>
+          <div
+            className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
+            onClick={() => imageInputRef.current?.click()}
+          >
+            {imageFile ? (
+              <div className="flex items-center gap-2 justify-center">
+                <ImageIcon className="w-4 h-4 text-primary" />
+                <span className="text-sm text-foreground truncate max-w-[200px]">{imageFile.name}</span>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-1">
+                <Upload className="w-5 h-5 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Click to upload image</span>
+              </div>
+            )}
+          </div>
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+          />
+        </div>
+
+        {/* Video upload for shorts */}
+        {placement === "shorts" && (
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">9:16 Video (optional, for Shorts Feed)</label>
+            <div
+              className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
+              onClick={() => videoInputRef.current?.click()}
+            >
+              {videoFile ? (
+                <div className="flex items-center gap-2 justify-center">
+                  <Video className="w-4 h-4 text-primary" />
+                  <span className="text-sm text-foreground truncate max-w-[200px]">{videoFile.name}</span>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-1">
+                  <Video className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Click to upload 9:16 video</span>
+                </div>
+              )}
+            </div>
+            <input
+              ref={videoInputRef}
+              type="file"
+              accept="video/*"
+              className="hidden"
+              onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+            />
+          </div>
+        )}
+
         <Input placeholder="Link URL (optional)" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} />
-        <Select value={placement} onValueChange={setPlacement}>
+        <Select value={placement} onValueChange={(v) => { setPlacement(v); if (v !== "shorts") setVideoFile(null); }}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -69,9 +161,9 @@ export default function AdsManager() {
             <SelectItem value="shorts">Shorts Feed</SelectItem>
           </SelectContent>
         </Select>
-        <Button onClick={handleCreate} disabled={createAd.isPending} className="w-full">
-          <Plus className="w-4 h-4 mr-2" />
-          {createAd.isPending ? "Creating..." : "Create Ad"}
+        <Button onClick={handleCreate} disabled={uploading || createAd.isPending} className="w-full">
+          {uploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+          {uploading ? "Uploading..." : "Create Ad"}
         </Button>
       </div>
 
@@ -99,6 +191,7 @@ export default function AdsManager() {
                   }`}>
                     {ad.placement}
                   </span>
+                  {ad.video_url && <Video className="w-3 h-3 text-muted-foreground" />}
                   {ad.link_url && <ExternalLink className="w-3 h-3 text-muted-foreground" />}
                 </div>
               </div>

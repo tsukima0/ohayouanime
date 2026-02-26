@@ -5,6 +5,7 @@ export interface Ad {
   id: string;
   title: string;
   image_url: string;
+  video_url: string | null;
   link_url: string | null;
   placement: string;
   is_active: boolean;
@@ -47,7 +48,7 @@ export function useAdminAds() {
 export function useCreateAd() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (ad: { title: string; image_url: string; link_url?: string; placement: string }) => {
+    mutationFn: async (ad: { title: string; image_url: string; video_url?: string; link_url?: string; placement: string }) => {
       const { error } = await supabase.from("ads" as any).insert(ad as any);
       if (error) throw error;
     },
