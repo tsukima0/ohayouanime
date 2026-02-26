@@ -29,7 +29,12 @@ export default function AdsManager() {
       toast.error("Title is required");
       return;
     }
-    if (!imageFile) {
+    // For shorts: need video or image. For banner: need image.
+    if (placement === "shorts" && !imageFile && !videoFile) {
+      toast.error("Please select a video or image for shorts ad");
+      return;
+    }
+    if (placement !== "shorts" && !imageFile) {
       toast.error("Please select an image");
       return;
     }
@@ -37,8 +42,11 @@ export default function AdsManager() {
     try {
       setUploading(true);
 
-      // Upload image to thumbnails bucket
-      const imageUrl = await uploadFile("thumbnails", imageFile, `ads/${crypto.randomUUID()}.${imageFile.name.split(".").pop()}`);
+      // Upload image if provided
+      let imageUrl = "";
+      if (imageFile) {
+        imageUrl = await uploadFile("thumbnails", imageFile, `ads/${crypto.randomUUID()}.${imageFile.name.split(".").pop()}`);
+      }
 
       // Upload video if provided (for shorts ads)
       let videoUrl: string | undefined;
@@ -48,7 +56,7 @@ export default function AdsManager() {
 
       await createAd.mutateAsync({
         title: title.trim(),
-        image_url: imageUrl,
+        image_url: imageUrl || videoUrl || "",
         link_url: linkUrl.trim() || undefined,
         placement,
         video_url: videoUrl,
@@ -95,7 +103,9 @@ export default function AdsManager() {
 
         {/* Image upload */}
         <div>
-          <label className="text-xs text-muted-foreground mb-1 block">Ad Image *</label>
+          <label className="text-xs text-muted-foreground mb-1 block">
+            Ad Image {placement === "shorts" ? "(optional if video provided)" : "*"}
+          </label>
           <div
             className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
             onClick={() => imageInputRef.current?.click()}
