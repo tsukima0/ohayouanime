@@ -96,6 +96,7 @@ export default function EpisodeManager() {
     try {
       let videoUrl: string | null = null;
       let thumbUrl = thumbnailPreview;
+      const oldEp = editingId ? episodes.find(e => e.id === editingId) : null;
 
       if (videoFile) {
         setUploadProgress("Uploading video...");
@@ -122,6 +123,11 @@ export default function EpisodeManager() {
       if (editingId) {
         const { error } = await supabase.from("episodes" as any).update(payload).eq("id", editingId);
         if (error) throw error;
+        // Delete old R2 files if replaced
+        const oldUrls: (string | null)[] = [];
+        if (videoFile && oldEp?.video_url) oldUrls.push(oldEp.video_url);
+        if (thumbnailFile && oldEp?.thumbnail_url) oldUrls.push(oldEp.thumbnail_url);
+        if (oldUrls.length) deleteR2Files(oldUrls);
         toast({ title: "Episode updated" });
       } else {
         payload.video_url = videoUrl;
