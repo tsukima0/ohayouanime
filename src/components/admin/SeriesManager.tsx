@@ -83,6 +83,7 @@ export default function SeriesManager() {
 
     try {
       let imageUrl = thumbnailPreview;
+      const oldImageUrl = editingId ? seriesList.find(s => s.id === editingId)?.image_url : null;
       if (thumbnailFile) {
         imageUrl = await uploadFile("thumbnails", thumbnailFile, `series/${crypto.randomUUID()}.${thumbnailFile.name.split(".").pop()}`);
       }
@@ -103,6 +104,10 @@ export default function SeriesManager() {
           .update(payload as any)
           .eq("id", editingId);
         if (error) throw error;
+        // Delete old thumbnail from R2 if replaced
+        if (thumbnailFile && oldImageUrl && oldImageUrl !== imageUrl) {
+          deleteR2Files([oldImageUrl]);
+        }
         toast({ title: "Series updated" });
       } else {
         const { error } = await supabase

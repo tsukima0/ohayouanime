@@ -102,6 +102,7 @@ export default function ShortsManager() {
     try {
       let videoUrl: string | null = null;
       let thumbUrl = thumbnailPreview;
+      const oldShort = editingId ? shorts.find(s => s.id === editingId) : null;
 
       if (videoFile) {
         setUploadProgress("Uploading video...");
@@ -126,6 +127,11 @@ export default function ShortsManager() {
       if (editingId) {
         const { error } = await supabase.from("shorts").update(payload).eq("id", editingId);
         if (error) throw error;
+        // Delete old R2 files if replaced
+        const oldUrls: (string | null)[] = [];
+        if (videoFile && oldShort?.video_url) oldUrls.push(oldShort.video_url);
+        if (thumbnailFile && oldShort?.thumbnail_url) oldUrls.push(oldShort.thumbnail_url);
+        if (oldUrls.length) deleteR2Files(oldUrls);
         toast({ title: "Short updated" });
       } else {
         payload.video_url = videoUrl;
