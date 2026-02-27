@@ -40,12 +40,12 @@ export default function AdminPage() {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 p-1 rounded-xl bg-secondary mb-6">
+          <div className="flex gap-1 p-1 rounded-xl bg-secondary mb-6 overflow-x-auto no-scrollbar">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium flex-1 justify-center transition-colors ${
+                className={`relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap flex-shrink-0 transition-colors ${
                   activeTab === tab.id
                     ? "text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"
