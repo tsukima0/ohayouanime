@@ -116,6 +116,14 @@
 }
 
 @layer utilities {
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   .glass-card {
     background: hsl(var(--glass-bg));
     backdrop-filter: blur(16px);
