@@ -39,7 +39,10 @@ export default function NextEpisodeCard({ episode }: NextEpisodeCardProps) {
                 <p className="text-sm sm:text-xs text-primary font-bold leading-tight">
                   {episode.series?.title}
                 </p>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1.5">
+                <p className="text-xs text-foreground font-medium mt-1">
+                  Ep {episode.episode_number}: {episode.title}
+                </p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                   <span>{formatTimestamp(episode.duration)}</span>
                   <span>•</span>
                   <span>Season {episode.season}</span>
