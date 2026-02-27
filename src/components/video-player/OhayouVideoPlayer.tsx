@@ -195,7 +195,7 @@ export default function OhayouVideoPlayer({
         <SubtitleDisplay fileUrl={activeSubtitleUrl} playerRef={playerRef} playerReady={playerReady} fontScale={subtitleAppearance.fontScale} bgOpacity={subtitleAppearance.bgOpacity} position={subtitleAppearance.position} controlsVisible={controlsVisible} />
 
         {/* Double-tap skip overlay (sides) */}
-        <DoubleTapSkip onSkipForward={handleSkipForward} onSkipBackward={handleSkipBackward} onFirstTap={() => areaTapRef.current?.()} />
+        <DoubleTapSkip onSkipForward={handleSkipForward} onSkipBackward={handleSkipBackward} />
 
         {/* Center click-to-play zone */}
         <div
