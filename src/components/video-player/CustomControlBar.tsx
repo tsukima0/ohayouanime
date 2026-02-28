@@ -132,14 +132,16 @@ export default function CustomControlBar({ playerRef, onNext, playerReady, onAre
     const el = containerRef.current?.parentElement;
     if (!el) return;
 
-    const onMove = () => resetHideTimer();
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType === "mouse") resetHideTimer();
+    };
 
-    el.addEventListener("mousemove", onMove);
+    el.addEventListener("pointermove", onMove);
 
     resetHideTimer();
 
     return () => {
-      el.removeEventListener("mousemove", onMove);
+      el.removeEventListener("pointermove", onMove);
       if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     };
   }, [resetHideTimer]);
