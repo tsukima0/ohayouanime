@@ -11,12 +11,13 @@ interface RippleEvent {
 interface DoubleTapSkipProps {
   onSkipForward: () => void;
   onSkipBackward: () => void;
-  onFirstTap?: () => void;
+  onSingleTap?: () => void;
 }
 
-export default function DoubleTapSkip({ onSkipForward, onSkipBackward, onFirstTap }: DoubleTapSkipProps) {
+export default function DoubleTapSkip({ onSkipForward, onSkipBackward, onSingleTap }: DoubleTapSkipProps) {
   const [ripples, setRipples] = useState<RippleEvent[]>([]);
   const lastTapRef = useRef<{ time: number; side: "left" | "right" } | null>(null);
+  const singleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const idRef = useRef(0);
 
   const createHandler = useCallback(
@@ -27,6 +28,12 @@ export default function DoubleTapSkip({ onSkipForward, onSkipBackward, onFirstTa
       if (lastTapRef.current && now - lastTapRef.current.time < 350 && lastTapRef.current.side === side) {
         e.preventDefault();
         e.stopPropagation();
+
+        // Cancel pending single-tap so controls don't appear
+        if (singleTapTimerRef.current) {
+          clearTimeout(singleTapTimerRef.current);
+          singleTapTimerRef.current = null;
+        }
 
         if (side === "right") onSkipForward();
         else onSkipBackward();
@@ -43,9 +50,16 @@ export default function DoubleTapSkip({ onSkipForward, onSkipBackward, onFirstTa
         lastTapRef.current = null;
       } else {
         lastTapRef.current = { time: now, side };
+
+        // Delay single-tap — cancelled if a second tap arrives
+        if (singleTapTimerRef.current) clearTimeout(singleTapTimerRef.current);
+        singleTapTimerRef.current = setTimeout(() => {
+          singleTapTimerRef.current = null;
+          onSingleTap?.();
+        }, 350);
       }
     },
-    [onSkipForward, onSkipBackward]
+    [onSkipForward, onSkipBackward, onSingleTap]
   );
 
   return (
