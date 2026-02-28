@@ -61,6 +61,9 @@ export default function OhayouVideoPlayer({
     if (fullEpisodeId) navigate(`/watch/${fullEpisodeId}`);
   }, [fullEpisodeId, navigate]);
 
+  const savedSpeedRef = useRef(1);
+  const rewindIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const handleSkipForward = useCallback(() => {
     const p = playerRef.current;
     if (!p || (p as any).isDisposed()) return;
@@ -74,6 +77,47 @@ export default function OhayouVideoPlayer({
     if (!p || (p as any).isDisposed()) return;
     const ct = p.currentTime() ?? 0;
     p.currentTime(Math.max(0, ct - 10));
+  }, []);
+
+  const handleLongPressStart = useCallback((side: "left" | "right") => {
+    const p = playerRef.current;
+    if (!p || (p as any).isDisposed()) return;
+
+    if (side === "right") {
+      // 2× forward speed
+      savedSpeedRef.current = p.playbackRate() ?? 1;
+      p.playbackRate(2);
+      if (p.paused()) p.play();
+    } else {
+      // Simulated rewind: seek backwards every 100ms
+      savedSpeedRef.current = p.playbackRate() ?? 1;
+      p.pause();
+      rewindIntervalRef.current = setInterval(() => {
+        const pl = playerRef.current;
+        if (!pl || (pl as any).isDisposed()) return;
+        const ct = pl.currentTime() ?? 0;
+        pl.currentTime(Math.max(0, ct - 0.2));
+      }, 100);
+    }
+  }, []);
+
+  const handleLongPressEnd = useCallback(() => {
+    const p = playerRef.current;
+    // Clear rewind interval
+    if (rewindIntervalRef.current) {
+      clearInterval(rewindIntervalRef.current);
+      rewindIntervalRef.current = null;
+      // Resume playback after rewind
+      if (p && !(p as any).isDisposed()) {
+        p.playbackRate(savedSpeedRef.current);
+        p.play();
+      }
+      return;
+    }
+    // Restore speed after forward
+    if (p && !(p as any).isDisposed()) {
+      p.playbackRate(savedSpeedRef.current);
+    }
   }, []);
 
   const handleNext = useCallback(() => {
@@ -195,7 +239,7 @@ export default function OhayouVideoPlayer({
         <SubtitleDisplay fileUrl={activeSubtitleUrl} playerRef={playerRef} playerReady={playerReady} fontScale={subtitleAppearance.fontScale} bgOpacity={subtitleAppearance.bgOpacity} position={subtitleAppearance.position} controlsVisible={controlsVisible} />
 
         {/* Double-tap skip overlay (sides) */}
-        <DoubleTapSkip onSkipForward={handleSkipForward} onSkipBackward={handleSkipBackward} onSingleTap={() => areaTapRef.current?.()} />
+        <DoubleTapSkip onSkipForward={handleSkipForward} onSkipBackward={handleSkipBackward} onSingleTap={() => areaTapRef.current?.()} onLongPressStart={handleLongPressStart} onLongPressEnd={handleLongPressEnd} />
 
         {/* Center click-to-play zone */}
         <div
