@@ -28,29 +28,21 @@ export async function uploadVideoToR2(
 ): Promise<string> {
   const { presignedUrl, publicUrl, contentType } = await getPresignedUrl(file, folder);
 
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("PUT", presignedUrl);
-    xhr.setRequestHeader("Content-Type", contentType);
-    xhr.timeout = 0;
+  // Use fetch instead of XHR to avoid CORS preflight issues with R2
+  if (onProgress) onProgress(10); // Signal upload started
 
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable && onProgress) {
-        onProgress(Math.round((e.loaded / e.total) * 100));
-      }
-    };
-
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve(publicUrl);
-      } else {
-        reject(new Error(`Upload failed (${xhr.status})`));
-      }
-    };
-
-    xhr.onerror = () => reject(new Error("Network error during upload"));
-    xhr.send(file);
+  const res = await fetch(presignedUrl, {
+    method: "PUT",
+    headers: { "Content-Type": contentType },
+    body: file,
   });
+
+  if (!res.ok) {
+    throw new Error(`Upload failed (${res.status})`);
+  }
+
+  if (onProgress) onProgress(100);
+  return publicUrl;
 }
 
 /**
