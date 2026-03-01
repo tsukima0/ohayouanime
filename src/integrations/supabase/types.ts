@@ -121,6 +121,7 @@ export type Database = {
       }
       featured_series: {
         Row: {
+          banner_image_url: string | null
           created_at: string
           created_by: string | null
           id: string
@@ -128,6 +129,7 @@ export type Database = {
           sort_order: number
         }
         Insert: {
+          banner_image_url?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -135,6 +137,7 @@ export type Database = {
           sort_order?: number
         }
         Update: {
+          banner_image_url?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
