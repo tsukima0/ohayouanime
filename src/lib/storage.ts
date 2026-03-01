@@ -111,30 +111,25 @@ export async function uploadVideoToR2(
     const end = Math.min(start + CHUNK_SIZE, file.size);
     const chunk = file.slice(start, end);
 
-    // Get presigned URL for this part
-    const presignRes = await fetch(fnUrl, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        action: "presign-part",
-        key,
-        uploadId,
-        partNumber,
-        contentType: contentType || "application/octet-stream",
-      }),
-    });
-    if (!presignRes.ok) throw new Error(`Failed to presign part ${partNumber}`);
-    const { presignedUrl, contentType: partCt } = await presignRes.json();
-
-    // Upload the chunk
-    const uploadRes = await fetch(presignedUrl, {
+    // Upload chunk through the edge function proxy (avoids R2 CORS issues)
+    const uploadRes = await fetch(fnUrl, {
       method: "PUT",
-      headers: { "Content-Type": partCt },
+      headers: {
+        ...headers,
+        "Content-Type": contentType || "application/octet-stream",
+        "x-r2-key": key,
+        "x-r2-upload-id": uploadId,
+        "x-r2-part-number": String(partNumber),
+        "x-r2-content-type": contentType || "application/octet-stream",
+      },
       body: chunk,
     });
-    if (!uploadRes.ok) throw new Error(`Part ${partNumber} upload failed (${uploadRes.status})`);
+    if (!uploadRes.ok) {
+      const err = await uploadRes.json().catch(() => ({ error: `Part ${partNumber} failed` }));
+      throw new Error(err.error || `Part ${partNumber} upload failed (${uploadRes.status})`);
+    }
 
-    const etag = uploadRes.headers.get("ETag") || `"part-${partNumber}"`;
+    const { etag } = await uploadRes.json();
     completedParts.push({ partNumber, etag });
 
     uploadedBytes += (end - start);
