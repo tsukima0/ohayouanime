@@ -4,9 +4,10 @@ import { Play, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { PublicSeries } from "@/hooks/useSeriesData";
 import type { EpisodeWithSeries } from "@/hooks/useSeriesData";
+import type { FeaturedSeriesItem } from "@/hooks/useFeaturedSeries";
 
 interface HeroBannerProps {
-  series: PublicSeries[];
+  series: (PublicSeries | FeaturedSeriesItem)[];
   latestEpisodes?: EpisodeWithSeries[];
 }
 
@@ -27,7 +28,8 @@ export default function HeroBanner({ series, latestEpisodes }: HeroBannerProps) 
   if (count === 0) return <div className="w-full h-[70vh] sm:h-[80vh] bg-muted animate-pulse" />;
 
   const hero = series[current];
-  const heroImage = hero.image_url || "/placeholder.svg";
+  const bannerUrl = "banner_image_url" in hero && hero.banner_image_url ? hero.banner_image_url : null;
+  const heroImage = bannerUrl || hero.image_url || "/placeholder.svg";
   const heroEpisode = latestEpisodes?.find((ep) => ep.series_id === hero.id);
 
   return (

@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadFile, deleteR2Files } from "@/lib/storage";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, Trash2, GripVertical, Loader2, Star } from "lucide-react";
+import { Plus, Trash2, Loader2, Star, ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import DragDropZone from "./DragDropZone";
 
 interface FeaturedItem {
   id: string;
   series_id: string;
   sort_order: number;
+  banner_image_url: string | null;
   series_title?: string;
   series_image?: string | null;
 }
@@ -26,13 +29,15 @@ export default function FeaturedManager() {
   const [loading, setLoading] = useState(true);
   const [selectedSeriesId, setSelectedSeriesId] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Banner image upload state per featured item
+  const [uploadingBannerId, setUploadingBannerId] = useState<string | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
     const [{ data: featData }, { data: seriesData }] = await Promise.all([
       supabase
         .from("featured_series")
-        .select("id, series_id, sort_order")
+        .select("id, series_id, sort_order, banner_image_url")
         .order("sort_order", { ascending: true }),
       supabase
         .from("series" as any)
@@ -83,11 +88,43 @@ export default function FeaturedManager() {
 
   const handleRemove = async (id: string) => {
     if (!confirm("Remove from featured?")) return;
+    const item = featured.find((f) => f.id === id);
     const { error } = await supabase.from("featured_series").delete().eq("id", id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
+      if (item?.banner_image_url) deleteR2Files([item.banner_image_url]);
       toast({ title: "Removed from featured" });
+      fetchData();
+    }
+  };
+
+  const handleBannerUpload = async (itemId: string, file: File | null) => {
+    if (!file) return;
+    setUploadingBannerId(itemId);
+    try {
+      const oldItem = featured.find((f) => f.id === itemId);
+      const url = await uploadFile("thumbnails", file, `banners/${crypto.randomUUID()}.${file.name.split(".").pop()}`);
+      const { error } = await supabase.from("featured_series").update({ banner_image_url: url }).eq("id", itemId);
+      if (error) throw error;
+      if (oldItem?.banner_image_url) deleteR2Files([oldItem.banner_image_url]);
+      toast({ title: "Banner image updated" });
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setUploadingBannerId(null);
+    }
+  };
+
+  const handleRemoveBanner = async (itemId: string) => {
+    const item = featured.find((f) => f.id === itemId);
+    const { error } = await supabase.from("featured_series").update({ banner_image_url: null }).eq("id", itemId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      if (item?.banner_image_url) deleteR2Files([item.banner_image_url]);
+      toast({ title: "Banner image removed" });
       fetchData();
     }
   };
@@ -97,7 +134,6 @@ export default function FeaturedManager() {
     const items = [...featured];
     const prevOrder = items[index - 1].sort_order;
     const currOrder = items[index].sort_order;
-
     await Promise.all([
       supabase.from("featured_series").update({ sort_order: currOrder }).eq("id", items[index - 1].id),
       supabase.from("featured_series").update({ sort_order: prevOrder }).eq("id", items[index].id),
@@ -110,7 +146,6 @@ export default function FeaturedManager() {
     const items = [...featured];
     const nextOrder = items[index + 1].sort_order;
     const currOrder = items[index].sort_order;
-
     await Promise.all([
       supabase.from("featured_series").update({ sort_order: currOrder }).eq("id", items[index + 1].id),
       supabase.from("featured_series").update({ sort_order: nextOrder }).eq("id", items[index].id),
@@ -156,53 +191,117 @@ export default function FeaturedManager() {
         )}
       </div>
 
-      {/* Featured list with reorder */}
-      <div className="space-y-2">
+      {/* Featured list with reorder & banner image */}
+      <div className="space-y-3">
         {featured.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-8">No featured series. Add one above to show it in the hero banner!</p>
         )}
         {featured.map((item, index) => (
-          <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl glass-card border border-border">
-            {/* Reorder buttons */}
-            <div className="flex flex-col gap-0.5 flex-shrink-0">
-              <button
-                onClick={() => handleMoveUp(index)}
-                disabled={index === 0}
-                className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground disabled:opacity-20 transition-colors text-xs"
-              >
-                ▲
-              </button>
-              <button
-                onClick={() => handleMoveDown(index)}
-                disabled={index === featured.length - 1}
-                className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground disabled:opacity-20 transition-colors text-xs"
-              >
-                ▼
-              </button>
-            </div>
-
-            {/* Thumbnail */}
-            {item.series_image ? (
-              <img src={item.series_image} alt={item.series_title} className="w-14 h-20 rounded-lg object-cover flex-shrink-0" />
-            ) : (
-              <div className="w-14 h-20 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
-                <Star className="w-5 h-5 text-muted-foreground" />
+          <div key={item.id} className="p-4 rounded-xl glass-card border border-border space-y-3">
+            <div className="flex items-center gap-3">
+              {/* Reorder buttons */}
+              <div className="flex flex-col gap-0.5 flex-shrink-0">
+                <button
+                  onClick={() => handleMoveUp(index)}
+                  disabled={index === 0}
+                  className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground disabled:opacity-20 transition-colors text-xs"
+                >
+                  ▲
+                </button>
+                <button
+                  onClick={() => handleMoveDown(index)}
+                  disabled={index === featured.length - 1}
+                  className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground disabled:opacity-20 transition-colors text-xs"
+                >
+                  ▼
+                </button>
               </div>
-            )}
 
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-              <h4 className="font-display font-semibold text-foreground text-sm truncate">{item.series_title}</h4>
-              <p className="text-xs text-muted-foreground">Position #{index + 1}</p>
+              {/* Series thumbnail */}
+              {item.series_image ? (
+                <img src={item.series_image} alt={item.series_title} className="w-12 h-16 rounded-lg object-cover flex-shrink-0" />
+              ) : (
+                <div className="w-12 h-16 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+                  <Star className="w-5 h-5 text-muted-foreground" />
+                </div>
+              )}
+
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <h4 className="font-display font-semibold text-foreground text-sm truncate">{item.series_title}</h4>
+                <p className="text-xs text-muted-foreground">Position #{index + 1}</p>
+                {item.banner_image_url ? (
+                  <p className="text-xs text-primary mt-0.5">✓ Custom banner set</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-0.5">Using series cover image</p>
+                )}
+              </div>
+
+              {/* Remove */}
+              <button
+                onClick={() => handleRemove(item.id)}
+                className="p-2 rounded-lg hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive flex-shrink-0"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
 
-            {/* Remove */}
-            <button
-              onClick={() => handleRemove(item.id)}
-              className="p-2 rounded-lg hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive flex-shrink-0"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            {/* Banner image section */}
+            <div className="pl-9">
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                Custom Banner Image (recommended: 1920×1080)
+              </label>
+              {item.banner_image_url ? (
+                <div className="relative group">
+                  <img
+                    src={item.banner_image_url}
+                    alt="Banner"
+                    className="w-full max-w-md h-28 rounded-lg object-cover border border-border"
+                  />
+                  <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <label className="p-1.5 rounded-lg bg-background/80 backdrop-blur-sm cursor-pointer hover:bg-background text-muted-foreground hover:text-foreground transition-colors">
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleBannerUpload(item.id, f);
+                        }}
+                      />
+                    </label>
+                    <button
+                      onClick={() => handleRemoveBanner(item.id)}
+                      className="p-1.5 rounded-lg bg-background/80 backdrop-blur-sm hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  {uploadingBannerId === item.id && (
+                    <div className="absolute inset-0 rounded-lg bg-background/60 flex items-center justify-center">
+                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="max-w-md">
+                  {uploadingBannerId === item.id ? (
+                    <div className="flex items-center justify-center h-24 rounded-xl border-2 border-dashed border-border bg-secondary/50">
+                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    </div>
+                  ) : (
+                    <DragDropZone
+                      accept="image/*"
+                      label="Drop banner image (16:9)"
+                      icon="image"
+                      file={null}
+                      onFile={(f) => { if (f) handleBannerUpload(item.id, f); }}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>
