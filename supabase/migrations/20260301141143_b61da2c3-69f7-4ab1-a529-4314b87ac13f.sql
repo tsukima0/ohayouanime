@@ -1,0 +1,1 @@
+ALTER TABLE public.featured_series ADD COLUMN tagline TEXT;

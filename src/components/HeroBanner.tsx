@@ -70,6 +70,9 @@ export default function HeroBanner({ series, latestEpisodes }: HeroBannerProps) 
             <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-3">
               {hero.title}
             </h1>
+            {"tagline" in hero && hero.tagline && (
+              <p className="text-primary font-semibold text-sm sm:text-base mb-2">{hero.tagline}</p>
+            )}
             <p className="text-muted-foreground text-sm sm:text-base max-w-lg mb-6 leading-relaxed line-clamp-3">
               {hero.description}
             </p>
