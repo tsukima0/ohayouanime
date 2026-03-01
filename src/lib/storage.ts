@@ -23,6 +23,12 @@ const CHUNK_SIZE = 10 * 1024 * 1024;
 // Max parallel part uploads
 const MAX_PARALLEL = 3;
 
+export interface UploadProgressInfo {
+  percent: number;
+  speedMBps: number;
+  etaSeconds: number;
+}
+
 /**
  * Upload a video file to Cloudflare R2 using multipart upload with real progress tracking.
  * Falls back to single-part upload for files smaller than CHUNK_SIZE.
@@ -30,7 +36,8 @@ const MAX_PARALLEL = 3;
 export async function uploadVideoToR2(
   file: File,
   folder: string = "episodes",
-  onProgress?: (percent: number) => void
+  onProgress?: (percent: number) => void,
+  onDetailedProgress?: (info: UploadProgressInfo) => void
 ): Promise<string> {
   // Small files: use simple presigned upload
   if (file.size < CHUNK_SIZE) {
@@ -76,6 +83,23 @@ export async function uploadVideoToR2(
   const totalParts = Math.ceil(file.size / CHUNK_SIZE);
   const completedParts: { partNumber: number; etag: string }[] = [];
   let uploadedBytes = 0;
+  const startTime = Date.now();
+
+  const reportProgress = () => {
+    const pct = Math.round(1 + (uploadedBytes / file.size) * 95);
+    const clampedPct = Math.min(pct, 96);
+    if (onProgress) onProgress(clampedPct);
+
+    const elapsedSec = (Date.now() - startTime) / 1000;
+    const speedBps = elapsedSec > 0 ? uploadedBytes / elapsedSec : 0;
+    const speedMBps = speedBps / (1024 * 1024);
+    const remainingBytes = file.size - uploadedBytes;
+    const etaSeconds = speedBps > 0 ? remainingBytes / speedBps : 0;
+
+    if (onDetailedProgress) {
+      onDetailedProgress({ percent: clampedPct, speedMBps, etaSeconds });
+    }
+  };
 
   if (onProgress) onProgress(1);
 
@@ -114,11 +138,7 @@ export async function uploadVideoToR2(
     completedParts.push({ partNumber, etag });
 
     uploadedBytes += (end - start);
-    if (onProgress) {
-      // Reserve 1% for init, 4% for completion
-      const pct = Math.round(1 + (uploadedBytes / file.size) * 95);
-      onProgress(Math.min(pct, 96));
-    }
+    reportProgress();
   }
 
   // Process parts with concurrency limit

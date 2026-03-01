@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { uploadFile, uploadVideoToR2, deleteR2Files } from "@/lib/storage";
+import { uploadFile, uploadVideoToR2, deleteR2Files, type UploadProgressInfo } from "@/lib/storage";
 import { useAuth } from "@/hooks/useAuth";
 import { Plus, Trash2, Edit2, Loader2, ImageIcon, Film, Link2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import UploadProgressDisplay from "./UploadProgressDisplay";
 
 interface Short {
   id: string;
@@ -44,6 +45,7 @@ export default function ShortsManager() {
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState("");
   const [uploadPercent, setUploadPercent] = useState(0);
+  const [uploadDetail, setUploadDetail] = useState<UploadProgressInfo | null>(null);
 
   const fetchShorts = async () => {
     const { data } = await supabase
@@ -81,7 +83,7 @@ export default function ShortsManager() {
   const resetForm = () => {
     setTitle(""); setDescription(""); setDuration("0"); setEpisodeId("");
     setVideoFile(null); setThumbnailFile(null); setThumbnailPreview(null);
-    setEditingId(null); setShowForm(false); setUploadProgress(""); setUploadPercent(0);
+    setEditingId(null); setShowForm(false); setUploadProgress(""); setUploadPercent(0); setUploadDetail(null);
   };
 
   const startEdit = (s: Short) => {
@@ -107,7 +109,7 @@ export default function ShortsManager() {
       if (videoFile) {
         setUploadProgress("Uploading video...");
         setUploadPercent(0);
-        videoUrl = await uploadVideoToR2(videoFile, "shorts", (p) => setUploadPercent(p));
+        videoUrl = await uploadVideoToR2(videoFile, "shorts", (p) => setUploadPercent(p), (d) => setUploadDetail(d));
       }
       if (thumbnailFile) {
         setUploadProgress("Uploading thumbnail...");
@@ -266,17 +268,7 @@ export default function ShortsManager() {
           </div>
 
           {uploadProgress && (
-            <div className="space-y-1.5">
-              <p className="text-xs text-primary flex items-center gap-2">
-                <Loader2 className="w-3 h-3 animate-spin" /> {uploadProgress} {uploadPercent > 0 && `${uploadPercent}%`}
-              </p>
-              <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
-                <div
-                  className="h-full bg-primary rounded-full transition-all duration-300"
-                  style={{ width: `${uploadPercent}%` }}
-                />
-              </div>
-            </div>
+            <UploadProgressDisplay label={uploadProgress} percent={uploadPercent} detail={uploadDetail} />
           )}
 
           <div className="flex gap-3 pt-2">
