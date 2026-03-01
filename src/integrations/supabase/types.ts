@@ -127,6 +127,7 @@ export type Database = {
           id: string
           series_id: string
           sort_order: number
+          tagline: string | null
         }
         Insert: {
           banner_image_url?: string | null
@@ -135,6 +136,7 @@ export type Database = {
           id?: string
           series_id: string
           sort_order?: number
+          tagline?: string | null
         }
         Update: {
           banner_image_url?: string | null
@@ -143,6 +145,7 @@ export type Database = {
           id?: string
           series_id?: string
           sort_order?: number
+          tagline?: string | null
         }
         Relationships: [
           {

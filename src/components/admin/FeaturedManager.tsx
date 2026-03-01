@@ -11,6 +11,7 @@ interface FeaturedItem {
   series_id: string;
   sort_order: number;
   banner_image_url: string | null;
+  tagline: string | null;
   series_title?: string;
   series_image?: string | null;
 }
@@ -29,15 +30,16 @@ export default function FeaturedManager() {
   const [loading, setLoading] = useState(true);
   const [selectedSeriesId, setSelectedSeriesId] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  // Banner image upload state per featured item
   const [uploadingBannerId, setUploadingBannerId] = useState<string | null>(null);
+  const [editingTaglineId, setEditingTaglineId] = useState<string | null>(null);
+  const [taglineValue, setTaglineValue] = useState("");
 
   const fetchData = async () => {
     setLoading(true);
     const [{ data: featData }, { data: seriesData }] = await Promise.all([
       supabase
         .from("featured_series")
-        .select("id, series_id, sort_order, banner_image_url")
+        .select("id, series_id, sort_order, banner_image_url, tagline")
         .order("sort_order", { ascending: true }),
       supabase
         .from("series" as any)
@@ -244,6 +246,42 @@ export default function FeaturedManager() {
               >
                 <Trash2 className="w-4 h-4" />
               </button>
+            </div>
+
+            {/* Tagline */}
+            <div className="pl-9 space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground block">Tagline / Subtitle</label>
+              {editingTaglineId === item.id ? (
+                <div className="flex gap-2 max-w-md">
+                  <input
+                    value={taglineValue}
+                    onChange={(e) => setTaglineValue(e.target.value)}
+                    placeholder="e.g. New episodes every Friday!"
+                    className="flex-1 px-3 py-1.5 rounded-lg bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    maxLength={120}
+                  />
+                  <button
+                    onClick={async () => {
+                      const val = taglineValue.trim() || null;
+                      await supabase.from("featured_series").update({ tagline: val }).eq("id", item.id);
+                      setEditingTaglineId(null);
+                      fetchData();
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold"
+                  >Save</button>
+                  <button
+                    onClick={() => setEditingTaglineId(null)}
+                    className="px-3 py-1.5 rounded-lg bg-secondary text-muted-foreground text-xs"
+                  >Cancel</button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => { setEditingTaglineId(item.id); setTaglineValue(item.tagline || ""); }}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {item.tagline || <span className="italic text-xs">Click to add tagline…</span>}
+                </button>
+              )}
             </div>
 
             {/* Banner image section */}

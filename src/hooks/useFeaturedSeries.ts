@@ -4,6 +4,7 @@ import type { PublicSeries } from "@/hooks/useSeriesData";
 
 export interface FeaturedSeriesItem extends PublicSeries {
   banner_image_url?: string | null;
+  tagline?: string | null;
 }
 
 export function useFeaturedSeries() {
@@ -12,7 +13,7 @@ export function useFeaturedSeries() {
     queryFn: async () => {
       const { data: featured, error: fErr } = await supabase
         .from("featured_series")
-        .select("series_id, sort_order, banner_image_url")
+        .select("series_id, sort_order, banner_image_url, tagline")
         .order("sort_order", { ascending: true });
       if (fErr) throw fErr;
       if (!featured || featured.length === 0) return [];
@@ -26,13 +27,14 @@ export function useFeaturedSeries() {
       if (error) throw error;
 
       const seriesMap = new Map((series as unknown as PublicSeries[]).map((s) => [s.id, s]));
-      const bannerMap = new Map((featured as any[]).map((f) => [f.series_id, f.banner_image_url]));
+      const featMap = new Map((featured as any[]).map((f) => [f.series_id, f]));
 
       return ids
         .map((id: string) => {
           const s = seriesMap.get(id);
+          const f = featMap.get(id);
           if (!s) return null;
-          return { ...s, banner_image_url: bannerMap.get(id) || null } as FeaturedSeriesItem;
+          return { ...s, banner_image_url: f?.banner_image_url || null, tagline: f?.tagline || null } as FeaturedSeriesItem;
         })
         .filter(Boolean) as FeaturedSeriesItem[];
     },
