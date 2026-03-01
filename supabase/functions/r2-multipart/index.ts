@@ -4,8 +4,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "authorization, x-client-info, apikey, content-type, x-r2-action, x-r2-key, x-r2-upload-id, x-r2-part-number, x-r2-content-type, x-r2-folder, x-r2-filename, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Methods": "POST, PUT, OPTIONS",
+  "Access-Control-Expose-Headers": "x-r2-etag",
 };
 
 const BUCKET = "ohayou-anime-storage";
@@ -56,9 +57,6 @@ serve(async (req) => {
       );
     }
 
-    const body = await req.json();
-    const { action } = body;
-
     const R2_ENDPOINT = Deno.env.get("R2_ENDPOINT")!;
     const R2_ACCESS_KEY_ID = Deno.env.get("R2_ACCESS_KEY_ID")!;
     const R2_SECRET_ACCESS_KEY = Deno.env.get("R2_SECRET_ACCESS_KEY")!;
@@ -88,12 +86,10 @@ serve(async (req) => {
       const endpointUrl = new URL(R2_ENDPOINT);
       const host = endpointUrl.hostname;
 
-      // Add required headers
       headers["host"] = host;
       headers["x-amz-date"] = amzDate;
       headers["x-amz-content-sha256"] = payloadHash;
 
-      // Build canonical headers (sorted)
       const sortedHeaderKeys = Object.keys(headers).sort();
       const canonicalHeaders = sortedHeaderKeys.map((k) => `${k}:${headers[k]}`).join("\n") + "\n";
       const signedHeaders = sortedHeaderKeys.join(";");
@@ -119,37 +115,58 @@ serve(async (req) => {
       };
     }
 
-    async function presignUrl(method: string, path: string, queryParams: URLSearchParams, signedHeadersList: string, canonicalHeadersStr: string, expiresIn: number) {
-      const now = new Date();
-      const dateStamp = now.toISOString().replace(/[-:]/g, "").slice(0, 8);
-      const amzDate = now.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
-      const region = "auto";
-      const service = "s3";
-      const scope = `${dateStamp}/${region}/${service}/aws4_request`;
+    // ──── Check for binary upload-part via PUT method ────
+    if (req.method === "PUT") {
+      const key = req.headers.get("x-r2-key");
+      const uploadId = req.headers.get("x-r2-upload-id");
+      const partNumber = req.headers.get("x-r2-part-number");
+      const ct = req.headers.get("x-r2-content-type") || "application/octet-stream";
 
-      queryParams.set("X-Amz-Algorithm", "AWS4-HMAC-SHA256");
-      queryParams.set("X-Amz-Credential", `${R2_ACCESS_KEY_ID}/${scope}`);
-      queryParams.set("X-Amz-Date", amzDate);
-      queryParams.set("X-Amz-Expires", String(expiresIn));
-      queryParams.set("X-Amz-SignedHeaders", signedHeadersList);
+      if (!key || !uploadId || !partNumber) {
+        return new Response(JSON.stringify({ error: "Missing x-r2-key, x-r2-upload-id, or x-r2-part-number headers" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
-      const sortedParams = new URLSearchParams([...queryParams.entries()].sort((a, b) => a[0].localeCompare(b[0])));
-      const canonicalQueryString = sortedParams.toString();
+      const path = `/${BUCKET}/${key}`;
+      const chunkData = new Uint8Array(await req.arrayBuffer());
+      const payloadHash = await sha256Hex(chunkData);
 
-      const payloadHash = "UNSIGNED-PAYLOAD";
-      const canonicalRequest = `${method}\n${path}\n${canonicalQueryString}\n${canonicalHeadersStr}\n${signedHeadersList}\n${payloadHash}`;
-      const canonicalRequestHash = await sha256Hex(encoder.encode(canonicalRequest));
-      const stringToSign = `AWS4-HMAC-SHA256\n${amzDate}\n${scope}\n${canonicalRequestHash}`;
+      const headers: Record<string, string> = { "content-type": ct };
+      const queryParams = new URLSearchParams({ partNumber, uploadId });
 
-      const kDate = await hmac(encoder.encode("AWS4" + R2_SECRET_ACCESS_KEY), dateStamp);
-      const kRegion = await hmac(kDate, region);
-      const kService = await hmac(kRegion, service);
-      const kSigning = await hmac(kService, "aws4_request");
-      const signatureBuffer = await hmac(kSigning, stringToSign);
-      const signature = [...new Uint8Array(signatureBuffer)].map((b) => b.toString(16).padStart(2, "0")).join("");
+      const sig = await signRequest("PUT", path, queryParams, headers, payloadHash);
 
-      return `${R2_ENDPOINT}${path}?${canonicalQueryString}&X-Amz-Signature=${signature}`;
+      const url = `${R2_ENDPOINT}${path}?partNumber=${partNumber}&uploadId=${encodeURIComponent(uploadId)}`;
+      const r2Res = await fetch(url, {
+        method: "PUT",
+        headers: {
+          "content-type": ct,
+          "host": sig.host,
+          "x-amz-date": sig.amzDate,
+          "x-amz-content-sha256": payloadHash,
+          Authorization: sig.authorization,
+        },
+        body: chunkData,
+      });
+
+      if (!r2Res.ok) {
+        const text = await r2Res.text();
+        console.error(`UploadPart ${partNumber} failed:`, text);
+        throw new Error(`UploadPart ${partNumber} failed (${r2Res.status})`);
+      }
+
+      const etag = r2Res.headers.get("ETag") || `"part-${partNumber}"`;
+
+      return new Response(
+        JSON.stringify({ etag }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json", "x-r2-etag": etag } }
+      );
     }
+
+    // ──── JSON actions via POST ────
+    const body = await req.json();
+    const { action } = body;
 
     // ──────── ACTION: create (InitiateMultipartUpload) ────────
     if (action === "create") {
@@ -195,34 +212,9 @@ serve(async (req) => {
       );
     }
 
-    // ──────── ACTION: presign-part (presigned URL for each part) ────────
-    if (action === "presign-part") {
-      const { key, uploadId, partNumber, contentType } = body;
-      const path = `/${BUCKET}/${key}`;
-      const ct = contentType || "application/octet-stream";
-
-      const endpointUrl = new URL(R2_ENDPOINT);
-      const host = endpointUrl.hostname;
-      const canonicalHeadersStr = `content-type:${ct}\nhost:${host}\n`;
-      const signedHeadersList = "content-type;host";
-
-      const queryParams = new URLSearchParams({
-        partNumber: String(partNumber),
-        uploadId,
-      });
-
-      const presigned = await presignUrl("PUT", path, queryParams, signedHeadersList, canonicalHeadersStr, 3600);
-
-      return new Response(
-        JSON.stringify({ presignedUrl: presigned, contentType: ct }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     // ──────── ACTION: complete (CompleteMultipartUpload) ────────
     if (action === "complete") {
       const { key, uploadId, parts } = body;
-      // parts: Array<{ partNumber: number; etag: string }>
       const path = `/${BUCKET}/${key}`;
 
       const xmlParts = parts
@@ -294,7 +286,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ error: "Unknown action. Use: create, presign-part, complete, abort" }),
+      JSON.stringify({ error: "Unknown action. Use: create, complete, abort (POST) or PUT for upload-part" }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
