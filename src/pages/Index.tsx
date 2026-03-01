@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Play, TrendingUp, Tv, ArrowRight, Clock, Flame, History } from "lucide-react";
 import { useSeries, useShorts, useLatestEpisodes, toEpisodeWithSeries, type PublicEpisode } from "@/hooks/useSeriesData";
+import { useFeaturedSeries } from "@/hooks/useFeaturedSeries";
 import { usePopularSeries } from "@/hooks/usePopularSeries";
 import { useWatchHistory } from "@/hooks/useWatchHistory";
 import AnimeCard from "@/components/AnimeCard";
@@ -26,6 +27,7 @@ const Index = () => {
   const { data: shorts } = useShorts();
   const { data: latestEpisodes } = useLatestEpisodes();
   const { data: popularSeries } = usePopularSeries();
+  const { data: featuredSeries } = useFeaturedSeries();
   const { data: watchHistory } = useWatchHistory();
   const isMobile = useIsMobile();
 
@@ -59,7 +61,12 @@ const Index = () => {
     .filter(Boolean) as { ep: ReturnType<typeof toEpisodeWithSeries>; progress: number }[];
 
   // Use popular series for hero carousel, fallback to all series
-  const heroSeries = (popularSeries && popularSeries.length > 0) ? popularSeries : (allSeries?.slice(0, 5) ?? []);
+  // Use admin-managed featured series for hero, fallback to popular, then all series
+  const heroSeries = (featuredSeries && featuredSeries.length > 0)
+    ? featuredSeries
+    : (popularSeries && popularSeries.length > 0)
+      ? popularSeries
+      : (allSeries?.slice(0, 5) ?? []);
 
   return (
     <div className="min-h-screen bg-background pb-20 sm:pb-0">

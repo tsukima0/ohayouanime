@@ -119,6 +119,45 @@ export type Database = {
           },
         ]
       }
+      featured_series: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          series_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          series_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          series_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "featured_series_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: true
+            referencedRelation: "series"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "featured_series_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: true
+            referencedRelation: "series_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
