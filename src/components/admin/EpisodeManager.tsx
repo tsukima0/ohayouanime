@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadFile, uploadVideoToR2, deleteR2Files, type UploadProgressInfo } from "@/lib/storage";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, Trash2, Edit2, Loader2, ImageIcon, Film } from "lucide-react";
+import { Plus, Trash2, Edit2, Loader2, Film } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import UploadProgressDisplay from "./UploadProgressDisplay";
+import DragDropZone from "./DragDropZone";
 
 interface Series {
   id: string;
@@ -236,29 +237,22 @@ export default function EpisodeManager() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Video File</label>
-              <input type="file" accept="video/*" onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
-                className="text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 file:cursor-pointer" />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Thumbnail</label>
-              <div className="flex items-center gap-3">
-                {thumbnailPreview ? (
-                  <img src={thumbnailPreview} alt="Thumb" className="w-16 h-10 rounded object-cover" />
-                ) : (
-                  <div className="w-16 h-10 rounded bg-secondary flex items-center justify-center">
-                    <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                )}
-                <input type="file" accept="image/*"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) { setThumbnailFile(f); setThumbnailPreview(URL.createObjectURL(f)); }
-                  }}
-                  className="text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-secondary file:text-secondary-foreground file:cursor-pointer" />
-              </div>
-            </div>
+            <DragDropZone
+              accept="video/*"
+              label="Drop video file"
+              icon="video"
+              file={videoFile}
+              onFile={setVideoFile}
+            />
+            <DragDropZone
+              accept="image/*"
+              label="Drop thumbnail"
+              icon="image"
+              file={thumbnailFile}
+              preview={thumbnailPreview}
+              onFile={setThumbnailFile}
+              onPreview={setThumbnailPreview}
+            />
           </div>
 
           {uploadProgress && (
