@@ -58,7 +58,8 @@ export default function SubtitleManager() {
     if (!user || !selectedEpisode || !subtitleFile) return;
     setSubmitting(true);
     try {
-      const fileUrl = await uploadFile("subtitles", subtitleFile, `${selectedEpisode}/${crypto.randomUUID()}.vtt`);
+      const ext = subtitleFile.name.split(".").pop() || "vtt";
+      const fileUrl = await uploadFile("subtitles", subtitleFile, `subtitles/${selectedEpisode}/${crypto.randomUUID()}.${ext}`);
       const { error } = await supabase.from("subtitles" as any).insert({ episode_id: selectedEpisode, language, label, file_url: fileUrl, created_by: user.id });
       if (error) throw error;
       toast({ title: "Subtitle added" });
