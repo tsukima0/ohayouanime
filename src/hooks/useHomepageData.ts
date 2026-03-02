@@ -43,7 +43,6 @@ export function useMostPopularEpisodes() {
         .limit(5);
       if (error) throw error;
       if (!data) return [];
-      // Fetch series info for each episode
       const seriesIds = [...new Set((data as any[]).map((e: any) => e.series_id))];
       const { data: seriesData } = await supabase
         .from("series_public" as any)
@@ -66,5 +65,84 @@ export function useMostPopularEpisodes() {
         };
       });
     },
+  });
+}
+
+// Genre taglines mapping
+const GENRE_TAGLINES: Record<string, { tagline: string; icon: string }> = {
+  Action: { tagline: "Get Ready to Fight", icon: "⚔️" },
+  Romance: { tagline: "Fall in Love Again", icon: "💕" },
+  Comedy: { tagline: "Time to Laugh Out Loud", icon: "😂" },
+  Fantasy: { tagline: "Enter Another World", icon: "✨" },
+  Horror: { tagline: "Face Your Fears", icon: "👻" },
+  Drama: { tagline: "Feel Every Emotion", icon: "🎭" },
+  Adventure: { tagline: "Embark on a Journey", icon: "🗺️" },
+  "Sci-Fi": { tagline: "Beyond the Stars", icon: "🚀" },
+  Mystery: { tagline: "Uncover the Truth", icon: "🔍" },
+  Thriller: { tagline: "Edge of Your Seat", icon: "🔥" },
+  "Slice of Life": { tagline: "Everyday Magic", icon: "🌸" },
+  Supernatural: { tagline: "Beyond the Ordinary", icon: "👁️" },
+  Sports: { tagline: "Chase the Victory", icon: "🏆" },
+  Mecha: { tagline: "Suit Up & Deploy", icon: "🤖" },
+  Isekai: { tagline: "Reborn in a New World", icon: "🌀" },
+};
+
+export function getGenreTagline(genre: string) {
+  return GENRE_TAGLINES[genre] || { tagline: genre, icon: "🎬" };
+}
+
+// Episodes grouped by genre
+export function useEpisodesByGenre() {
+  return useQuery({
+    queryKey: ["episodesByGenre"],
+    queryFn: async () => {
+      // Fetch all series with their genres
+      const { data: seriesData, error: seriesError } = await supabase
+        .from("series_public" as any)
+        .select("*");
+      if (seriesError) throw seriesError;
+      if (!seriesData) return [];
+
+      const seriesList = seriesData as unknown as { id: string; title: string; image_url: string | null; genres: string[] }[];
+
+      // Build genre -> series IDs map
+      const genreSeriesMap = new Map<string, Set<string>>();
+      for (const s of seriesList) {
+        for (const g of s.genres || []) {
+          if (!genreSeriesMap.has(g)) genreSeriesMap.set(g, new Set());
+          genreSeriesMap.get(g)!.add(s.id);
+        }
+      }
+
+      // Fetch all episodes
+      const { data: episodeData, error: epError } = await supabase
+        .from("episodes_public" as any)
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (epError) throw epError;
+      if (!episodeData) return [];
+
+      const episodes = episodeData as unknown as PublicEpisode[];
+
+      // Build genre sections (only genres with episodes)
+      const result: { genre: string; tagline: string; icon: string; episodes: ReturnType<typeof toEpisodeWithSeries>[] }[] = [];
+
+      for (const [genre, seriesIds] of genreSeriesMap.entries()) {
+        const genreEpisodes = episodes
+          .filter((ep) => ep.series_id && seriesIds.has(ep.series_id))
+          .slice(0, 20)
+          .map(toEpisodeWithSeries);
+
+        if (genreEpisodes.length > 0) {
+          const { tagline, icon } = getGenreTagline(genre);
+          result.push({ genre, tagline, icon, episodes: genreEpisodes });
+        }
+      }
+
+      // Sort by number of episodes descending so bigger genres show first
+      result.sort((a, b) => b.episodes.length - a.episodes.length);
+      return result;
+    },
+    staleTime: 120_000,
   });
 }
