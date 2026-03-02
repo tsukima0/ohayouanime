@@ -6,6 +6,7 @@ import { Plus, Trash2, Edit2, Loader2, Film, Link2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import UploadProgressDisplay from "./UploadProgressDisplay";
 import DragDropZone from "./DragDropZone";
+import VideoThumbnail from "@/components/VideoThumbnail";
 
 interface Short {
   id: string;
@@ -287,6 +288,8 @@ export default function ShortsManager() {
           <div key={s.id} className="flex items-center gap-4 p-3 rounded-xl glass-card border border-border">
             {s.thumbnail_url ? (
               <img src={s.thumbnail_url} alt={s.title} className="w-14 h-20 rounded-lg object-cover flex-shrink-0" />
+            ) : s.video_url ? (
+              <VideoThumbnail videoUrl={s.video_url} alt={s.title} className="w-14 h-20 rounded-lg object-cover flex-shrink-0" />
             ) : (
               <div className="w-14 h-20 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
                 <Film className="w-5 h-5 text-muted-foreground" />
