@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Play, TrendingUp, Tv, ArrowRight, Clock, Flame, History } from "lucide-react";
+import { Play, TrendingUp, Tv, ArrowRight, Clock, Flame, History, Sparkles } from "lucide-react";
 import { useSeries, useShorts, useLatestEpisodes, toEpisodeWithSeries, type PublicEpisode } from "@/hooks/useSeriesData";
 import { useFeaturedSeries } from "@/hooks/useFeaturedSeries";
 import { usePopularSeries } from "@/hooks/usePopularSeries";
@@ -11,6 +11,8 @@ import EpisodeScrollCard from "@/components/EpisodeScrollCard";
 import HorizontalScrollSection from "@/components/HorizontalScrollSection";
 import AdBanner from "@/components/AdBanner";
 import HeroBanner from "@/components/HeroBanner";
+import NewEpisodeCard from "@/components/NewEpisodeCard";
+import { useNewEpisodes } from "@/hooks/useHomepageData";
 import { useAuth } from "@/hooks/useAuth";
 import { useWatchlist } from "@/hooks/useWatchlist";
 import { useQueries } from "@tanstack/react-query";
@@ -29,6 +31,7 @@ const Index = () => {
   const { data: popularSeries } = usePopularSeries();
   const { data: featuredSeries } = useFeaturedSeries();
   const { data: watchHistory } = useWatchHistory();
+  const { data: newEpisodes } = useNewEpisodes();
   const isMobile = useIsMobile();
 
   // Continue Watching: same logic as Browse/Watch tab
@@ -101,6 +104,21 @@ const Index = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         <AdBanner placement="banner" />
       </div>
+
+      {/* New Episodes */}
+      {newEpisodes && newEpisodes.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+          <div className="flex items-center gap-3 mb-6">
+            <Sparkles className="w-5 h-5 text-primary" />
+            <h2 className="font-display text-xl sm:text-2xl font-bold">New Episodes</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {newEpisodes.slice(0, 6).map((ep, index) => (
+              <NewEpisodeCard key={ep.id} episode={ep as any} index={index} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* My List (only for logged-in users) */}
       {user && <MyListSection watchlistIds={watchlistIds} />}
