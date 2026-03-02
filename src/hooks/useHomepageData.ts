@@ -5,16 +5,14 @@ import { toEpisodeWithSeries, PublicEpisode } from "@/hooks/useSeriesData";
 // Helper re-exported for internal reuse
 export { toEpisodeWithSeries };
 
-// New episodes: latest episode per series released in the last 7 days
+// New episodes: latest episode per series (all time)
 export function useNewEpisodes() {
   return useQuery({
     queryKey: ["newEpisodes"],
     queryFn: async () => {
-      const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const { data, error } = await supabase
         .from("episodes_public" as any)
         .select("*")
-        .gte("created_at", oneWeekAgo)
         .order("created_at", { ascending: false });
       if (error) throw error;
       if (!data) return [];
