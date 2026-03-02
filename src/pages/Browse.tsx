@@ -1,5 +1,5 @@
 import { History, Sparkles, Flame } from "lucide-react";
-import { useNewEpisodes, useMostPopularEpisodes } from "@/hooks/useHomepageData";
+import { useNewEpisodes, useMostPopularEpisodes, useEpisodesByGenre } from "@/hooks/useHomepageData";
 import { useWatchHistory } from "@/hooks/useWatchHistory";
 import { toEpisodeWithSeries, type PublicEpisode } from "@/hooks/useSeriesData";
 import EpisodeScrollCard from "@/components/EpisodeScrollCard";
@@ -34,6 +34,7 @@ export default function BrowsePage() {
   const { user } = useAuth();
   const { data: newEpisodes, isLoading: newLoading } = useNewEpisodes();
   const { data: popularEpisodes, isLoading: popularLoading } = useMostPopularEpisodes();
+  const { data: genreSections, isLoading: genreLoading } = useEpisodesByGenre();
   const { data: watchHistory } = useWatchHistory();
 
   const continueIds = (watchHistory ?? []).map((h) => h.episode_id);
@@ -48,7 +49,7 @@ export default function BrowsePage() {
     })
     .filter(Boolean) as { ep: ReturnType<typeof toEpisodeWithSeries>; progress: number; watched_seconds: number }[];
 
-  const isLoading = newLoading || popularLoading;
+  const isLoading = newLoading || popularLoading || genreLoading;
 
   return (
     <div className="min-h-screen bg-background pt-16 pb-20 sm:pb-0">
@@ -142,9 +143,32 @@ export default function BrowsePage() {
             </HorizontalScrollSection>
           )}
 
-          {/* Empty state */}
+          {/* Genre Sections */}
+          {genreSections && genreSections.map((section) => (
+            <HorizontalScrollSection
+              key={section.genre}
+              title={`${section.icon} ${section.tagline}`}
+              icon={<span className="sr-only">{section.genre}</span>}
+            >
+              {section.episodes.map((ep) => (
+                <div key={ep.id} style={{ scrollSnapAlign: "start" }}>
+                  <EpisodeScrollCard
+                    id={ep.id}
+                    title={ep.title}
+                    episode_number={ep.episode_number}
+                    season={ep.season}
+                    duration={ep.duration}
+                    thumbnail_url={ep.thumbnail_url}
+                    video_url={ep.video_url}
+                    series={ep.series}
+                  />
+                </div>
+              ))}
+            </HorizontalScrollSection>
+          ))}
           {(!newEpisodes || newEpisodes.length === 0) &&
             (!popularEpisodes || popularEpisodes.length === 0) &&
+            (!genreSections || genreSections.length === 0) &&
             continueWatchingItems.length === 0 && (
               <div className="flex flex-col items-center justify-center py-24 text-center">
                 <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
