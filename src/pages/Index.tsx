@@ -131,27 +131,6 @@ const Index = () => {
       {/* My List (only for logged-in users) */}
       {user && <MyListSection watchlistIds={watchlistIds} />}
 
-      {/* Popular Series */}
-      {popularSeries && popularSeries.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-          <div className="flex items-center gap-3 mb-6">
-            <Flame className="w-5 h-5 text-primary" />
-            <h2 className="font-display text-xl sm:text-2xl font-bold">Popular Series</h2>
-          </div>
-          <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide" style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
-            {popularSeries.map((series, index) => (
-              <div
-                key={series.id}
-                className="flex-shrink-0 w-[130px] sm:w-[180px] lg:w-[200px]"
-                style={{ scrollSnapAlign: "start" }}
-              >
-                <AnimeCard series={series} index={index} />
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* Trending Shorts Section */}
       {shorts && shorts.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
@@ -215,6 +194,27 @@ const Index = () => {
                   </div>
                 </Link>
               </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Popular Series */}
+      {popularSeries && popularSeries.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+          <div className="flex items-center gap-3 mb-6">
+            <Flame className="w-5 h-5 text-primary" />
+            <h2 className="font-display text-xl sm:text-2xl font-bold">Popular Series</h2>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide" style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
+            {popularSeries.map((series, index) => (
+              <div
+                key={series.id}
+                className="flex-shrink-0 w-[130px] sm:w-[180px] lg:w-[200px]"
+                style={{ scrollSnapAlign: "start" }}
+              >
+                <AnimeCard series={series} index={index} />
+              </div>
             ))}
           </div>
         </section>
