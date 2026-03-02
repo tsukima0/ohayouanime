@@ -128,8 +128,6 @@ const Index = () => {
         </HorizontalScrollSection>
       )}
 
-      {/* My List (only for logged-in users) */}
-      {user && <MyListSection watchlistIds={watchlistIds} />}
 
       {/* Trending Shorts Section */}
       {shorts && shorts.length > 0 && (
@@ -220,7 +218,10 @@ const Index = () => {
         </section>
       )}
 
-      {/* All Series */}
+      {/* My List (only for logged-in users) */}
+      {user && <MyListSection watchlistIds={watchlistIds} />}
+
+
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 mb-12">
         <div className="flex items-center gap-3 mb-6">
           <Tv className="w-5 h-5 text-primary" />
