@@ -114,24 +114,29 @@ export function useEpisodesByGenre() {
         }
       }
 
-      // Fetch all episodes
+      // Fetch all episodes ordered by season/episode_number to get first episodes
       const { data: episodeData, error: epError } = await supabase
         .from("episodes_public" as any)
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("season", { ascending: true })
+        .order("episode_number", { ascending: true });
       if (epError) throw epError;
       if (!episodeData) return [];
 
       const episodes = episodeData as unknown as PublicEpisode[];
 
-      // Build genre sections (only genres with episodes)
+      // Build genre sections — only first episode per series
       const result: { genre: string; tagline: string; icon: string; episodes: ReturnType<typeof toEpisodeWithSeries>[] }[] = [];
 
       for (const [genre, seriesIds] of genreSeriesMap.entries()) {
-        const genreEpisodes = episodes
-          .filter((ep) => ep.series_id && seriesIds.has(ep.series_id))
-          .slice(0, 20)
-          .map(toEpisodeWithSeries);
+        const seen = new Set<string>();
+        const genreEpisodes: ReturnType<typeof toEpisodeWithSeries>[] = [];
+        for (const ep of episodes) {
+          if (ep.series_id && seriesIds.has(ep.series_id) && !seen.has(ep.series_id)) {
+            seen.add(ep.series_id);
+            genreEpisodes.push(toEpisodeWithSeries(ep));
+          }
+        }
 
         if (genreEpisodes.length > 0) {
           const { tagline, icon } = getGenreTagline(genre);
