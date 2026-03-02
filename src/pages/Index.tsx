@@ -107,17 +107,25 @@ const Index = () => {
 
       {/* New Episodes */}
       {newEpisodes && newEpisodes.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-          <div className="flex items-center gap-3 mb-6">
-            <Sparkles className="w-5 h-5 text-primary" />
-            <h2 className="font-display text-xl sm:text-2xl font-bold">New Episodes</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {newEpisodes.slice(0, 6).map((ep, index) => (
-              <NewEpisodeCard key={ep.id} episode={ep as any} index={index} />
-            ))}
-          </div>
-        </section>
+        <HorizontalScrollSection
+          title="New Episodes"
+          icon={<Sparkles className="w-5 h-5 text-primary" />}
+        >
+          {newEpisodes.map((ep) => (
+            <div key={ep.id} style={{ scrollSnapAlign: "start" }}>
+              <EpisodeScrollCard
+                id={ep.id}
+                title={ep.title}
+                episode_number={ep.episode_number}
+                season={ep.season}
+                duration={ep.duration}
+                thumbnail_url={ep.thumbnail_url}
+                video_url={ep.video_url}
+                series={ep.series}
+              />
+            </div>
+          ))}
+        </HorizontalScrollSection>
       )}
 
       {/* My List (only for logged-in users) */}
