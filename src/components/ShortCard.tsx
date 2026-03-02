@@ -9,6 +9,7 @@ import ShortActions from "@/components/shorts/ShortActions";
 import ShortCommentsSheet from "@/components/shorts/ShortCommentsSheet";
 import ShortShareSheet from "@/components/shorts/ShortShareSheet";
 import ShortProgressBar from "@/components/shorts/ShortProgressBar";
+import VideoThumbnail from "@/components/VideoThumbnail";
 
 interface ShortCardProps {
   short: ShortWithEpisode;
@@ -102,6 +103,8 @@ export default function ShortCard({ short, isActive, shouldLoad }: ShortCardProp
           />
         ) : short.thumbnail_url ? (
           <img src={short.thumbnail_url} alt={short.title} className="w-full h-full object-cover" />
+        ) : short.video_url ? (
+          <VideoThumbnail videoUrl={short.video_url} alt={short.title} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-muted to-accent flex items-center justify-center">
             <Play className="w-12 h-12 text-muted-foreground/50" />
