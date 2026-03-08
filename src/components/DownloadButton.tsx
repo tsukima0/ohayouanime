@@ -104,45 +104,50 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
 
   return (
     <div className="flex justify-end mt-4 gap-3 items-center">
-      <button
-        onClick={isDownloading ? handleCancel : handleDownload}
-        className={`relative inline-flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm transition-colors shadow-lg overflow-hidden ${
-          isDownloading
-            ? "bg-transparent border-2 border-muted text-destructive cursor-pointer hover:text-destructive/80"
-            : isDone
-              ? "bg-primary text-primary-foreground"
-              : "bg-primary text-primary-foreground hover:bg-primary/90"
-        }`}
-      >
-        {/* Red border progress overlay */}
-        {isDownloading && progress < 100 && (
+      {/* Wrapper for progress ring */}
+      <div className="relative">
+        {/* Red conic-gradient border ring */}
+        {isDownloading && (
           <span
-            className="absolute inset-0 rounded-full pointer-events-none"
+            className="absolute inset-0 rounded-full pointer-events-none z-10"
             style={{
-              background: `conic-gradient(hsl(var(--destructive)) ${progress * 3.6}deg, transparent ${progress * 3.6}deg)`,
+              background: progress >= 100
+                ? `hsl(var(--destructive))`
+                : `conic-gradient(hsl(var(--destructive)) ${progress * 3.6}deg, hsl(var(--muted)) ${progress * 3.6}deg)`,
               mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
               maskComposite: "exclude",
               WebkitMaskComposite: "xor",
-              padding: "2px",
+              padding: "3px",
             }}
           />
         )}
 
-        {isDone ? (
-          <Check className="w-4 h-4" />
-        ) : isDownloading ? (
-          <X className="w-4 h-4" />
-        ) : (
-          <Download className="w-4 h-4" />
-        )}
-        <span>
-          {isDone
-            ? "Downloaded!"
-            : isDownloading
-              ? `Downloading... ${progress}%`
-              : "Download Episode"}
-        </span>
-      </button>
+        <button
+          onClick={isDownloading ? handleCancel : handleDownload}
+          className={`relative inline-flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm transition-colors shadow-lg ${
+            isDownloading
+              ? "bg-transparent text-destructive cursor-pointer hover:text-destructive/80"
+              : isDone
+                ? "bg-primary text-primary-foreground"
+                : "bg-primary text-primary-foreground hover:bg-primary/90"
+          }`}
+        >
+          {isDone ? (
+            <Check className="w-4 h-4" />
+          ) : isDownloading ? (
+            <X className="w-4 h-4" />
+          ) : (
+            <Download className="w-4 h-4" />
+          )}
+          <span>
+            {isDone
+              ? "Downloaded!"
+              : isDownloading
+                ? `Downloading... ${progress}%`
+                : "Download Episode"}
+          </span>
+        </button>
+      </div>
     </div>
   );
 }
