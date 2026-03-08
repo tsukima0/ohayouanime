@@ -63,8 +63,6 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
         >
           {isDone ? (
             <Check className="w-4 h-4" />
-          ) : isDownloading ? (
-            <X className="w-4 h-4" />
           ) : (
             <Download className="w-4 h-4" />
           )}
