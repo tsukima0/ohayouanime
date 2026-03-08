@@ -36,7 +36,7 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
         throw new Error(`HTTP ${res.status}`);
       }
 
-      const contentLength = res.headers.get("content-length");
+      const contentLength = res.headers.get("x-content-length") || res.headers.get("content-length");
       const total = contentLength ? parseInt(contentLength, 10) : 0;
       const reader = res.body?.getReader();
 

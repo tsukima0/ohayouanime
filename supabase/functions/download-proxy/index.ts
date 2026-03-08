@@ -42,11 +42,12 @@ serve(async (req) => {
     const headers: Record<string, string> = {
       ...corsHeaders,
       "Content-Type": contentType,
-      "Access-Control-Expose-Headers": "Content-Length, Content-Type",
+      "Access-Control-Expose-Headers": "Content-Length, Content-Type, X-Content-Length",
     };
 
     if (contentLength) {
       headers["Content-Length"] = contentLength;
+      headers["X-Content-Length"] = contentLength;
     }
 
     return new Response(upstream.body, { headers });
