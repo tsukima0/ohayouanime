@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Download, Check, X } from "lucide-react";
+import { Download, Check } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface DownloadButtonProps {
