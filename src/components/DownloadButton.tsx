@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { Download, Check, X } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface DownloadButtonProps {
   videoUrl: string;
@@ -82,6 +83,10 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
 
       setProgress(100);
       setIsDone(true);
+      toast({
+        title: "Download Complete",
+        description: `${fileName} has been downloaded successfully.`,
+      });
       setTimeout(() => {
         setIsDone(false);
         setProgress(0);
