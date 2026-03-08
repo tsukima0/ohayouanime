@@ -103,7 +103,7 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
   }, [videoUrl, fileName, isDownloading]);
 
   return (
-    <div className="flex justify-end mt-4">
+    <div className="flex justify-end mt-4 gap-2">
       <button
         onClick={handleDownload}
         disabled={isDownloading}
@@ -141,6 +141,16 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
               : "Download Episode"}
         </span>
       </button>
+
+      {isDownloading && (
+        <button
+          onClick={handleCancel}
+          className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-full font-medium text-sm transition-colors bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-lg"
+        >
+          <X className="w-4 h-4" />
+          <span>Cancel</span>
+        </button>
+      )}
     </div>
   );
 }
