@@ -103,18 +103,23 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
   }, [videoUrl, fileName, isDownloading]);
 
   return (
-    <div className="flex justify-end mt-4 gap-2">
+    <div className="flex justify-end mt-4 gap-3 items-center">
       <button
-        onClick={handleDownload}
-        disabled={isDownloading}
-        className="relative inline-flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm transition-colors shadow-lg disabled:cursor-not-allowed overflow-hidden bg-primary text-primary-foreground hover:bg-primary/90"
+        onClick={isDownloading ? handleCancel : handleDownload}
+        className={`relative inline-flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm transition-colors shadow-lg overflow-hidden ${
+          isDownloading
+            ? "bg-transparent border-2 border-muted text-destructive cursor-pointer hover:text-destructive/80"
+            : isDone
+              ? "bg-primary text-primary-foreground"
+              : "bg-primary text-primary-foreground hover:bg-primary/90"
+        }`}
       >
-        {/* Border progress ring overlay */}
+        {/* Red border progress overlay */}
         {isDownloading && progress < 100 && (
           <span
             className="absolute inset-0 rounded-full pointer-events-none"
             style={{
-              background: `conic-gradient(hsl(var(--primary-foreground) / 0.35) ${progress * 3.6}deg, transparent ${progress * 3.6}deg)`,
+              background: `conic-gradient(hsl(var(--destructive)) ${progress * 3.6}deg, transparent ${progress * 3.6}deg)`,
               mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
               maskComposite: "exclude",
               WebkitMaskComposite: "xor",
@@ -123,34 +128,21 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
           />
         )}
 
-        {/* Bottom progress bar */}
-        {isDownloading && (
-          <span className="absolute bottom-0 left-0 h-[3px] bg-primary-foreground/80 transition-all duration-200 ease-linear rounded-b-full" style={{ width: `${progress}%` }} />
-        )}
-
         {isDone ? (
           <Check className="w-4 h-4" />
+        ) : isDownloading ? (
+          <X className="w-4 h-4" />
         ) : (
-          <Download className={`w-4 h-4 ${isDownloading ? "animate-pulse" : ""}`} />
+          <Download className="w-4 h-4" />
         )}
         <span>
           {isDone
             ? "Downloaded!"
             : isDownloading
-              ? `${progress}%`
+              ? "Downloading..."
               : "Download Episode"}
         </span>
       </button>
-
-      {isDownloading && (
-        <button
-          onClick={handleCancel}
-          className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-full font-medium text-sm transition-colors bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-lg"
-        >
-          <X className="w-4 h-4" />
-          <span>Cancel</span>
-        </button>
-      )}
     </div>
   );
 }
