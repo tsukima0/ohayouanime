@@ -18,7 +18,9 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
     setIsDone(false);
 
     try {
-      const res = await fetch(videoUrl, { mode: "cors" });
+      // Use download proxy edge function to get proper CORS + content-length headers
+      const proxyUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-proxy?url=${encodeURIComponent(videoUrl)}`;
+      const res = await fetch(proxyUrl);
       
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);
