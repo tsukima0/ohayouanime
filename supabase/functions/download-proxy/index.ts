@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { S3Client, GetObjectCommand } from "https://esm.sh/@aws-sdk/client-s3@3.540.0";
+import { getSignedUrl } from "https://esm.sh/@aws-sdk/s3-request-presigner@3.540.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,7 +24,6 @@ serve(async (req) => {
       });
     }
 
-    // Extract the R2 key from the public URL
     const publicPrefix = "https://pub-4e3d2a977f8845e7b4585a44ad906f66.r2.dev/";
     if (!videoUrl.startsWith(publicPrefix)) {
       return new Response(JSON.stringify({ error: "Unsupported URL" }), {
@@ -37,63 +38,23 @@ serve(async (req) => {
     const R2_ACCESS_KEY_ID = Deno.env.get("R2_ACCESS_KEY_ID")!;
     const R2_SECRET_ACCESS_KEY = Deno.env.get("R2_SECRET_ACCESS_KEY")!;
 
-    const encoder = new TextEncoder();
+    const s3Client = new S3Client({
+      region: "auto",
+      endpoint: R2_ENDPOINT,
+      credentials: {
+        accessKeyId: R2_ACCESS_KEY_ID,
+        secretAccessKey: R2_SECRET_ACCESS_KEY,
+      },
+    });
 
-    async function hmac(key: ArrayBuffer, data: string): Promise<ArrayBuffer> {
-      const cryptoKey = await crypto.subtle.importKey(
-        "raw", key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
-      );
-      return crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(data));
-    }
+    const safeName = (fileName || "video.mp4").replace(/"/g, '\\"');
+    const command = new GetObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+      ResponseContentDisposition: `attachment; filename="${safeName}"`,
+    });
 
-    async function sha256Hex(data: Uint8Array): Promise<string> {
-      const hash = await crypto.subtle.digest("SHA-256", data);
-      return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, "0")).join("");
-    }
-
-    const now = new Date();
-    const dateStamp = now.toISOString().replace(/[-:]/g, "").slice(0, 8);
-    const amzDate = now.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
-    const region = "auto";
-    const service = "s3";
-    const expiresIn = 3600;
-
-    const endpointUrl = new URL(R2_ENDPOINT);
-    const host = endpointUrl.hostname;
-    const scope = `${dateStamp}/${region}/${service}/aws4_request`;
-
-    const disposition = `attachment; filename="${(fileName || "video.mp4").replace(/"/g, '\\"')}"`;
-
-    const queryParams = new URLSearchParams();
-    queryParams.set("X-Amz-Algorithm", "AWS4-HMAC-SHA256");
-    queryParams.set("X-Amz-Credential", `${R2_ACCESS_KEY_ID}/${scope}`);
-    queryParams.set("X-Amz-Date", amzDate);
-    queryParams.set("X-Amz-Expires", String(expiresIn));
-    queryParams.set("X-Amz-SignedHeaders", "host");
-    queryParams.set("response-content-disposition", disposition);
-
-    const sortedEntries = [...queryParams.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-    const canonicalQueryString = sortedEntries
-      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
-      .join("&");
-
-    const canonicalHeaders = `host:${host}\n`;
-    const signedHeaders = "host";
-    const payloadHash = "UNSIGNED-PAYLOAD";
-
-    const canonicalRequest = `GET\n/${BUCKET}/${key}\n${canonicalQueryString}\n${canonicalHeaders}\n${signedHeaders}\n${payloadHash}`;
-    const canonicalRequestHash = await sha256Hex(encoder.encode(canonicalRequest));
-
-    const stringToSign = `AWS4-HMAC-SHA256\n${amzDate}\n${scope}\n${canonicalRequestHash}`;
-
-    const kDate = await hmac(encoder.encode("AWS4" + R2_SECRET_ACCESS_KEY), dateStamp);
-    const kRegion = await hmac(kDate, region);
-    const kService = await hmac(kRegion, service);
-    const kSigning = await hmac(kService, "aws4_request");
-    const signatureBuffer = await hmac(kSigning, stringToSign);
-    const signature = [...new Uint8Array(signatureBuffer)].map(b => b.toString(16).padStart(2, "0")).join("");
-
-    const downloadUrl = `${R2_ENDPOINT}/${BUCKET}/${key}?${canonicalQueryString}&X-Amz-Signature=${signature}`;
+    const downloadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
 
     return new Response(JSON.stringify({ downloadUrl }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
