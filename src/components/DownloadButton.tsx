@@ -18,13 +18,28 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
     setIsDone(false);
 
     try {
-      const res = await fetch(videoUrl);
+      const res = await fetch(videoUrl, { mode: "cors" });
+      
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
       const contentLength = res.headers.get("content-length");
       const total = contentLength ? parseInt(contentLength, 10) : 0;
       const reader = res.body?.getReader();
 
       if (!reader) {
-        throw new Error("No reader available");
+        // Fallback: direct link download
+        const a = document.createElement("a");
+        a.href = videoUrl;
+        a.download = fileName;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setIsDownloading(false);
+        return;
       }
 
       const chunks: Uint8Array[] = [];
@@ -37,10 +52,13 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
         received += value.length;
         if (total > 0) {
           setProgress(Math.round((received / total) * 100));
+        } else {
+          // No content-length, show indeterminate progress
+          setProgress(Math.min(95, Math.round(received / 1024 / 1024)));
         }
       }
 
-      const blob = new Blob(chunks as BlobPart[]);
+      const blob = new Blob(chunks as BlobPart[], { type: "video/mp4" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -56,8 +74,17 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
         setIsDone(false);
         setProgress(0);
       }, 3000);
-    } catch {
-      console.error("Download failed");
+    } catch (err) {
+      console.error("Download failed, falling back to direct link:", err);
+      // Fallback: open direct link
+      const a = document.createElement("a");
+      a.href = videoUrl;
+      a.download = fileName;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
     } finally {
       setIsDownloading(false);
     }
