@@ -52,7 +52,7 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
         )}
 
         <button
-          onClick={isDownloading ? handleCancel : handleDownload}
+          onClick={handleDownload}
           className={`relative inline-flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm transition-colors shadow-lg ${
             isDownloading
               ? "bg-transparent text-destructive cursor-pointer hover:text-destructive/80"
