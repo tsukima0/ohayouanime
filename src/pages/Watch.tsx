@@ -21,7 +21,7 @@ export default function WatchPage() {
   const { data: subtitles = [] } = useSubtitles(episodeId);
   const { user } = useAuth();
   const { mutate: upsertHistory } = useUpsertWatchHistory();
-  const [isDownloading, setIsDownloading] = useState(false);
+  
 
   // Save progress periodically (every 10s) using a ref to avoid re-creating the player
   const saveProgressRef = useRef<(currentTime: number, duration: number) => void>(() => {});
