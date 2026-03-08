@@ -112,16 +112,33 @@ export default function WatchPage() {
           {/* Download Button */}
           {episode.video_url && (
             <div className="flex justify-end mt-4">
-              <a
-                href={episode.video_url}
-                download={`${animeName} - S${episode.season}E${episode.episode_number} - ${episode.title}.mp4`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors shadow-lg"
+              <button
+                onClick={async () => {
+                  if (isDownloading) return;
+                  setIsDownloading(true);
+                  try {
+                    const res = await fetch(episode.video_url!);
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `${animeName} - S${episode.season}E${episode.episode_number} - ${episode.title}.mp4`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                  } catch {
+                    console.error("Download failed");
+                  } finally {
+                    setIsDownloading(false);
+                  }
+                }}
+                disabled={isDownloading}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors shadow-lg disabled:opacity-60"
               >
-                <Download className="w-4 h-4" />
-                <span>Download Episode</span>
-              </a>
+                <Download className={`w-4 h-4 ${isDownloading ? "animate-bounce" : ""}`} />
+                <span>{isDownloading ? "Downloading..." : "Download Episode"}</span>
+              </button>
             </div>
           )}
         </div>
