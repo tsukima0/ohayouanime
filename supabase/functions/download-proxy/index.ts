@@ -72,10 +72,10 @@ serve(async (req) => {
     queryParams.set("X-Amz-SignedHeaders", "host");
     queryParams.set("response-content-disposition", disposition);
 
-    const sortedParams = new URLSearchParams(
-      [...queryParams.entries()].sort((a, b) => a[0].localeCompare(b[0]))
-    );
-    const canonicalQueryString = sortedParams.toString();
+    const sortedEntries = [...queryParams.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    const canonicalQueryString = sortedEntries
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+      .join("&");
 
     const canonicalHeaders = `host:${host}\n`;
     const signedHeaders = "host";
