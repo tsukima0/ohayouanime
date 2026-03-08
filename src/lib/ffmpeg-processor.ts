@@ -229,7 +229,7 @@ export async function processAndDownload({
   }
 
   const output = await ffmpeg.readFile("output.mp4");
-  const blob = new Blob([output], { type: "video/mp4" });
+  const blob = new Blob([(output as Uint8Array).buffer], { type: "video/mp4" });
 
   // Cleanup
   try {
