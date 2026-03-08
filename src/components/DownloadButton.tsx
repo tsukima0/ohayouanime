@@ -139,7 +139,7 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
           {isDone
             ? "Downloaded!"
             : isDownloading
-              ? "Downloading..."
+              ? `Downloading... ${progress}%`
               : "Download Episode"}
         </span>
       </button>
