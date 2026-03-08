@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import OhayouVideoPlayer from "@/components/video-player/OhayouVideoPlayer";
 import NextEpisodeCard from "@/components/NextEpisodeCard";
 import AdBanner from "@/components/AdBanner";
-import { Clock, Calendar } from "lucide-react";
+import { Clock, Calendar, Download } from "lucide-react";
 import { formatTimestamp } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -103,9 +103,27 @@ export default function WatchPage() {
               </div>
             </div>
           </div>
+
+          {/* Description */}
           <p className="text-muted-foreground text-sm mt-4 max-w-3xl leading-relaxed">
             {episode.description}
           </p>
+
+          {/* Download Button */}
+          {episode.video_url && (
+            <div className="flex justify-end mt-4">
+              <a
+                href={episode.video_url}
+                download={`${animeName} - S${episode.season}E${episode.episode_number} - ${episode.title}.mp4`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors shadow-lg"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download Episode</span>
+              </a>
+            </div>
+          )}
         </div>
 
         {/* Next Episode Card */}
