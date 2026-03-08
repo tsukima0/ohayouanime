@@ -8,10 +8,8 @@ interface DownloadButtonProps {
 }
 
 export default function DownloadButton({ videoUrl, fileName }: DownloadButtonProps) {
-  const [progress, setProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isDone, setIsDone] = useState(false);
-  const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleCancel = useCallback(() => {
     abortControllerRef.current?.abort();
