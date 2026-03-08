@@ -10,9 +10,19 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
   const [progress, setProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const handleCancel = useCallback(() => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    setIsDownloading(false);
+    setProgress(0);
+  }, []);
 
   const handleDownload = useCallback(async () => {
     if (isDownloading) return;
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
     setIsDownloading(true);
     setProgress(0);
     setIsDone(false);
