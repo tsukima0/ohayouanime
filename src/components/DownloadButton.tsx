@@ -18,7 +18,6 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
     setIsDone(false);
 
     try {
-      // Get a presigned download URL with Content-Disposition: attachment
       const { data: sessionData } = await supabase.auth.getSession();
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-proxy`,
@@ -36,15 +35,15 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      const { downloadUrl } = await res.json();
-
-      // Open presigned URL - browser will download due to content-disposition
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = downloadUrl;
+      a.href = url;
       a.download = fileName;
       document.body.appendChild(a);
       a.click();
       a.remove();
+      URL.revokeObjectURL(url);
 
       setIsDone(true);
       toast({
