@@ -6,11 +6,12 @@ import { useAuth } from "@/hooks/useAuth";
 import OhayouVideoPlayer from "@/components/video-player/OhayouVideoPlayer";
 import NextEpisodeCard from "@/components/NextEpisodeCard";
 import AdBanner from "@/components/AdBanner";
-import { Clock, Calendar, Download } from "lucide-react";
+import DownloadButton from "@/components/DownloadButton";
+import { Clock, Calendar } from "lucide-react";
 import { formatTimestamp } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function WatchPage() {
@@ -20,7 +21,7 @@ export default function WatchPage() {
   const { data: subtitles = [] } = useSubtitles(episodeId);
   const { user } = useAuth();
   const { mutate: upsertHistory } = useUpsertWatchHistory();
-  const [isDownloading, setIsDownloading] = useState(false);
+  
 
   // Save progress periodically (every 10s) using a ref to avoid re-creating the player
   const saveProgressRef = useRef<(currentTime: number, duration: number) => void>(() => {});
@@ -112,35 +113,10 @@ export default function WatchPage() {
 
           {/* Download Button */}
           {episode.video_url && (
-            <div className="flex justify-end mt-4">
-              <button
-                onClick={async () => {
-                  if (isDownloading) return;
-                  setIsDownloading(true);
-                  try {
-                    const res = await fetch(episode.video_url!);
-                    const blob = await res.blob();
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = `${animeName} - S${episode.season}E${episode.episode_number} - ${episode.title}.mp4`;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    URL.revokeObjectURL(url);
-                  } catch {
-                    console.error("Download failed");
-                  } finally {
-                    setIsDownloading(false);
-                  }
-                }}
-                disabled={isDownloading}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors shadow-lg disabled:opacity-60"
-              >
-                <Download className={`w-4 h-4 ${isDownloading ? "animate-bounce" : ""}`} />
-                <span>{isDownloading ? "Downloading..." : "Download Episode"}</span>
-              </button>
-            </div>
+            <DownloadButton
+              videoUrl={episode.video_url}
+              fileName={`${animeName} - S${episode.season}E${episode.episode_number} - ${episode.title}.mp4`}
+            />
           )}
         </div>
 
