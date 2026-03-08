@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { Download, Check } from "lucide-react";
+import { useState, useCallback, useRef } from "react";
+import { Download, Check, X } from "lucide-react";
 
 interface DownloadButtonProps {
   videoUrl: string;
