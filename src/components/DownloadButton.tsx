@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Download, Check, Loader2, X } from "lucide-react";
+import { Download, Check, Loader2, X, Subtitles, ChevronDown } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { processAndDownload, type ProgressCallback } from "@/lib/ffmpeg-processor";
 import logoUrl from "@/assets/logo.png";
@@ -22,6 +22,14 @@ export default function DownloadButton({ videoUrl, fileName, subtitles = [] }: D
   const [progress, setProgress] = useState({ phase: "", percent: 0, message: "" });
   const [abortController, setAbortController] = useState<AbortController | null>(null);
 
+  const availableSubs = subtitles.filter((s) => s.file_url);
+  const [selectedSubIndex, setSelectedSubIndex] = useState<number | null>(
+    availableSubs.length > 0 ? 0 : null
+  );
+  const [showSubMenu, setShowSubMenu] = useState(false);
+
+  const selectedSub = selectedSubIndex !== null ? availableSubs[selectedSubIndex] : null;
+
   const handleDownload = useCallback(async () => {
     if (isProcessing) return;
     setIsProcessing(true);
@@ -35,18 +43,14 @@ export default function DownloadButton({ videoUrl, fileName, subtitles = [] }: D
     };
 
     try {
-      // Use the first available subtitle
-      const activeSub = subtitles.find((s) => s.file_url);
-
       const blob = await processAndDownload({
         videoUrl,
         fileName,
-        subtitleUrl: activeSub?.file_url || undefined,
+        subtitleUrl: selectedSub?.file_url || undefined,
         logoUrl,
         onProgress,
       });
 
-      // Trigger download
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -69,7 +73,6 @@ export default function DownloadButton({ videoUrl, fileName, subtitles = [] }: D
         description: "Falling back to direct download without subtitles/logo.",
         variant: "destructive",
       });
-      // Fallback: direct link download
       const a = document.createElement("a");
       a.href = videoUrl;
       a.download = fileName;
@@ -83,7 +86,7 @@ export default function DownloadButton({ videoUrl, fileName, subtitles = [] }: D
       setAbortController(null);
       setProgress({ phase: "", percent: 0, message: "" });
     }
-  }, [videoUrl, fileName, subtitles, isProcessing]);
+  }, [videoUrl, fileName, selectedSub, isProcessing]);
 
   const handleCancel = useCallback(() => {
     abortController?.abort();
@@ -108,6 +111,55 @@ export default function DownloadButton({ videoUrl, fileName, subtitles = [] }: D
           <p className="text-[10px] text-muted-foreground/60">
             ⚠ Processing in browser — may take several minutes for long videos
           </p>
+        </div>
+      )}
+
+      {/* Subtitle track selector */}
+      {availableSubs.length > 0 && !isProcessing && (
+        <div className="relative">
+          <button
+            onClick={() => setShowSubMenu((o) => !o)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-muted-foreground bg-muted/50 hover:bg-muted transition-colors"
+          >
+            <Subtitles className="w-3.5 h-3.5" />
+            <span>
+              {selectedSub ? `Subs: ${selectedSub.label}` : "No subtitles"}
+            </span>
+            <ChevronDown className="w-3 h-3" />
+          </button>
+          {showSubMenu && (
+            <div
+              className="absolute bottom-full mb-1 right-0 min-w-[160px] rounded-xl py-1.5 z-50 overflow-hidden"
+              style={{
+                background: "hsl(var(--popover))",
+                border: "1px solid hsl(var(--border))",
+              }}
+            >
+              <button
+                onClick={() => { setSelectedSubIndex(null); setShowSubMenu(false); }}
+                className={`w-full text-left px-4 py-2 text-xs transition-colors ${
+                  selectedSubIndex === null
+                    ? "text-primary font-semibold"
+                    : "text-foreground hover:text-primary"
+                }`}
+              >
+                No subtitles
+              </button>
+              {availableSubs.map((s, i) => (
+                <button
+                  key={i}
+                  onClick={() => { setSelectedSubIndex(i); setShowSubMenu(false); }}
+                  className={`w-full text-left px-4 py-2 text-xs transition-colors ${
+                    selectedSubIndex === i
+                      ? "text-primary font-semibold"
+                      : "text-foreground hover:text-primary"
+                  }`}
+                >
+                  {s.label || s.language || `Track ${i + 1}`}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
