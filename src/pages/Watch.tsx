@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import OhayouVideoPlayer from "@/components/video-player/OhayouVideoPlayer";
 import NextEpisodeCard from "@/components/NextEpisodeCard";
 import AdBanner from "@/components/AdBanner";
-import DownloadButton from "@/components/DownloadButton";
+
 import { Clock, Calendar } from "lucide-react";
 import { formatTimestamp } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -111,14 +111,6 @@ export default function WatchPage() {
             {episode.description}
           </p>
 
-          {/* Download Button */}
-          {episode.video_url && (
-            <DownloadButton
-              videoUrl={episode.video_url}
-              fileName={`${animeName} - S${episode.season}E${episode.episode_number} - ${episode.title}.mp4`}
-              subtitles={subtitles}
-            />
-          )}
         </div>
 
         {/* Next Episode Card */}
