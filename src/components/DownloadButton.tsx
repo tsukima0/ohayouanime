@@ -83,6 +83,10 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
 
       setProgress(100);
       setIsDone(true);
+      toast({
+        title: "Download Complete",
+        description: `${fileName} has been downloaded successfully.`,
+      });
       setTimeout(() => {
         setIsDone(false);
         setProgress(0);
