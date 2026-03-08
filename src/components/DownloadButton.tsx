@@ -109,21 +109,11 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
 
   return (
     <div className="flex justify-end mt-4 gap-3 items-center">
-      {/* Wrapper for progress ring */}
       <div className="relative">
-        {/* Red conic-gradient border ring */}
+        {/* Red static border when downloading */}
         {isDownloading && (
           <span
-            className="absolute inset-0 rounded-full pointer-events-none z-10"
-            style={{
-              background: progress >= 100
-                ? `hsl(var(--destructive))`
-                : `conic-gradient(hsl(var(--destructive)) ${progress * 3.6}deg, hsl(var(--muted)) ${progress * 3.6}deg)`,
-              mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-              maskComposite: "exclude",
-              WebkitMaskComposite: "xor",
-              padding: "3px",
-            }}
+            className="absolute inset-0 rounded-full pointer-events-none z-10 border-2 border-destructive"
           />
         )}
 
@@ -148,7 +138,7 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
             {isDone
               ? "Downloaded!"
               : isDownloading
-                ? `Downloading... ${progress}%`
+                ? "Downloading..."
                 : "Download Episode"}
           </span>
         </button>
