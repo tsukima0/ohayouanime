@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { Download, Check } from "lucide-react";
+import { useState, useCallback, useRef } from "react";
+import { Download, Check, X } from "lucide-react";
 
 interface DownloadButtonProps {
   videoUrl: string;
@@ -10,9 +10,19 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
   const [progress, setProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const handleCancel = useCallback(() => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    setIsDownloading(false);
+    setProgress(0);
+  }, []);
 
   const handleDownload = useCallback(async () => {
     if (isDownloading) return;
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
     setIsDownloading(true);
     setProgress(0);
     setIsDone(false);
@@ -20,7 +30,7 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
     try {
       // Use download proxy edge function to get proper CORS + content-length headers
       const proxyUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-proxy?url=${encodeURIComponent(videoUrl)}`;
-      const res = await fetch(proxyUrl);
+      const res = await fetch(proxyUrl, { signal: controller.signal });
       
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);
@@ -93,7 +103,7 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
   }, [videoUrl, fileName, isDownloading]);
 
   return (
-    <div className="flex justify-end mt-4">
+    <div className="flex justify-end mt-4 gap-2">
       <button
         onClick={handleDownload}
         disabled={isDownloading}
@@ -131,6 +141,16 @@ export default function DownloadButton({ videoUrl, fileName }: DownloadButtonPro
               : "Download Episode"}
         </span>
       </button>
+
+      {isDownloading && (
+        <button
+          onClick={handleCancel}
+          className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-full font-medium text-sm transition-colors bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-lg"
+        >
+          <X className="w-4 h-4" />
+          <span>Cancel</span>
+        </button>
+      )}
     </div>
   );
 }
