@@ -1,6 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { S3Client, GetObjectCommand } from "https://esm.sh/@aws-sdk/client-s3@3.540.0";
-import { getSignedUrl } from "https://esm.sh/@aws-sdk/s3-request-presigner@3.540.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,42 +22,28 @@ serve(async (req) => {
       });
     }
 
-    const publicPrefix = "https://pub-4e3d2a977f8845e7b4585a44ad906f66.r2.dev/";
-    if (!videoUrl.startsWith(publicPrefix)) {
-      return new Response(JSON.stringify({ error: "Unsupported URL" }), {
-        status: 400,
+    // Fetch the video from the public R2 URL and stream it back with attachment disposition
+    const upstream = await fetch(videoUrl);
+    if (!upstream.ok) {
+      return new Response(JSON.stringify({ error: `Upstream error: ${upstream.status}` }), {
+        status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const key = videoUrl.slice(publicPrefix.length);
-    const BUCKET = "ohayou-anime-storage";
-    const R2_ENDPOINT = Deno.env.get("R2_ENDPOINT")!;
-    const R2_ACCESS_KEY_ID = Deno.env.get("R2_ACCESS_KEY_ID")!;
-    const R2_SECRET_ACCESS_KEY = Deno.env.get("R2_SECRET_ACCESS_KEY")!;
-
-    const s3Client = new S3Client({
-      region: "auto",
-      endpoint: R2_ENDPOINT,
-      forcePathStyle: true,
-      credentials: {
-        accessKeyId: R2_ACCESS_KEY_ID,
-        secretAccessKey: R2_SECRET_ACCESS_KEY,
-      },
-    });
-
     const safeName = (fileName || "video.mp4").replace(/"/g, '\\"');
-    const command = new GetObjectCommand({
-      Bucket: BUCKET,
-      Key: key,
-      ResponseContentDisposition: `attachment; filename="${safeName}"`,
+    const headers = new Headers({
+      ...corsHeaders,
+      "Content-Type": upstream.headers.get("Content-Type") || "video/mp4",
+      "Content-Disposition": `attachment; filename="${safeName}"`,
     });
 
-    const downloadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+    const contentLength = upstream.headers.get("Content-Length");
+    if (contentLength) {
+      headers.set("Content-Length", contentLength);
+    }
 
-    return new Response(JSON.stringify({ downloadUrl }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(upstream.body, { headers });
   } catch (err) {
     console.error("Download proxy error:", err);
     return new Response(JSON.stringify({ error: err.message }), {
