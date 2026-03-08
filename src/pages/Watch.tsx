@@ -116,6 +116,7 @@ export default function WatchPage() {
             <DownloadButton
               videoUrl={episode.video_url}
               fileName={`${animeName} - S${episode.season}E${episode.episode_number} - ${episode.title}.mp4`}
+              subtitles={subtitles}
             />
           )}
         </div>
