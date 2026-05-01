@@ -378,6 +378,7 @@ export default function SubtitleDisplay({
   controlsVisible = true,
 }: SubtitleDisplayProps) {
   const [cues, setCues] = useState<Cue[]>([]);
+  const [playRes, setPlayRes] = useState<{ x: number; y: number }>({ x: 384, y: 288 });
   const [currentCue, setCurrentCue] = useState<Cue | null>(null);
   const rafRef = useRef<number>();
 
@@ -392,8 +393,13 @@ export default function SubtitleDisplay({
         const res = await fetch(fileUrl);
         const text = await res.text();
         const format = detectFormat(text);
-        const parsed = format === "ass" ? parseASS(text) : parseVTT(text);
-        setCues(parsed);
+        if (format === "ass") {
+          const { cues: c, playResX, playResY } = parseASS(text);
+          setCues(c);
+          setPlayRes({ x: playResX, y: playResY });
+        } else {
+          setCues(parseVTT(text));
+        }
       } catch {
         setCues([]);
       }
