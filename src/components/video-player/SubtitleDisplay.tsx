@@ -21,6 +21,13 @@ interface SubtitleDisplayProps {
   controlsVisible?: boolean;
 }
 
+interface ParsedSubs {
+  cues: Cue[];
+  /** Script resolution from ASS [Script Info]; defaults if not present */
+  playResX: number;
+  playResY: number;
+}
+
 /* ---------------- Timestamp parsing ---------------- */
 
 function parseTimestamp(ts: string): number {
