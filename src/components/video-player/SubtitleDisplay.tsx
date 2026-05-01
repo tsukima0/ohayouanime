@@ -276,10 +276,25 @@ function parseASS(text: string): { cues: Cue[]; playResX: number; playResY: numb
   for (const line of lines) {
     const trimmed = line.trim();
     if (trimmed.startsWith("[")) {
-      inEvents = trimmed.toLowerCase() === "[events]";
+      const section = trimmed.toLowerCase();
+      inEvents = section === "[events]";
+      inScriptInfo = section === "[script info]";
       format = null;
       continue;
     }
+
+    if (inScriptInfo) {
+      const lower = trimmed.toLowerCase();
+      if (lower.startsWith("playresx:")) {
+        const v = parseFloat(trimmed.substring(9).trim());
+        if (!Number.isNaN(v) && v > 0) playResX = v;
+      } else if (lower.startsWith("playresy:")) {
+        const v = parseFloat(trimmed.substring(9).trim());
+        if (!Number.isNaN(v) && v > 0) playResY = v;
+      }
+      continue;
+    }
+
     if (!inEvents) continue;
 
     if (trimmed.toLowerCase().startsWith("format:")) {
