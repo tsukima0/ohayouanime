@@ -439,7 +439,8 @@ export default function SubtitleDisplay({
 
   // Resolve effective vertical position: cue \an overrides prop
   // ASS numpad: 1-3 bottom, 4-6 middle, 7-9 top; horizontal 1/4/7 left, 2/5/8 center, 3/6/9 right
-  const align = currentCue.align;
+  // Default ASS alignment is 2 (bottom-center) when none specified.
+  const align = currentCue.align ?? (currentCue.pos ? 2 : undefined);
   let vPos: "top" | "middle" | "bottom" = position === "top" ? "top" : "bottom";
   let hAlign: "left" | "center" | "right" = "center";
   if (align) {
@@ -452,37 +453,55 @@ export default function SubtitleDisplay({
 
   const containerStyle: React.CSSProperties = {
     position: "absolute",
-    left: 0,
-    right: 0,
-    display: "flex",
-    justifyContent: hAlign === "left" ? "flex-start" : hAlign === "right" ? "flex-end" : "center",
     pointerEvents: "none",
-    paddingLeft: "1rem",
-    paddingRight: "1rem",
     zIndex: 2147483644,
+    display: "flex",
   };
 
-  if (vPos === "top") {
-    containerStyle.top = "1.5rem";
-  } else if (vPos === "middle") {
-    containerStyle.top = "50%";
-    containerStyle.transform = "translateY(-50%)";
+  if (currentCue.pos) {
+    // Map script-resolution coords to percentage of player area.
+    const xPct = Math.max(0, Math.min(100, (currentCue.pos.x / playRes.x) * 100));
+    const yPct = Math.max(0, Math.min(100, (currentCue.pos.y / playRes.y) * 100));
+    containerStyle.left = `${xPct}%`;
+    containerStyle.top = `${yPct}%`;
+    // Anchor the text box at the position point based on \an alignment.
+    const tx = hAlign === "left" ? "0%" : hAlign === "right" ? "-100%" : "-50%";
+    const ty = vPos === "top" ? "0%" : vPos === "middle" ? "-50%" : "-100%";
+    containerStyle.transform = `translate(${tx}, ${ty})`;
+    containerStyle.justifyContent =
+      hAlign === "left" ? "flex-start" : hAlign === "right" ? "flex-end" : "center";
   } else {
-    containerStyle.bottom = controlsVisible ? "4rem" : "1.5rem";
-    containerStyle.transition = "bottom 0.3s ease";
+    containerStyle.left = 0;
+    containerStyle.right = 0;
+    containerStyle.paddingLeft = "1rem";
+    containerStyle.paddingRight = "1rem";
+    containerStyle.justifyContent =
+      hAlign === "left" ? "flex-start" : hAlign === "right" ? "flex-end" : "center";
+
+    if (vPos === "top") {
+      containerStyle.top = "1.5rem";
+    } else if (vPos === "middle") {
+      containerStyle.top = "50%";
+      containerStyle.transform = "translateY(-50%)";
+    } else {
+      containerStyle.bottom = controlsVisible ? "4rem" : "1.5rem";
+      containerStyle.transition = "bottom 0.3s ease";
+    }
   }
 
   return (
     <div style={containerStyle}>
       <div
-        className="px-3 py-1.5 rounded-lg max-w-[85%]"
+        className="px-3 py-1.5 rounded-lg"
         style={{
+          maxWidth: currentCue.pos ? "none" : "85%",
           background: `hsla(0, 0%, 0%, ${bgOpacity})`,
           color: "hsl(0, 0%, 100%)",
           fontSize: `calc(clamp(0.85rem, 2.2vw, 1.25rem) * ${fontScale})`,
           lineHeight: 1.4,
           textAlign: hAlign,
           textShadow: "0 1px 3px hsla(0, 0%, 0%, 0.8)",
+          whiteSpace: currentCue.pos ? "nowrap" : "normal",
         }}
         dangerouslySetInnerHTML={{ __html: currentCue.html }}
       />
