@@ -349,7 +349,7 @@ function parseASS(text: string): { cues: Cue[]; playResX: number; playResY: numb
   }
 
   cues.sort((a, b) => a.start - b.start);
-  return cues;
+  return { cues, playResX, playResY };
 }
 
 /* ---------------- Format detection ---------------- */
