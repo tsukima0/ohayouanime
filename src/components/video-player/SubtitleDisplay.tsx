@@ -262,12 +262,15 @@ function vttToHtml(text: string): string {
 
 /* ---------------- ASS parser ---------------- */
 
-function parseASS(text: string): Cue[] {
+function parseASS(text: string): { cues: Cue[]; playResX: number; playResY: number } {
   const cues: Cue[] = [];
   const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
 
   // Find the Format: line under [Events] to know column order
   let inEvents = false;
+  let inScriptInfo = false;
+  let playResX = 384;
+  let playResY = 288;
   let format: string[] | null = null;
 
   for (const line of lines) {
