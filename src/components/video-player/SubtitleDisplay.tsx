@@ -494,14 +494,14 @@ export default function SubtitleDisplay({
       <div
         className="px-3 py-1.5 rounded-lg"
         style={{
-          maxWidth: currentCue.pos ? "none" : "85%",
+          maxWidth: "none",
           background: `hsla(0, 0%, 0%, ${bgOpacity})`,
           color: "hsl(0, 0%, 100%)",
           fontSize: `calc(clamp(0.85rem, 2.2vw, 1.25rem) * ${fontScale})`,
           lineHeight: 1.4,
           textAlign: hAlign,
           textShadow: "0 1px 3px hsla(0, 0%, 0%, 0.8)",
-          whiteSpace: currentCue.pos ? "nowrap" : "normal",
+          whiteSpace: "pre",
         }}
         dangerouslySetInnerHTML={{ __html: currentCue.html }}
       />
