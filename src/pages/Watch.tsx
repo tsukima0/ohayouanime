@@ -63,9 +63,31 @@ export default function WatchPage() {
   }
 
   const animeName = episode.series?.title || "Unknown Series";
+  const pageTitle = `${animeName} — Episode ${episode.episode_number}: ${episode.title} | Ohayou Anime`;
+  const pageDesc = (episode.description || `Watch ${animeName} Episode ${episode.episode_number}: ${episode.title} on Ohayou Anime.`).slice(0, 300);
+  const thumb = episode.thumbnail_url || episode.series?.image_url || undefined;
+  const videoLd = {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    name: `${animeName} — Episode ${episode.episode_number}: ${episode.title}`,
+    description: pageDesc,
+    thumbnailUrl: thumb,
+    uploadDate: (episode as any).created_at,
+    duration: episode.duration ? `PT${Math.floor(episode.duration / 60)}M${episode.duration % 60}S` : undefined,
+    contentUrl: episode.video_url || undefined,
+    embedUrl: `https://ohayouanime.lovable.app/watch/${episode.id}`,
+  };
 
   return (
     <div className="min-h-screen bg-background pt-16 pb-20 sm:pb-0">
+      <SEO
+        title={pageTitle}
+        description={pageDesc}
+        path={`/watch/${episode.id}`}
+        image={thumb}
+        type="video.episode"
+        jsonLd={videoLd}
+      />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Video Player */}
         <motion.div
