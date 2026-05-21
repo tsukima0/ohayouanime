@@ -43,6 +43,10 @@ export default function HeroBanner({ series, latestEpisodes }: HeroBannerProps) 
           key={hero.id}
           src={heroImage}
           alt={hero.title}
+          width={1920}
+          height={1080}
+          fetchPriority="high"
+          decoding="async"
           className="absolute inset-0 w-full h-full object-cover"
           initial={{ opacity: 0, scale: 1.05 }}
           animate={{ opacity: 1, scale: 1 }}

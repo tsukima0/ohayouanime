@@ -32,21 +32,23 @@ const App = () => (
           <BrowserRouter>
             <ScrollToTop />
             <Navbar />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/browse" element={<BrowsePage />} />
-              <Route path="/shorts" element={<ShortsPage />} />
-              <Route path="/shorts/:shortId" element={<ShortsPage />} />
-              <Route path="/series/:seriesId" element={<SeriesDetailPage />} />
-              <Route path="/watch/:episodeId" element={<WatchPage />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/search" element={<SearchPage />} />
-              <Route path="/admin" element={<AdminPage />} />
-              <Route path="/copyright-policy" element={<CopyrightPolicyPage />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <main>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/browse" element={<BrowsePage />} />
+                <Route path="/shorts" element={<ShortsPage />} />
+                <Route path="/shorts/:shortId" element={<ShortsPage />} />
+                <Route path="/series/:seriesId" element={<SeriesDetailPage />} />
+                <Route path="/watch/:episodeId" element={<WatchPage />} />
+                <Route path="/auth" element={<AuthPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/search" element={<SearchPage />} />
+                <Route path="/admin" element={<AdminPage />} />
+                <Route path="/copyright-policy" element={<CopyrightPolicyPage />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
             <Footer />
           </BrowserRouter>
         </TooltipProvider>
