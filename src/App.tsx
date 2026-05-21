@@ -30,6 +30,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <ScrollToTop />
             <Navbar />
             <Routes>
               <Route path="/" element={<Index />} />
