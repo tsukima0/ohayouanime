@@ -21,6 +21,7 @@ import { motion } from "framer-motion";
 import { formatTimestamp } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
+import SEO from "@/components/SEO";
 
 const Index = () => {
   const { user } = useAuth();
@@ -73,6 +74,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20 sm:pb-0">
+      <SEO
+        title="Ohayou Anime — Watch Your Favorite Anime Series Online"
+        description="Stream subbed and dubbed anime series, episodes, and shorts on Ohayou Anime. Discover trending titles, build your watchlist, and enjoy a custom theater-mode player."
+        path="/"
+      />
       {/* Hero Banner - auto-scrolling popular series */}
       <HeroBanner series={heroSeries} latestEpisodes={latestEpisodes} />
 

@@ -5,6 +5,7 @@ import { Star, Play, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import VideoThumbnail from "@/components/VideoThumbnail";
+import SEO from "@/components/SEO";
 
 export default function SeriesDetailPage() {
   const { seriesId } = useParams();
@@ -39,8 +40,31 @@ export default function SeriesDetailPage() {
 
   const label = statusLabel(series.status);
 
+  const desc = (series.description || `Watch ${series.title} on Ohayou Anime — ${series.episode_count} episodes available.`).slice(0, 300);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "TVSeries",
+    name: series.title,
+    description: desc,
+    image: imageSrc,
+    genre: series.genres,
+    numberOfEpisodes: series.episode_count,
+    aggregateRating: series.rating
+      ? { "@type": "AggregateRating", ratingValue: series.rating, bestRating: 10, ratingCount: 1 }
+      : undefined,
+    url: `https://ohayouanime.lovable.app/series/${series.id}`,
+  };
+
   return (
     <div className="min-h-screen bg-background pt-16 pb-20 sm:pb-0">
+      <SEO
+        title={`${series.title} — Ohayou Anime`}
+        description={desc}
+        path={`/series/${series.id}`}
+        image={imageSrc}
+        type="video.tv_show"
+        jsonLd={jsonLd}
+      />
       {/* Hero Banner */}
       <div className="relative w-full h-[50vh] overflow-hidden">
         <img
