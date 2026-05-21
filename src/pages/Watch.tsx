@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import OhayouVideoPlayer from "@/components/video-player/OhayouVideoPlayer";
 import NextEpisodeCard from "@/components/NextEpisodeCard";
 import AdBanner from "@/components/AdBanner";
+import SEO from "@/components/SEO";
 
 import { Clock, Calendar } from "lucide-react";
 import { formatTimestamp } from "@/lib/utils";
