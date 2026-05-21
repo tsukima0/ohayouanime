@@ -1,0 +1,15 @@
+# Ohayou Anime
+
+> Ohayou Anime is a streaming destination for anime series, episodes, and short-form clips with a custom theater-mode player, watchlists, and search.
+
+## Pages
+
+- [Home](/): Featured series, continue watching, new episodes, and trending shorts.
+- [Browse](/browse): Discovery hub for all series and episodes.
+- [Search](/search): Search and filter the full anime catalog.
+- [Shorts](/shorts): Vertical short-form anime clips feed.
+- [Copyright Policy](/copyright-policy): DMCA and copyright information.
+
+## Optional
+
+- [Sign in](/auth): Account login and signup.
