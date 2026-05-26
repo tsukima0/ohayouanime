@@ -36,14 +36,14 @@ Deno.serve(async (req) => {
 
     const { data: ep, error: epErr } = await supabase
       .from("episodes")
-      .select("id, series_id, season, episode_number, title, thumbnail_url")
+      .select("id, series_id, season, episode_number, title, description, thumbnail_url")
       .eq("id", episodeId)
       .maybeSingle();
     if (epErr || !ep) throw new Error(epErr?.message || "Episode not found");
 
     const { data: series, error: sErr } = await supabase
       .from("series")
-      .select("title, image_url, genres, status, audio_language, subtitle_language")
+      .select("title, description, image_url, genres, status, audio_language, subtitle_language")
       .eq("id", ep.series_id)
       .maybeSingle();
     if (sErr || !series) throw new Error(sErr?.message || "Series not found");
@@ -64,8 +64,13 @@ Deno.serve(async (req) => {
       String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
     const title = `<b>${esc(series.title)} - Season ${ep.season} Episode ${ep.episode_number}</b>`;
+    const rawDesc = (ep.description?.trim() || series.description?.trim() || "").replace(/\s+/g, " ");
+    const descText = rawDesc
+      ? (rawDesc.length > 200 ? rawDesc.slice(0, 200).trimEnd() + "..." : rawDesc)
+      : "none";
     const caption =
       `${title}\n\n` +
+      `${esc(descText)}\n\n` +
       `🎭 <b>Genre:</b> ${esc((series.genres ?? []).join(", ") || "—")}\n` +
       `🔊 <b>Audio:</b> ${esc(series.audio_language || "Japanese")}\n` +
       `📡 <b>Status:</b> Episode ${minEp} to ${maxEp} (${statusText})\n` +
