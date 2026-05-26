@@ -48,6 +48,10 @@ export default function EpisodeManager() {
   const [uploadProgress, setUploadProgress] = useState<string>("");
   const [uploadPercent, setUploadPercent] = useState(0);
   const [uploadDetail, setUploadDetail] = useState<UploadProgressInfo | null>(null);
+  // Subtitle form state (optional)
+  const [subtitleFile, setSubtitleFile] = useState<File | null>(null);
+  const [subtitleLabel, setSubtitleLabel] = useState("English");
+  const [subtitleLanguage, setSubtitleLanguage] = useState("en");
 
   useEffect(() => {
     const loadSeries = async () => {
@@ -78,6 +82,7 @@ export default function EpisodeManager() {
     setTitle(""); setDescription(""); setSeason("1"); setEpisodeNumber("1"); setDuration("0");
     setVideoFile(null); setThumbnailFile(null); setThumbnailPreview(null); setEditingId(null);
     setShowForm(false); setUploadProgress(""); setUploadPercent(0); setUploadDetail(null);
+    setSubtitleFile(null); setSubtitleLabel("English"); setSubtitleLanguage("en");
   };
 
   const startEdit = (ep: Episode) => {
@@ -123,6 +128,7 @@ export default function EpisodeManager() {
       };
       if (videoUrl) payload.video_url = videoUrl;
 
+      let episodeId: string | null = editingId;
       if (editingId) {
         const { error } = await supabase.from("episodes" as any).update(payload).eq("id", editingId);
         if (error) throw error;
@@ -134,9 +140,31 @@ export default function EpisodeManager() {
         toast({ title: "Episode updated" });
       } else {
         payload.video_url = videoUrl;
-        const { error } = await supabase.from("episodes" as any).insert(payload);
+        const { data: inserted, error } = await supabase.from("episodes" as any).insert(payload).select("id").single();
         if (error) throw error;
+        episodeId = (inserted as any)?.id ?? null;
         toast({ title: "Episode created" });
+      }
+
+      // Optional subtitle upload alongside episode
+      if (subtitleFile && episodeId) {
+        try {
+          setUploadProgress("Uploading subtitle...");
+          const ext = subtitleFile.name.split(".").pop() || "vtt";
+          const fileUrl = await uploadFile("subtitles", subtitleFile, `subtitles/${episodeId}/${crypto.randomUUID()}.${ext}`);
+          const { error: subErr } = await supabase.from("subtitles" as any).insert({
+            episode_id: episodeId,
+            language: subtitleLanguage,
+            label: subtitleLabel,
+            file_url: fileUrl,
+            created_by: user.id,
+          });
+          if (subErr) throw subErr;
+          toast({ title: "Subtitle added" });
+        } catch (subErr: any) {
+          console.error("Subtitle upload error:", subErr);
+          toast({ title: "Subtitle upload failed", description: subErr.message, variant: "destructive" });
+        }
       }
 
       resetForm();
@@ -253,6 +281,31 @@ export default function EpisodeManager() {
               onFile={setThumbnailFile}
               onPreview={setThumbnailPreview}
             />
+          </div>
+
+          {/* Optional subtitle upload */}
+          <div className="p-4 rounded-xl bg-secondary/40 border border-border space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-display font-semibold text-foreground">Subtitle (optional)</h4>
+              <span className="text-xs text-muted-foreground">Upload alongside this episode</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Label</label>
+                <input value={subtitleLabel} onChange={(e) => setSubtitleLabel(e.target.value)} placeholder="e.g. English"
+                  className="w-full px-3 py-2 rounded-xl bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Language Code</label>
+                <input value={subtitleLanguage} onChange={(e) => setSubtitleLanguage(e.target.value)} placeholder="e.g. en"
+                  className="w-full px-3 py-2 rounded-xl bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Subtitle File</label>
+                <input type="file" accept=".vtt,.srt,.ass,.ssa" onChange={(e) => setSubtitleFile(e.target.files?.[0] || null)}
+                  className="text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 file:cursor-pointer" />
+              </div>
+            </div>
           </div>
 
           {uploadProgress && (
