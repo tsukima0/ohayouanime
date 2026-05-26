@@ -82,6 +82,7 @@ export default function EpisodeManager() {
     setTitle(""); setDescription(""); setSeason("1"); setEpisodeNumber("1"); setDuration("0");
     setVideoFile(null); setThumbnailFile(null); setThumbnailPreview(null); setEditingId(null);
     setShowForm(false); setUploadProgress(""); setUploadPercent(0); setUploadDetail(null);
+    setSubtitleFile(null); setSubtitleLabel("English"); setSubtitleLanguage("en");
   };
 
   const startEdit = (ep: Episode) => {
