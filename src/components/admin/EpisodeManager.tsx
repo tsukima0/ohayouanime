@@ -128,6 +128,7 @@ export default function EpisodeManager() {
       };
       if (videoUrl) payload.video_url = videoUrl;
 
+      let episodeId: string | null = editingId;
       if (editingId) {
         const { error } = await supabase.from("episodes" as any).update(payload).eq("id", editingId);
         if (error) throw error;
@@ -139,9 +140,31 @@ export default function EpisodeManager() {
         toast({ title: "Episode updated" });
       } else {
         payload.video_url = videoUrl;
-        const { error } = await supabase.from("episodes" as any).insert(payload);
+        const { data: inserted, error } = await supabase.from("episodes" as any).insert(payload).select("id").single();
         if (error) throw error;
+        episodeId = (inserted as any)?.id ?? null;
         toast({ title: "Episode created" });
+      }
+
+      // Optional subtitle upload alongside episode
+      if (subtitleFile && episodeId) {
+        try {
+          setUploadProgress("Uploading subtitle...");
+          const ext = subtitleFile.name.split(".").pop() || "vtt";
+          const fileUrl = await uploadFile("subtitles", subtitleFile, `subtitles/${episodeId}/${crypto.randomUUID()}.${ext}`);
+          const { error: subErr } = await supabase.from("subtitles" as any).insert({
+            episode_id: episodeId,
+            language: subtitleLanguage,
+            label: subtitleLabel,
+            file_url: fileUrl,
+            created_by: user.id,
+          });
+          if (subErr) throw subErr;
+          toast({ title: "Subtitle added" });
+        } catch (subErr: any) {
+          console.error("Subtitle upload error:", subErr);
+          toast({ title: "Subtitle upload failed", description: subErr.message, variant: "destructive" });
+        }
       }
 
       resetForm();
