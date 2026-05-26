@@ -48,6 +48,10 @@ export default function EpisodeManager() {
   const [uploadProgress, setUploadProgress] = useState<string>("");
   const [uploadPercent, setUploadPercent] = useState(0);
   const [uploadDetail, setUploadDetail] = useState<UploadProgressInfo | null>(null);
+  // Subtitle form state (optional)
+  const [subtitleFile, setSubtitleFile] = useState<File | null>(null);
+  const [subtitleLabel, setSubtitleLabel] = useState("English");
+  const [subtitleLanguage, setSubtitleLanguage] = useState("en");
 
   useEffect(() => {
     const loadSeries = async () => {
