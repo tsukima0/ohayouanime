@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Tv, Film, Clapperboard, Subtitles, Megaphone, Star } from "lucide-react";
+import { ArrowLeft, Tv, Film, Clapperboard, Subtitles, Megaphone, Star, Send } from "lucide-react";
 import { motion } from "framer-motion";
 import AdminGuard from "@/components/admin/AdminGuard";
 import SeriesManager from "@/components/admin/SeriesManager";
@@ -9,6 +9,7 @@ import ShortsManager from "@/components/admin/ShortsManager";
 import SubtitleManager from "@/components/admin/SubtitleManager";
 import AdsManager from "@/components/admin/AdsManager";
 import FeaturedManager from "@/components/admin/FeaturedManager";
+import NotificationsSettings from "@/components/admin/NotificationsSettings";
 
 const tabs = [
   { id: "featured", label: "Featured", icon: Star },
@@ -17,6 +18,7 @@ const tabs = [
   { id: "shorts", label: "Shorts", icon: Film },
   { id: "subtitles", label: "Subtitles", icon: Subtitles },
   { id: "ads", label: "Ads", icon: Megaphone },
+  { id: "notifications", label: "Notifications", icon: Send },
 ] as const;
 
 type Tab = (typeof tabs)[number]["id"];
@@ -81,6 +83,7 @@ export default function AdminPage() {
             {activeTab === "shorts" && <ShortsManager />}
             {activeTab === "subtitles" && <SubtitleManager />}
             {activeTab === "ads" && <AdsManager />}
+            {activeTab === "notifications" && <NotificationsSettings />}
           </motion.div>
         </div>
       </div>

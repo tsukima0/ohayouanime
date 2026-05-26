@@ -14,6 +14,8 @@ interface Series {
   image_url: string | null;
   status: string;
   episode_count: number;
+  audio_language?: string;
+  subtitle_language?: string;
   created_at: string;
 }
 
@@ -38,6 +40,8 @@ export default function SeriesManager() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [rating, setRating] = useState("0");
   const [status, setStatus] = useState("ongoing");
+  const [audioLanguage, setAudioLanguage] = useState("Japanese");
+  const [subtitleLanguage, setSubtitleLanguage] = useState("Burmese");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
@@ -59,6 +63,8 @@ export default function SeriesManager() {
     setSelectedGenres([]);
     setRating("0");
     setStatus("ongoing");
+    setAudioLanguage("Japanese");
+    setSubtitleLanguage("Burmese");
     setThumbnailFile(null);
     setThumbnailPreview(null);
     setEditingId(null);
@@ -71,6 +77,8 @@ export default function SeriesManager() {
     setSelectedGenres(s.genres);
     setRating(String(s.rating));
     setStatus(s.status);
+    setAudioLanguage(s.audio_language || "Japanese");
+    setSubtitleLanguage(s.subtitle_language || "Burmese");
     setThumbnailPreview(s.image_url);
     setEditingId(s.id);
     setShowForm(true);
@@ -94,6 +102,8 @@ export default function SeriesManager() {
         genres: selectedGenres,
         rating: parseFloat(rating),
         status,
+        audio_language: audioLanguage,
+        subtitle_language: subtitleLanguage,
         image_url: imageUrl,
         created_by: user.id,
       };
@@ -192,6 +202,25 @@ export default function SeriesManager() {
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Description</label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3}
               className="w-full px-3 py-2 rounded-xl bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none" />
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">Rating (0–10)</label>
+            <input type="number" min="0" max="10" step="0.1" value={rating} onChange={(e) => setRating(e.target.value)}
+              className="w-32 px-3 py-2 rounded-xl bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Audio Language</label>
+              <input value={audioLanguage} onChange={(e) => setAudioLanguage(e.target.value)} placeholder="Japanese"
+                className="w-full px-3 py-2 rounded-xl bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Subtitle Language</label>
+              <input value={subtitleLanguage} onChange={(e) => setSubtitleLanguage(e.target.value)} placeholder="Burmese"
+                className="w-full px-3 py-2 rounded-xl bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+            </div>
           </div>
 
           <div>
