@@ -14,6 +14,8 @@ interface Series {
   image_url: string | null;
   status: string;
   episode_count: number;
+  audio_language?: string;
+  subtitle_language?: string;
   created_at: string;
 }
 
@@ -38,6 +40,8 @@ export default function SeriesManager() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [rating, setRating] = useState("0");
   const [status, setStatus] = useState("ongoing");
+  const [audioLanguage, setAudioLanguage] = useState("Japanese");
+  const [subtitleLanguage, setSubtitleLanguage] = useState("Burmese");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
@@ -59,6 +63,8 @@ export default function SeriesManager() {
     setSelectedGenres([]);
     setRating("0");
     setStatus("ongoing");
+    setAudioLanguage("Japanese");
+    setSubtitleLanguage("Burmese");
     setThumbnailFile(null);
     setThumbnailPreview(null);
     setEditingId(null);
@@ -71,6 +77,8 @@ export default function SeriesManager() {
     setSelectedGenres(s.genres);
     setRating(String(s.rating));
     setStatus(s.status);
+    setAudioLanguage(s.audio_language || "Japanese");
+    setSubtitleLanguage(s.subtitle_language || "Burmese");
     setThumbnailPreview(s.image_url);
     setEditingId(s.id);
     setShowForm(true);
@@ -94,6 +102,8 @@ export default function SeriesManager() {
         genres: selectedGenres,
         rating: parseFloat(rating),
         status,
+        audio_language: audioLanguage,
+        subtitle_language: subtitleLanguage,
         image_url: imageUrl,
         created_by: user.id,
       };
