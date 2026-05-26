@@ -190,6 +190,7 @@ export type Database = {
       }
       series: {
         Row: {
+          audio_language: string
           created_at: string
           created_by: string | null
           description: string | null
@@ -199,10 +200,12 @@ export type Database = {
           image_url: string | null
           rating: number | null
           status: string
+          subtitle_language: string
           title: string
           updated_at: string
         }
         Insert: {
+          audio_language?: string
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -212,10 +215,12 @@ export type Database = {
           image_url?: string | null
           rating?: number | null
           status?: string
+          subtitle_language?: string
           title: string
           updated_at?: string
         }
         Update: {
+          audio_language?: string
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -225,6 +230,7 @@ export type Database = {
           image_url?: string | null
           rating?: number | null
           status?: string
+          subtitle_language?: string
           title?: string
           updated_at?: string
         }
