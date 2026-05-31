@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
       `🔊 <b>Audio:</b> ${esc(series.audio_language || "Japanese")}\n` +
       `📡 <b>Status:</b> Episode ${minEp} to ${maxEp} (${statusText})\n` +
       `📝 <b>Subtitles:</b> ${esc(series.subtitle_language || "Burmese")}\n\n` +
-      `— @OhayouAM | Powered by Ohayou Anime`;
+      `— @OhayouAM | Developed by Tsukima`;
 
     const photo = ep.thumbnail_url || series.image_url;
     const reply_markup = {
