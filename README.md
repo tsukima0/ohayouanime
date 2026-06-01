@@ -1,4 +1,4 @@
-# Ohayou Anime 🎌
+# Ohayou Anime 🎬👹
 
 **Ohayou Anime** is a hybrid anime streaming platform that combines **full-length episode streaming** with a **TikTok-style short-form vertical feed** — built for modern anime fans who want both deep binge sessions and quick, immersive scrolling.
 
