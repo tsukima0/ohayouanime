@@ -23,7 +23,7 @@ Open an issue tagged `enhancement` and describe:
 1. **Fork** the repository
 2. **Clone** your fork:
    ```bash
-   git clone https://github.com/<your-username>/ohayou-anime.git
+   git clone https://github.com/tsukima0/ohayouanime.git
    cd ohayou-anime
    ```
 3. **Install** dependencies:
