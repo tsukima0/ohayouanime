@@ -32,7 +32,7 @@
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/<your-username>/ohayou-anime.git
+git clone https://github.com/tsukima0/ohayouanime.git
 cd ohayou-anime
 ```
 
