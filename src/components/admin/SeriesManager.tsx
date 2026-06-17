@@ -204,13 +204,7 @@ export default function SeriesManager() {
               className="w-full px-3 py-2 rounded-xl bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none" />
           </div>
 
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Rating (0–10)</label>
-            <input type="number" min="0" max="10" step="0.1" value={rating} onChange={(e) => setRating(e.target.value)}
-              className="w-32 px-3 py-2 rounded-xl bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Audio Language</label>
               <input value={audioLanguage} onChange={(e) => setAudioLanguage(e.target.value)} placeholder="Japanese"
@@ -221,12 +215,11 @@ export default function SeriesManager() {
               <input value={subtitleLanguage} onChange={(e) => setSubtitleLanguage(e.target.value)} placeholder="Burmese"
                 className="w-full px-3 py-2 rounded-xl bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
             </div>
-          </div>
-
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Rating (0–10)</label>
-            <input type="number" min="0" max="10" step="0.1" value={rating} onChange={(e) => setRating(e.target.value)}
-              className="w-32 px-3 py-2 rounded-xl bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Rating (0–10)</label>
+              <input type="number" min="0" max="10" step="0.1" value={rating} onChange={(e) => setRating(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl bg-secondary border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+            </div>
           </div>
 
           <div>
