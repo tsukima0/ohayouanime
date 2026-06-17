@@ -1,0 +1,22 @@
+{
+  "name": "ohayou-anime-uploader-bot",
+  "version": "1.0.0",
+  "description": "Standalone Telegram admin uploader bot for Ohayou Anime — streams media to Cloudflare R2 and writes metadata to Supabase.",
+  "type": "module",
+  "main": "src/bot.js",
+  "scripts": {
+    "start": "node src/bot.js",
+    "dev": "node --watch src/bot.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.645.0",
+    "@aws-sdk/lib-storage": "^3.645.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "dotenv": "^16.4.5",
+    "node-fetch": "^3.3.2",
+    "telegraf": "^4.16.3"
+  }
+}
