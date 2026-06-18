@@ -11,8 +11,8 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    // Auth: require a valid Bearer JWT (accepts the anon key used by the DB trigger
-    // as well as any signed-in user). Blocks unauthenticated internet callers.
+    // Auth: require a valid Bearer token. Accept either the project's anon key
+    // (used by the DB trigger via pg_net) or a valid signed-in user JWT.
     const authHeader = req.headers.get("Authorization") ?? "";
     if (!authHeader.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -20,12 +20,14 @@ Deno.serve(async (req) => {
       });
     }
     const token = authHeader.slice("Bearer ".length).trim();
-    const authClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-    );
-    const { data: claimsData, error: claimsErr } = await authClient.auth.getClaims(token);
-    if (claimsErr || !claimsData?.claims) {
+    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+    let authorized = token === ANON_KEY;
+    if (!authorized) {
+      const authClient = createClient(Deno.env.get("SUPABASE_URL")!, ANON_KEY);
+      const { data, error } = await authClient.auth.getUser(token);
+      authorized = !error && !!data?.user;
+    }
+    if (!authorized) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
