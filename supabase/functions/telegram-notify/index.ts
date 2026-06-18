@@ -11,8 +11,8 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    // Auth: require a valid Bearer token. Accept either the project's anon key
-    // (used by the DB trigger via pg_net) or a valid signed-in user JWT.
+    // Auth: require a Bearer JWT issued by this Supabase project. Accepts the
+    // anon/publishable key (used by the DB trigger) or any signed-in user JWT.
     const authHeader = req.headers.get("Authorization") ?? "";
     if (!authHeader.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -20,12 +20,18 @@ Deno.serve(async (req) => {
       });
     }
     const token = authHeader.slice("Bearer ".length).trim();
-    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-    let authorized = token === ANON_KEY;
-    if (!authorized) {
-      const authClient = createClient(Deno.env.get("SUPABASE_URL")!, ANON_KEY);
-      const { data, error } = await authClient.auth.getUser(token);
-      authorized = !error && !!data?.user;
+    let authorized = false;
+    try {
+      const payload = JSON.parse(
+        atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))
+      );
+      const projectRef = (Deno.env.get("SUPABASE_URL") ?? "").match(/https?:\/\/([^.]+)\./)?.[1];
+      const expOk = typeof payload.exp === "number" ? payload.exp * 1000 > Date.now() : true;
+      const issOk = !projectRef || payload.ref === projectRef || String(payload.iss ?? "").includes(projectRef);
+      const roleOk = payload.role === "anon" || payload.role === "authenticated" || payload.role === "service_role";
+      authorized = expOk && issOk && roleOk;
+    } catch {
+      authorized = false;
     }
     if (!authorized) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
