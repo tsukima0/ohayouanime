@@ -380,7 +380,9 @@ export default function SubtitleDisplay({
   const [cues, setCues] = useState<Cue[]>([]);
   const [playRes, setPlayRes] = useState<{ x: number; y: number }>({ x: 384, y: 288 });
   const [activeCues, setActiveCues] = useState<Cue[]>([]);
+  const [videoRect, setVideoRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
   const rafRef = useRef<number>();
+  const rectRafRef = useRef<number>();
 
   useEffect(() => {
     if (!fileUrl) {
@@ -405,6 +407,44 @@ export default function SubtitleDisplay({
       }
     })();
   }, [fileUrl]);
+
+  // Track actual rendered video rect (handles letterboxing for \pos)
+  useEffect(() => {
+    if (!playerReady) return;
+    const measure = () => {
+      const p = playerRef.current as any;
+      if (!p || p.isDisposed?.()) {
+        rectRafRef.current = requestAnimationFrame(measure);
+        return;
+      }
+      const videoEl: HTMLVideoElement | undefined = p.tech?.(true)?.el?.();
+      const containerEl: HTMLElement | undefined = p.el?.();
+      if (videoEl && containerEl && videoEl.videoWidth && videoEl.videoHeight) {
+        const cRect = containerEl.getBoundingClientRect();
+        const cw = cRect.width;
+        const ch = cRect.height;
+        const vAR = videoEl.videoWidth / videoEl.videoHeight;
+        const cAR = cw / ch;
+        let w = cw, h = ch, left = 0, top = 0;
+        if (vAR > cAR) {
+          h = cw / vAR;
+          top = (ch - h) / 2;
+        } else {
+          w = ch * vAR;
+          left = (cw - w) / 2;
+        }
+        setVideoRect((prev) => {
+          if (prev && Math.abs(prev.width - w) < 0.5 && Math.abs(prev.height - h) < 0.5 && Math.abs(prev.left - left) < 0.5 && Math.abs(prev.top - top) < 0.5) return prev;
+          return { left, top, width: w, height: h };
+        });
+      }
+      rectRafRef.current = requestAnimationFrame(measure);
+    };
+    rectRafRef.current = requestAnimationFrame(measure);
+    return () => {
+      if (rectRafRef.current) cancelAnimationFrame(rectRafRef.current);
+    };
+  }, [playerReady, playerRef]);
 
   useEffect(() => {
     if (!playerReady || cues.length === 0) {
