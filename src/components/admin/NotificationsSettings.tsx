@@ -32,11 +32,11 @@ export default function NotificationsSettings() {
     if (!selected) return;
     setSending(true);
     try {
-      const { data, error } = await supabase.functions.invoke("telegram-notify", {
-        body: { episode_id: selected },
+      const { data, error } = await (supabase as any).rpc("admin_send_telegram_test", {
+        _episode_id: selected,
       });
       if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
+      if (data && (data as any).ok === false) throw new Error("Failed to enqueue");
       toast({ title: "Sent to Telegram channel" });
     } catch (err: any) {
       toast({ title: "Failed", description: err.message, variant: "destructive" });
@@ -44,6 +44,7 @@ export default function NotificationsSettings() {
       setSending(false);
     }
   };
+
 
   return (
     <div className="space-y-6">

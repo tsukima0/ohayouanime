@@ -2,8 +2,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-internal-secret",
 };
+
 
 const SITE_URL = "https://ohayouanime.lovable.app";
 
@@ -11,33 +12,40 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    // Auth: require a Bearer JWT issued by this Supabase project. Accepts the
-    // anon/publishable key (used by the DB trigger) or any signed-in user JWT.
-    const authHeader = req.headers.get("Authorization") ?? "";
-    if (!authHeader.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const token = authHeader.slice("Bearer ".length).trim();
+    // Auth: only accept calls bearing the internal shared secret stored in
+    // public.internal_settings (readable only by service_role). The DB trigger
+    // and the admin-only RPC both call this endpoint with that header. Public
+    // JWTs (anon or user) are NOT accepted.
+    const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+    const providedSecret = req.headers.get("x-internal-secret") ?? "";
     let authorized = false;
-    try {
-      const payload = JSON.parse(
-        atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))
-      );
-      const projectRef = (Deno.env.get("SUPABASE_URL") ?? "").match(/https?:\/\/([^.]+)\./)?.[1];
-      const expOk = typeof payload.exp === "number" ? payload.exp * 1000 > Date.now() : true;
-      const issOk = !projectRef || payload.ref === projectRef || String(payload.iss ?? "").includes(projectRef);
-      const roleOk = payload.role === "anon" || payload.role === "authenticated" || payload.role === "service_role";
-      authorized = expOk && issOk && roleOk;
-    } catch {
-      authorized = false;
+    if (providedSecret) {
+      const { data: row } = await adminClient
+        .from("internal_settings")
+        .select("value")
+        .eq("key", "telegram_notify_secret")
+        .maybeSingle();
+      const expected = (row?.value as string | undefined) ?? "";
+      if (expected && providedSecret.length === expected.length) {
+        let diff = 0;
+        for (let i = 0; i < expected.length; i++) {
+          diff |= providedSecret.charCodeAt(i) ^ expected.charCodeAt(i);
+        }
+        authorized = diff === 0;
+      }
     }
+
     if (!authorized) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+
+
 
     const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
     const CHAT_ID = Deno.env.get("TELEGRAM_CHANNEL_ID");
@@ -57,10 +65,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabase = adminClient;
+
 
     const { data: ep, error: epErr } = await supabase
       .from("episodes")

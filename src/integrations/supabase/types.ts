@@ -164,6 +164,24 @@ export type Database = {
           },
         ]
       }
+      internal_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -746,6 +764,7 @@ export type Database = {
       }
     }
     Functions: {
+      admin_send_telegram_test: { Args: { _episode_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
