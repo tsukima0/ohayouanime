@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
 
     const { data: series, error: sErr } = await supabase
       .from("series")
-      .select("title, description, image_url, genres, status, audio_language, subtitle_language")
+      .select("title, image_url, genres, status, audio_language")
       .eq("id", ep.series_id)
       .maybeSingle();
     if (sErr || !series) throw new Error(sErr?.message || "Series not found");
@@ -94,21 +94,35 @@ Deno.serve(async (req) => {
     const maxEp = nums.length ? Math.max(...nums) : ep.episode_number;
     const statusText = series.status === "completed" ? "Completed" : "Ongoing";
 
+    // Per-episode subtitle languages
+    const { data: subs } = await supabase
+      .from("subtitles")
+      .select("language, label")
+      .eq("episode_id", ep.id);
+    const subLangs = Array.from(
+      new Set((subs ?? []).map((s: any) => (s.label || s.language || "").trim()).filter(Boolean))
+    );
+    const subtitlesText = subLangs.length ? subLangs.join(", ") : "Burmese";
+
     const esc = (s: string) =>
       String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-    const title = `<b>${esc(series.title)} - Season ${ep.season} Episode ${ep.episode_number}</b>`;
-    const rawDesc = (ep.description?.trim() || series.description?.trim() || "").replace(/\s+/g, " ");
-    const descText = rawDesc
-      ? (rawDesc.length > 200 ? rawDesc.slice(0, 200).trimEnd() + "..." : rawDesc)
-      : "none";
+    const epTitlePart = ep.title?.trim() ? `: ${esc(ep.title.trim())}` : "";
+    const title = `<b>${esc(series.title)} - Season ${ep.season} Episode ${ep.episode_number}${epTitlePart}</b>`;
+
+    // Episode-only description (never fall back to series description)
+    const rawEpDesc = (ep.description ?? "").trim().replace(/\s+/g, " ");
+    const epDesc = rawEpDesc
+      ? (rawEpDesc.length > 200 ? rawEpDesc.slice(0, 200).trimEnd() + "..." : rawEpDesc)
+      : "";
+
     const caption =
       `${title}\n\n` +
-      `${esc(descText)}\n\n` +
+      (epDesc ? `${esc(epDesc)}\n\n` : "") +
       `🎭 <b>Genre:</b> ${esc((series.genres ?? []).join(", ") || "—")}\n` +
       `🔊 <b>Audio:</b> ${esc(series.audio_language || "Japanese")}\n` +
       `📡 <b>Status:</b> Episode ${minEp} to ${maxEp} (${statusText})\n` +
-      `📝 <b>Subtitles:</b> ${esc(series.subtitle_language || "Burmese")}\n\n` +
+      `📝 <b>Subtitles:</b> ${esc(subtitlesText)}\n\n` +
       `— @OhayouAM | Powered by Tsukima`;
 
     const photo = ep.thumbnail_url || series.image_url;
