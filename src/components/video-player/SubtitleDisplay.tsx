@@ -380,7 +380,9 @@ export default function SubtitleDisplay({
   const [cues, setCues] = useState<Cue[]>([]);
   const [playRes, setPlayRes] = useState<{ x: number; y: number }>({ x: 384, y: 288 });
   const [activeCues, setActiveCues] = useState<Cue[]>([]);
+  const [videoRect, setVideoRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
   const rafRef = useRef<number>();
+  const rectRafRef = useRef<number>();
 
   useEffect(() => {
     if (!fileUrl) {
@@ -405,6 +407,44 @@ export default function SubtitleDisplay({
       }
     })();
   }, [fileUrl]);
+
+  // Track actual rendered video rect (handles letterboxing for \pos)
+  useEffect(() => {
+    if (!playerReady) return;
+    const measure = () => {
+      const p = playerRef.current as any;
+      if (!p || p.isDisposed?.()) {
+        rectRafRef.current = requestAnimationFrame(measure);
+        return;
+      }
+      const videoEl: HTMLVideoElement | undefined = p.tech?.(true)?.el?.();
+      const containerEl: HTMLElement | undefined = p.el?.();
+      if (videoEl && containerEl && videoEl.videoWidth && videoEl.videoHeight) {
+        const cRect = containerEl.getBoundingClientRect();
+        const cw = cRect.width;
+        const ch = cRect.height;
+        const vAR = videoEl.videoWidth / videoEl.videoHeight;
+        const cAR = cw / ch;
+        let w = cw, h = ch, left = 0, top = 0;
+        if (vAR > cAR) {
+          h = cw / vAR;
+          top = (ch - h) / 2;
+        } else {
+          w = ch * vAR;
+          left = (cw - w) / 2;
+        }
+        setVideoRect((prev) => {
+          if (prev && Math.abs(prev.width - w) < 0.5 && Math.abs(prev.height - h) < 0.5 && Math.abs(prev.left - left) < 0.5 && Math.abs(prev.top - top) < 0.5) return prev;
+          return { left, top, width: w, height: h };
+        });
+      }
+      rectRafRef.current = requestAnimationFrame(measure);
+    };
+    rectRafRef.current = requestAnimationFrame(measure);
+    return () => {
+      if (rectRafRef.current) cancelAnimationFrame(rectRafRef.current);
+    };
+  }, [playerReady, playerRef]);
 
   useEffect(() => {
     if (!playerReady || cues.length === 0) {
@@ -519,24 +559,50 @@ export default function SubtitleDisplay({
       })}
       {positioned.map((cue, idx) => {
         const { vPos, hAlign } = resolveCue(cue);
-        const xPct = Math.max(0, Math.min(100, (cue.pos!.x / playRes.x) * 100));
-        const yPct = Math.max(0, Math.min(100, (cue.pos!.y / playRes.y) * 100));
+        const xFrac = Math.max(0, Math.min(1, cue.pos!.x / playRes.x));
+        const yFrac = Math.max(0, Math.min(1, cue.pos!.y / playRes.y));
         const tx = hAlign === "left" ? "0%" : hAlign === "right" ? "-100%" : "-50%";
         const ty = vPos === "top" ? "0%" : vPos === "middle" ? "-50%" : "-100%";
-        const style: React.CSSProperties = {
-          position: "absolute",
-          pointerEvents: "none",
-          zIndex: 2147483644,
-          display: "flex",
-          left: `${xPct}%`,
-          top: `${yPct}%`,
-          transform: `translate(${tx}, ${ty})`,
-          justifyContent:
-            hAlign === "left" ? "flex-start" : hAlign === "right" ? "flex-end" : "center",
-        };
+        const style: React.CSSProperties = videoRect
+          ? {
+              position: "absolute",
+              pointerEvents: "none",
+              zIndex: 2147483644,
+              display: "flex",
+              left: `${videoRect.left + videoRect.width * xFrac}px`,
+              top: `${videoRect.top + videoRect.height * yFrac}px`,
+              transform: `translate(${tx}, ${ty})`,
+              justifyContent:
+                hAlign === "left" ? "flex-start" : hAlign === "right" ? "flex-end" : "center",
+              maxWidth: `${videoRect.width}px`,
+            }
+          : {
+              position: "absolute",
+              pointerEvents: "none",
+              zIndex: 2147483644,
+              display: "flex",
+              left: `${xFrac * 100}%`,
+              top: `${yFrac * 100}%`,
+              transform: `translate(${tx}, ${ty})`,
+              justifyContent:
+                hAlign === "left" ? "flex-start" : hAlign === "right" ? "flex-end" : "center",
+            };
+        // Positioned cues (\pos) are typically typesetting/signs — render without bubble chrome.
         return (
           <div key={`pos-${idx}`} style={style}>
-            {renderBubble(cue, hAlign, idx)}
+            <div
+              className="px-1"
+              style={{
+                color: "hsl(0, 0%, 100%)",
+                fontSize: `calc(clamp(0.85rem, 2.2vw, 1.25rem) * ${fontScale})`,
+                lineHeight: 1.4,
+                textAlign: hAlign,
+                textShadow:
+                  "0 0 2px hsl(0,0%,0%), 0 0 2px hsl(0,0%,0%), 0 1px 3px hsla(0,0%,0%,0.9)",
+                whiteSpace: "pre-wrap",
+              }}
+              dangerouslySetInnerHTML={{ __html: cue.html }}
+            />
           </div>
         );
       })}
