@@ -50,12 +50,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://ohayouanime.lovable.app/watch/71cfe309-9936-49cf-8b00-a474dfe10281</loc>
-    <lastmod>2026-06-06</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://ohayouanime.lovable.app/watch/aff35658-770a-44c9-b4ab-14493ca95dab</loc>
     <lastmod>2026-03-02</lastmod>
     <changefreq>monthly</changefreq>
@@ -166,6 +160,12 @@
   <url>
     <loc>https://ohayouanime.lovable.app/watch/eebdb786-dbfc-4de6-adb5-dc525ce6a2a2</loc>
     <lastmod>2026-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://ohayouanime.lovable.app/watch/71cfe309-9936-49cf-8b00-a474dfe10281</loc>
+    <lastmod>2026-06-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -381,6 +381,12 @@
   </url>
   <url>
     <loc>https://ohayouanime.lovable.app/watch/1055ebcc-1659-4c48-8274-878139bc912f</loc>
+    <lastmod>2026-06-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://ohayouanime.lovable.app/watch/9d6f5592-8299-4eaa-8ccf-1fc4c269188f</loc>
     <lastmod>2026-06-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
