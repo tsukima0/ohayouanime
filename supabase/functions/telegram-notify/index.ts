@@ -12,36 +12,56 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    // Auth: require either the project's service_role key (used by the DB trigger
-    // via pg_net) OR a signed-in admin user JWT. The anon key is NOT accepted —
-    // it is public and would let anyone trigger Telegram posts.
-    const authHeader = req.headers.get("Authorization") ?? "";
-    if (!authHeader.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const token = authHeader.slice("Bearer ".length).trim();
-
+    // Auth model:
+    //  1) DB trigger calls send `x-internal-secret` matching a value stored
+    //     server-side in public.internal_settings (only service_role can read).
+    //  2) Admin UI calls send a signed-in user's Bearer JWT; we verify the JWT
+    //     via Supabase auth and require the user to have the `admin` role.
+    // The public anon key is NOT accepted.
     const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    let authorized = token === SERVICE_ROLE_KEY;
+    const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
+    let authorized = false;
+
+    // Path 1: internal secret from the DB trigger.
+    const providedSecret = req.headers.get("x-internal-secret");
+    if (providedSecret) {
+      const { data: row } = await adminClient
+        .from("internal_settings")
+        .select("value")
+        .eq("key", "telegram_notify_secret")
+        .maybeSingle();
+      const expected = row?.value as string | undefined;
+      if (expected && providedSecret.length === expected.length) {
+        let diff = 0;
+        for (let i = 0; i < expected.length; i++) {
+          diff |= providedSecret.charCodeAt(i) ^ expected.charCodeAt(i);
+        }
+        authorized = diff === 0;
+      }
+    }
+
+    // Path 2: admin user JWT.
     if (!authorized) {
-      // Cryptographically verify the JWT and require an admin role.
-      const authClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
-        global: { headers: { Authorization: authHeader } },
-      });
-      const { data: userData, error: userErr } = await authClient.auth.getUser(token);
-      if (!userErr && userData?.user) {
-        const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-        const { data: roleRow } = await adminClient
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", userData.user.id)
-          .eq("role", "admin")
-          .maybeSingle();
-        authorized = !!roleRow;
+      const authHeader = req.headers.get("Authorization") ?? "";
+      if (authHeader.startsWith("Bearer ")) {
+        const token = authHeader.slice("Bearer ".length).trim();
+        const authClient = createClient(
+          SUPABASE_URL,
+          Deno.env.get("SUPABASE_ANON_KEY")!,
+          { global: { headers: { Authorization: authHeader } } },
+        );
+        const { data: userData, error: userErr } = await authClient.auth.getUser(token);
+        if (!userErr && userData?.user) {
+          const { data: roleRow } = await adminClient
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", userData.user.id)
+            .eq("role", "admin")
+            .maybeSingle();
+          authorized = !!roleRow;
+        }
       }
     }
 
@@ -50,6 +70,7 @@ Deno.serve(async (req) => {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
 
     const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
