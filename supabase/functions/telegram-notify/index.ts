@@ -11,8 +11,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    // Auth: require a Bearer JWT issued by this Supabase project. Accepts the
-    // anon/publishable key (used by the DB trigger) or any signed-in user JWT.
+    // Auth: require either the project's service_role key (used by the DB trigger
+    // via pg_net) OR a signed-in admin user JWT. The anon key is NOT accepted —
+    // it is public and would let anyone trigger Telegram posts.
     const authHeader = req.headers.get("Authorization") ?? "";
     if (!authHeader.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -20,24 +21,35 @@ Deno.serve(async (req) => {
       });
     }
     const token = authHeader.slice("Bearer ".length).trim();
-    let authorized = false;
-    try {
-      const payload = JSON.parse(
-        atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))
-      );
-      const projectRef = (Deno.env.get("SUPABASE_URL") ?? "").match(/https?:\/\/([^.]+)\./)?.[1];
-      const expOk = typeof payload.exp === "number" ? payload.exp * 1000 > Date.now() : true;
-      const issOk = !projectRef || payload.ref === projectRef || String(payload.iss ?? "").includes(projectRef);
-      const roleOk = payload.role === "anon" || payload.role === "authenticated" || payload.role === "service_role";
-      authorized = expOk && issOk && roleOk;
-    } catch {
-      authorized = false;
+
+    const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    let authorized = token === SERVICE_ROLE_KEY;
+
+    if (!authorized) {
+      // Cryptographically verify the JWT and require an admin role.
+      const authClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: userData, error: userErr } = await authClient.auth.getUser(token);
+      if (!userErr && userData?.user) {
+        const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+        const { data: roleRow } = await adminClient
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userData.user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+        authorized = !!roleRow;
+      }
     }
+
     if (!authorized) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
     const CHAT_ID = Deno.env.get("TELEGRAM_CHANNEL_ID");
