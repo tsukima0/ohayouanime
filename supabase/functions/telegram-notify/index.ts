@@ -12,27 +12,23 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    // Auth model:
-    //  1) DB trigger calls send `x-internal-secret` matching a value stored
-    //     server-side in public.internal_settings (only service_role can read).
-    //  2) Admin UI calls send a signed-in user's Bearer JWT; we verify the JWT
-    //     via Supabase auth and require the user to have the `admin` role.
-    // The public anon key is NOT accepted.
+    // Auth: only accept calls bearing the internal shared secret stored in
+    // public.internal_settings (readable only by service_role). The DB trigger
+    // and the admin-only RPC both call this endpoint with that header. Public
+    // JWTs (anon or user) are NOT accepted.
     const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
+    const providedSecret = req.headers.get("x-internal-secret") ?? "";
     let authorized = false;
-
-    // Path 1: internal secret from the DB trigger.
-    const providedSecret = req.headers.get("x-internal-secret");
     if (providedSecret) {
       const { data: row } = await adminClient
         .from("internal_settings")
         .select("value")
         .eq("key", "telegram_notify_secret")
         .maybeSingle();
-      const expected = row?.value as string | undefined;
+      const expected = (row?.value as string | undefined) ?? "";
       if (expected && providedSecret.length === expected.length) {
         let diff = 0;
         for (let i = 0; i < expected.length; i++) {
@@ -42,34 +38,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Path 2: admin user JWT.
-    if (!authorized) {
-      const authHeader = req.headers.get("Authorization") ?? "";
-      if (authHeader.startsWith("Bearer ")) {
-        const token = authHeader.slice("Bearer ".length).trim();
-        const authClient = createClient(
-          SUPABASE_URL,
-          Deno.env.get("SUPABASE_ANON_KEY")!,
-          { global: { headers: { Authorization: authHeader } } },
-        );
-        const { data: userData, error: userErr } = await authClient.auth.getUser(token);
-        if (!userErr && userData?.user) {
-          const { data: roleRow } = await adminClient
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", userData.user.id)
-            .eq("role", "admin")
-            .maybeSingle();
-          authorized = !!roleRow;
-        }
-      }
-    }
-
     if (!authorized) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
 
 
