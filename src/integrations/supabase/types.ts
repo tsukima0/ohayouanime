@@ -764,6 +764,7 @@ export type Database = {
       }
     }
     Functions: {
+      admin_send_telegram_test: { Args: { _episode_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
