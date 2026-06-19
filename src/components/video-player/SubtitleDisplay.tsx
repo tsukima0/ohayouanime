@@ -559,24 +559,50 @@ export default function SubtitleDisplay({
       })}
       {positioned.map((cue, idx) => {
         const { vPos, hAlign } = resolveCue(cue);
-        const xPct = Math.max(0, Math.min(100, (cue.pos!.x / playRes.x) * 100));
-        const yPct = Math.max(0, Math.min(100, (cue.pos!.y / playRes.y) * 100));
+        const xFrac = Math.max(0, Math.min(1, cue.pos!.x / playRes.x));
+        const yFrac = Math.max(0, Math.min(1, cue.pos!.y / playRes.y));
         const tx = hAlign === "left" ? "0%" : hAlign === "right" ? "-100%" : "-50%";
         const ty = vPos === "top" ? "0%" : vPos === "middle" ? "-50%" : "-100%";
-        const style: React.CSSProperties = {
-          position: "absolute",
-          pointerEvents: "none",
-          zIndex: 2147483644,
-          display: "flex",
-          left: `${xPct}%`,
-          top: `${yPct}%`,
-          transform: `translate(${tx}, ${ty})`,
-          justifyContent:
-            hAlign === "left" ? "flex-start" : hAlign === "right" ? "flex-end" : "center",
-        };
+        const style: React.CSSProperties = videoRect
+          ? {
+              position: "absolute",
+              pointerEvents: "none",
+              zIndex: 2147483644,
+              display: "flex",
+              left: `${videoRect.left + videoRect.width * xFrac}px`,
+              top: `${videoRect.top + videoRect.height * yFrac}px`,
+              transform: `translate(${tx}, ${ty})`,
+              justifyContent:
+                hAlign === "left" ? "flex-start" : hAlign === "right" ? "flex-end" : "center",
+              maxWidth: `${videoRect.width}px`,
+            }
+          : {
+              position: "absolute",
+              pointerEvents: "none",
+              zIndex: 2147483644,
+              display: "flex",
+              left: `${xFrac * 100}%`,
+              top: `${yFrac * 100}%`,
+              transform: `translate(${tx}, ${ty})`,
+              justifyContent:
+                hAlign === "left" ? "flex-start" : hAlign === "right" ? "flex-end" : "center",
+            };
+        // Positioned cues (\pos) are typically typesetting/signs — render without bubble chrome.
         return (
           <div key={`pos-${idx}`} style={style}>
-            {renderBubble(cue, hAlign, idx)}
+            <div
+              className="px-1"
+              style={{
+                color: "hsl(0, 0%, 100%)",
+                fontSize: `calc(clamp(0.85rem, 2.2vw, 1.25rem) * ${fontScale})`,
+                lineHeight: 1.4,
+                textAlign: hAlign,
+                textShadow:
+                  "0 0 2px hsl(0,0%,0%), 0 0 2px hsl(0,0%,0%), 0 1px 3px hsla(0,0%,0%,0.9)",
+                whiteSpace: "pre-wrap",
+              }}
+              dangerouslySetInnerHTML={{ __html: cue.html }}
+            />
           </div>
         );
       })}
